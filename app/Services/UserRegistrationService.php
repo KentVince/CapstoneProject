@@ -2,31 +2,32 @@
 
 namespace App\Services;
 
-use App\Models\Farmer;
-use App\Models\Pds\PersonnelAddress;
+use App\Models\Farm;
 use App\Models\User;
+use App\Models\Farmer;
 use Faker\Provider\ar_EG\Person;
-use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\DB;
+use App\Models\Pds\PersonnelAddress;
+use Filament\Notifications\Notification;
 
 class UserRegistrationService
 {
     public function registerUser(array $arraydata): User
-    {        
-       
+    {
+
         $data = reset($arraydata);
         DB::beginTransaction();
         try {
-         
+
             // dd($data);
-            $user = $this->createUser($data);             
+            $user = $this->createUser($data);
             $farmer = $this->createFarmer($data, $user);
             $this->createFarm($data, $user);
-        
+
            // $this->createFarmerApp($data, $farmer);
           //   $this->createPersonnelAddresses($data, $farmer);
             // $this->createPersonnelContactId($data, $farmer);
-            // $this->createPersonnelEducBackground($data, $farmer);     
+            // $this->createPersonnelEducBackground($data, $farmer);
             // $this->createPersonnelEligibility($data, $farmer);
             // $this->createPersonnelWorkExp($data, $farmer);
             // $this->createPersonnelVoluntaryWorks($data, $farmer);
@@ -36,7 +37,7 @@ class UserRegistrationService
             // $this->createPersonelRefs($data, $farmer);
          //   $roleName = 'panel_user';
           //  $this->assignUserRole($user, $roleName);
-            
+
             DB::commit();
 
             return $user;
@@ -57,7 +58,7 @@ class UserRegistrationService
     protected function createUser(array $data): User
     {
 
-       
+
         return User::create([
             'name' => $data['name'],
             'email' => $data['email'],
@@ -67,7 +68,7 @@ class UserRegistrationService
 
     protected function createFarmer(array $data, User $user): Farmer
     {
-       
+
         return Farmer::create([
            'user_id' => $user->id,
            'app_no' => $data['app_no'] ?? '',
@@ -103,58 +104,53 @@ class UserRegistrationService
            'reason_assignment' => $data['reason_assignment'] ?? '',
 
 
-           
+
         ]);
     }
 
 
-    protected function createFarm(array $data, User $user): Farmer
+    protected function createFarm(array $data, User $user): Farm
     {
-       
-        return Farmer::create([
+
+            dd($data);
+        return Farm::create([
            'user_id' => $user->id,
-           'app_no' => $data['app_no'] ?? '',
-           'crop' => $data['crop'] ?? '',
-           'funding_source' => $data['funding_source'] ?? '',
-           'date_of_application' => $data['date_of_application'] ?? '',
-           'lastname' => $data['lastname'] ?? '',
-           'firstname' => $data['firstname'] ?? '',
-           'middlename' => $data['middlename'] ?? '',
+           'lot_hectare' => $data['lot_hectare'] ?? '',
+           'sitio' => $data['sitio'] ?? '',
+           'barangay' => $data['barangay'] ?? '',
+           'municipality' => $data['municipality'] ?? '',
+           'province' => $data['province'] ?? '',
+           'north' => $data['north'] ?? '',
+           'south' => $data['south'] ?? '',
            'street' => $data['street'] ?? '',
            'barangay' => $data['barangay'] ?? '',
            'municipality' => $data['municipality'] ?? '',
            'province' => $data['province'] ?? '',
-           'phone_no' => $data['phone_no'] ?? '',
-           'sex' => $data['sex'] ?? '',
-           'birthdate' => $data['birthdate'] ?? '',
-           'age' => $data['age'] ?? '',
-           'civil_status' => $data['civil_status'] ?? '',
-           'pwd' => $data['pwd'] ?? '',
-           'ip' => $data['ip'] ?? '',
-           'bank_name' => $data['bank_name'] ?? '',
-           'bank_account_no' => $data['bank_account_no'] ?? '',
-           'bank_branch' => $data['bank_branch'] ?? '',
-           'bank_name' => $data['bank_name'] ?? '',
-           'spouse' => $data['spouse'] ?? '',
-           'primary_beneficiaries' => $data['primary_beneficiaries'] ?? '',
-           'primary_beneficiaries_age' => $data['primary_beneficiaries_age'] ?? '',
-           'primary_beneficiaries_relationship' => $data['primary_beneficiaries_relationship'] ?? '',
-           'secondary_beneficiaries' => $data['secondary_beneficiaries'] ?? '',
-           'secondary_beneficiaries_age' => $data['secondary_beneficiaries_age'] ?? '',
-           'secondary_beneficiaries_relationship' => $data['secondary_beneficiaries_relationship'] ?? '',
-            'assignee' => $data['assignee'] ?? '',
-           'reason_assignment' => $data['reason_assignment'] ?? '',
+           'east' => $data['east'] ?? '',
+           'west' => $data['west'] ?? '',
+           'variety' => $data['variety'] ?? '',
+           'planning_method' => $data['planning_method'] ?? '',
+           'date_of_sowing' => $data['date_of_sowing'] ?? '',
+           'date_of_planning' => $data['date_of_planning'] ?? '',
+           'date_of_harvest' => $data['date_of_harvest'] ?? '',
+           'population_density' => $data['population_density'] ?? '',
+           'age_group' => $data['age_group'] ?? '',
+           'no_of_hills' => $data['no_of_hills'] ?? '',
+           'land_category' => $data['land_category'] ?? '',
+           'soil_type' => $data['soil_type'] ?? '',
+           'topography' => $data['topography'] ?? '',
+           'source_of_irrigation' => $data['source_of_irrigation'] ?? '',
+           'tenurial_status' => $data['tenurial_status'] ?? '',
 
 
-           
         ]);
     }
 
-  
+
 
     // protected function createFarmerApp(array $data, Farmer $farmer)
     // {
-        
+
     //     $farmer->farmerinfo()->create(reset($data[
     //         'farmerinfo']));
     // }
@@ -208,7 +204,7 @@ class UserRegistrationService
     }
 
     protected function createPersonnelStatutory(array $data, Farmer $farmer)
-    {        
+    {
         $farmer->statutory()->create([
             'stat_ques34a' => $data['stat_ques34a'] ?? null,
             'stat_ques34_dtl' => $data['stat_ques34_dtl'] ?? '',
@@ -242,17 +238,17 @@ class UserRegistrationService
     }
 
     protected function createPersonnelAddresses(array $data, Farmer $farmer)
-    {               
-        $addresses = array_merge($data['addresses_residential'] ?? [], $data['addresses_permanent'] ?? []);            
+    {
+        $addresses = array_merge($data['addresses_residential'] ?? [], $data['addresses_permanent'] ?? []);
         $farmer->addresses()->createMany($addresses);
     }
 
     protected function createPersonnelContactId(array $data, Farmer $farmer)
-    {          
+    {
         $farmer->contactId()->create([
             'email_add' => $data['email'],
             'mobile_no' => $data['mobile_no'],
-        ]);        
+        ]);
     }
 
     protected function assignUserRole(User $user, $roleName)

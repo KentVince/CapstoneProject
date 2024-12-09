@@ -32,24 +32,24 @@ trait HasFarmInfoComponents
     public function Step_FarmInfo(?Farm $farm = null, ?bool $is_signup = false): Step
     {
 
-     
 
-               
-                    
+
+
+
                     return
                     Step::make('FarmInfo')
                     ->label(new HtmlString('<span class="sm:whitespace-normal md:whitespace-pre-line md:inline">Farm Information</span>'))
                     ->icon('heroicon-o-users')
                     // ->description('Enter your Personal Details')
                     ->completedIcon('heroicon-m-hand-thumb-up')
-                   
+
                     ->schema([
-        
-        
-        
-                      
+
+
+
+
                             Tabs::make('Farm Information')
-                           
+
                                 ->tabs([
                                     Tab::make('B.1.Farm Location')
                                     ->columns([
@@ -60,23 +60,23 @@ trait HasFarmInfoComponents
                                     ->schema([
 
 
-                                     
+
                                         TextInput::make('lot_hectare')->required(),
                                         TextInput::make('sitio')->required(),
                                         TextInput::make('barangay')->required(),
                                         TextInput::make('municipality')->required(),
                                         TextInput::make('province')->required(),
-                                        
+
                                     ])
                                     ->icon('heroicon-o-credit-card'),
-        
-        
+
+
                                     Tab::make('B.2.Boundaries')
                                         // ->extraAttributes(['class' => 'personal-info-test'])
-                                      
+
                                         ->schema([
-        
-        
+
+
                                             Grid::make('farmernames')
                                             //     ->when($farmer != null, fn($grid) => $grid->relationship('contactId'))
                                                  ->columns([
@@ -86,35 +86,35 @@ trait HasFarmInfoComponents
                                                  ])
                                                  ->label('')
                                                  ->schema([
-        
-                                        
-                                     
-        
+
+
+
+
                                                     TextInput::make('north')->required(),
                                                     TextInput::make('south')->required(),
                                                     TextInput::make('east')->required(),
                                                     TextInput::make('west')->required(),
-                                                 
-                                                    
-                                                   
-                                                 
-                                              
-                                                  
-        
-                                     
-        
-                                     
-                                           
-        
-                
-        
-                                         
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                                         ]),
                                         ]) ->icon('heroicon-o-credit-card'),  // end Personal Info tab
-            
-                                 
-        
-        
+
+
+
+
                                         Tab::make('B.3-7')
                                         ->columns([
                                             'md' => 1,  // normal medium monitor
@@ -122,20 +122,20 @@ trait HasFarmInfoComponents
                                             '2xl' => 3, // my large monitor
                                         ])
                                         ->schema([
-    
-    
-                                         
+
+
+
                                             TextInput::make('variety')->required(),
                                             TextInput::make('planning_method')->required(),
-                                     
+
                                             DatePicker::make('date_of_sowing'),
                                             DatePicker::make('date_of_planning'),
                                             TextInput::make('population_density')->required(),
-                                            
+
                                         ])
                                         ->icon('heroicon-o-credit-card'),
-        
-        
+
+
                                         Tab::make('B.8.Population Density ')
                                         ->columns([
                                             'md' => 1,  // normal medium monitor
@@ -143,18 +143,18 @@ trait HasFarmInfoComponents
                                             '2xl' => 3, // my large monitor
                                         ])
                                         ->schema([
-    
-    
-                                         
-                                          
+
+
+
+
                                             TextInput::make('age_group')->required(),
                                             TextInput::make('no_of_hills')->required(),
-                                     
-                                            
+
+
                                         ])
                                         ->icon('heroicon-o-credit-card'),
-        
-        
+
+
                                         Tab::make('B.9-13')
                                         ->columns([
                                             'md' => 1,  // normal medium monitor
@@ -162,40 +162,40 @@ trait HasFarmInfoComponents
                                             '2xl' => 3, // my large monitor
                                         ])
                                         ->schema([
-    
-    
-                                        
+
+
+
                                             TextInput::make('land_category')->required(),
                                             TextInput::make('soil_type')->required(),
                                             TextInput::make('topography')->required(),
                                             TextInput::make('source_of_irrigation')->required(),
                                             TextInput::make('tenurial_status')->required(),
-                               
-                                     
-                                            
+
+
+
                                         ])
                                         ->icon('heroicon-o-credit-card'),
-                                    
-        
-        
-        
-        
-                                  
-        
-        
-        
-                       
-        
+
+
+
+
+
+
+
+
+
+
+
                         ])
-        
-        
+
+
                         ]);
 
 
 
 
-             
-          
+
+
     }
 
     // public function checkSameAsPermanent() : bool
