@@ -4,6 +4,7 @@ namespace App\Filament\Pages\Auth;
 
 use App\Models\User;
 use App\Models\Farmer;
+use App\Models\Farm;
 use Filament\Forms\Get;
 use Filament\Pages\Page;
 use BaconQrCode\Common\Mode;
@@ -54,7 +55,7 @@ class Register extends BaseRegister
     protected function getForms(): array
     {
 
-        
+
         $farmerForm = new FarmerForm(null);
         return [
             'form' => $this->form(
@@ -70,16 +71,18 @@ class Register extends BaseRegister
 
     protected function handleRegistration(array $data): Model
     {
-      
+
         /**
          *  init instance using app() helper, so laravel
          *  handles all object dependencies
          */
 
         $regService = app(UserRegistrationService::class);
-        
+
         $user = $regService->registerUser($data);
-       
+
+
+
         if (!isset($user->farmer_id)) {
 
             /**
@@ -87,11 +90,15 @@ class Register extends BaseRegister
              *  farmer_id then lets assign personnel here
              */
             $farmer = Farmer::where('user_id', $user->id)->first();
-          
+
             if ($farmer) {
                 $user->farmer_id = $farmer->id;
                 $user->save();
+
+                Farm::where('farmer_id', null)->update(['farmer_id' => $farmer->id]);
             }
+
+
         }
         return $user;
     }

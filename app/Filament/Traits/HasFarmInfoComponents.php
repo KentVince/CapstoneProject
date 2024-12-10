@@ -45,9 +45,6 @@ trait HasFarmInfoComponents
 
                     ->schema([
 
-
-
-
                             Tabs::make('Farm Information')
 
                                 ->tabs([
@@ -58,9 +55,6 @@ trait HasFarmInfoComponents
                                         '2xl' => 3, // my large monitor
                                     ])
                                     ->schema([
-
-
-
                                         TextInput::make('lot_hectare')->required(),
                                         TextInput::make('sitio')->required(),
                                         TextInput::make('barangay')->required(),

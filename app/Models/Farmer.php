@@ -16,15 +16,12 @@ class Farmer extends Model
 
 
 
-    public function user() : BelongsTo 
+    public function user() : BelongsTo
     {
-        return $this->belongsTo(User::class, 'farmer_id');    
+        return $this->belongsTo(User::class, 'farmer_id');
         // return $this->belongsTo(User::class);
     }
 
-    public function contactId() : HasOne
-    {    
-        return $this->hasOne(PersonnelContactId::class);
-    }
+
 
 }

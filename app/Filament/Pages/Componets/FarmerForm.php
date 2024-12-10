@@ -13,9 +13,9 @@ use App\Filament\Traits\HasLoginInfoComponents;
 use App\Filament\Traits\HasFarmerInfoComponents;
 
 
-class FarmerForm extends Page
+class FarmerForm
 {
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+  //  protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
    //  protected static string $view = 'filament.pages.componets.farmer-form';
 
@@ -23,18 +23,18 @@ class FarmerForm extends Page
     use HasFarmerInfoComponents,
         HasFarmInfoComponents,
         HasLoginInfoComponents;
-   
+
 
     protected ?Farmer $farmer;
     public array $formData = [];
 
-    
+
 
     public function __construct(?Farmer $farmer)
     {
-       
 
-       
+
+
         $this->farmer = $farmer;
 
         /**
@@ -50,7 +50,7 @@ class FarmerForm extends Page
      */
     public function getRegistrationSchema(): array
     {
-       
+
         /**
          *  set session expiration and clear session if expired
          */
@@ -78,8 +78,8 @@ class FarmerForm extends Page
                 $this->Step_FarmInfo()
                     ->afterValidation(fn(Component $livewire) => $this->saveStepData($livewire))
                     ,
-                
-               
+
+
 
 
                 // $this->Step_SupportDocs(),
@@ -106,6 +106,47 @@ class FarmerForm extends Page
                     BLADE))),
         ];
     }
+
+
+
+    public function getAccountSchema(): array
+    {
+        return [
+            Wizard::make([
+
+
+            $this->Step_FarmerInfo($this->farmer, true)
+                ->afterValidation(fn(Component $livewire) => $this->saveStepData($livewire))
+                ,
+
+            $this->Step_FarmInfo()
+                ->afterValidation(fn(Component $livewire) => $this->saveStepData($livewire))
+                ,
+            ])
+                // ->startOnStep(5)  // start on Statutory
+                ->columns(1)
+                ->columnSpanFull()
+                // ->skippable()
+
+                // don't set statePath() if you want to save using default saving
+                // method but if you insist then
+                // modify $this->data in CreatePersonnel->finalSave() accordingly
+                //
+                // ->statePath('data')
+
+                ->submitAction(new HtmlString(Blade::render(<<<BLADE
+                    <x-filament::button
+                        type="button"
+                        size="sm"
+                        wire:click="finalSave"
+                    >
+                        Save
+                    </x-filament::button>
+                BLADE)))
+                ,
+        ];
+    }
+
 
 
     public function saveStepData(Component $livewire)
@@ -135,6 +176,6 @@ class FarmerForm extends Page
         session()->put('reg_data', $updatedData);
         session()->put('reg_data_timestamp', now());
     }
-    
-    
+
+
 }

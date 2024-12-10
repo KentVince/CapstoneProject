@@ -35,8 +35,8 @@ class UserRegistrationService
             // $this->createPersonnelOtherInfo($data, $farmer);
             // $this->createPersonnelStatutory($data, $farmer);
             // $this->createPersonelRefs($data, $farmer);
-         //   $roleName = 'panel_user';
-          //  $this->assignUserRole($user, $roleName);
+           $roleName = 'panel_user';
+            $this->assignUserRole($user, $roleName);
 
             DB::commit();
 
@@ -112,9 +112,17 @@ class UserRegistrationService
     protected function createFarm(array $data, User $user): Farm
     {
 
-            dd($data);
+         // Find the farmer associated with the user
+    $farmer = Farmer::where('user_id', $user->id)->first();
+
+    if (!$farmer) {
+        throw new \Exception('Farmer not found for the user.');
+    }
+
+
+
         return Farm::create([
-           'user_id' => $user->id,
+            'farmer_id' => $farmer->id, // Use the actual farmer ID
            'lot_hectare' => $data['lot_hectare'] ?? '',
            'sitio' => $data['sitio'] ?? '',
            'barangay' => $data['barangay'] ?? '',
@@ -122,8 +130,6 @@ class UserRegistrationService
            'province' => $data['province'] ?? '',
            'north' => $data['north'] ?? '',
            'south' => $data['south'] ?? '',
-           'street' => $data['street'] ?? '',
-           'barangay' => $data['barangay'] ?? '',
            'municipality' => $data['municipality'] ?? '',
            'province' => $data['province'] ?? '',
            'east' => $data['east'] ?? '',
@@ -203,39 +209,7 @@ class UserRegistrationService
         $farmer->references()->createMany($data['references']);
     }
 
-    protected function createPersonnelStatutory(array $data, Farmer $farmer)
-    {
-        $farmer->statutory()->create([
-            'stat_ques34a' => $data['stat_ques34a'] ?? null,
-            'stat_ques34_dtl' => $data['stat_ques34_dtl'] ?? '',
-            'stat_ques34b' => $data['stat_ques34b'] ?? null,
-            'stat_ques35a' => $data['stat_ques35a'] ?? null,
-            'stat_ques35a_dtl' => $data['stat_ques35a_dtl'] ?? '',
-            'stat_ques35b' => $data['stat_ques35b'] ?? null,
-            'stat_ques35b_dtls_date' => $data['stat_ques35b_dtls_date'] ?? '',
-            'stat_ques35b_dtls_status' => $data['stat_ques35b_dtls_status'] ?? '',
-            'stat_ques36' => $data['stat_ques36'] ?? null,
-            'stat_ques36_dtl' => $data['stat_ques36_dtl'] ?? '',
-            'stat_ques37' => $data['stat_ques37'] ?? null,
-            'stat_ques37_dtl' => $data['stat_ques37_dtl'] ?? '',
-            'stat_ques38a_dtl' => $data['stat_ques38a_dtl'] ?? '',
-            'stat_ques38b' => $data['stat_ques38b'] ?? null,
-            'stat_ques38b_dtl' => $data['stat_ques38b_dtl'] ?? '',
-            'stat_ques39' => $data['stat_ques39'] ?? null,
-            'stat_ques39_dtl' => $data['stat_ques39_dtl'] ?? '',
-            'stat_ques40a' => $data['stat_ques40a'] ?? null,
-            'stat_ques40a_dtl' => $data['stat_ques40a_dtl'] ?? '',
-            'stat_ques40b' => $data['stat_ques40b'] ?? null,
-            'stat_ques40b_dtl' => $data['stat_ques40b_dtl'] ?? '',
-            'stat_ques40c' => $data['stat_ques40c'] ?? null,
-            'stat_ques40c_dtl' => $data['stat_ques40c_dtl'] ?? '',
-            'govt_issued_id' => $data['govt_issued_id'] ?? '',
-            'printing_date' => $data['printing_date'] ?? '',
-            'govt_issued_id_nbr' => $data['govt_issued_id_nbr'] ?? '',
-            'date_place_issuance' => $data['date_place_issuance'] ?? '',
-            'department_code' => $data['department_code'] ?? ''
-        ]);
-    }
+
 
     protected function createPersonnelAddresses(array $data, Farmer $farmer)
     {
