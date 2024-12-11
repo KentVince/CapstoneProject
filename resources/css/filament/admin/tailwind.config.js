@@ -12,12 +12,12 @@ export default {
         extend: {
             colors: {
                 'custom-color': {
-                    'sidebar': '#121832',
-                    'topnav': '#06467d',
+                    'sidebar': '#166534',
+                    'topnav': '#15803d',
                     'banner': '#f2911b',
-                    1: '#182138',
-                    2: '#33436b',
-                    3: '#2d3c61',
+                    1: '#ffff',
+                    2: '#ffff',
+                    3: '#ffff',
                 },
             },
         },

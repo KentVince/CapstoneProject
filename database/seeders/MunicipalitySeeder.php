@@ -14,7 +14,7 @@ class MunicipalitySeeder extends Seeder
     public function run(): void
     {
         //
-        DB::table('municipalities')->truncate(); // Optional: Clears existing data
+     //   DB::table('municipalities')->truncate(); // Optional: Clears existing data
         DB::table('municipalities')->insert($this->data());
     }
 

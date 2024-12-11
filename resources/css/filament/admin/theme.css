@@ -48,7 +48,7 @@
 
 .fi-simple-layout {
 
-    @apply bg-gradient-to-r from-blue-800 to-red-500;
+    @apply bg-gradient-to-r from-green-800 dark:bg-green-800/80;;
 }
 
 .fi-simple-main {
@@ -91,8 +91,8 @@
     @apply dark:bg-gray-800/50; */
     /* background-image: url('/public/images/bg.jpg'); */
 
-    @apply dark:bg-gradient-to-br dark:from-blue-950/90 from-30% dark:via-blue-900/80 dark:to-blue-950/100 dark:to-60%;
-    @apply bg-gradient-to-br from-blue-950/90 from-30% via-blue-900/80 to-blue-950/100 to-60%;
+    @apply dark:bg-gradient-to-br dark:from-green-900/90 from-30% dark:via-green-800/80 dark:to-green-900/100 dark:to-60%;
+    @apply bg-gradient-to-br from-green-900/90 from-30% via-green-900/80 to-green-950/100 to-60%;
     /* @apply bg-gradient-to-t from-blue-800 to-red-700 ; */
 }
 

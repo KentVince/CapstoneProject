@@ -14,7 +14,7 @@ class BarangaySeeder extends Seeder
     public function run(): void
     {
         //
-        DB::table('barangays')->truncate(); // Optional: Clears existing data
+     //   DB::table('barangays')->truncate(); // Optional: Clears existing data
         DB::table('barangays')->insert($this->data());
     }
 

@@ -35,7 +35,7 @@ trait HasFarmerInfoComponents
         return
             Step::make('Farmer Info')
             ->label(new HtmlString('<span class="sm:whitespace-normal md:whitespace-pre-line md:inline">Farmer Information</span>'))
-            ->icon('heroicon-o-users')
+            ->icon('heroicon-o-user')
             // ->description('Enter your Personal Details')
             ->completedIcon('heroicon-m-hand-thumb-up')
            
@@ -83,7 +83,7 @@ trait HasFarmerInfoComponents
                                    
                                     ]),  // end Fieldset contactId schema
                             ])
-                            ->icon('heroicon-o-credit-card'),
+                            ->icon('heroicon-o-user'),
 
 
                             Tab::make('Basic Info')
@@ -118,17 +118,35 @@ trait HasFarmerInfoComponents
                                     ->required()
                                     ->maxLength(255),
 
-                                TextInput::make('province')
-                                    ->required()
-                                    ->maxLength(255),
+                                    Select::make('province')
+                                    ->options([
+                                        'Davao de Oro' => 'Davao de Oro', // The key must match the default value
+                                        'Davao del Sur' => 'Davao del Sur',
+                                    ])
+                                    ->default('Davao de Oro')
+                                    ->disabled(),
 
-                                TextInput::make('municipality')
+                                    Select::make('municipality')
+                                    ->label('Municipality')
                                     ->required()
-                                    ->maxLength(255),
+                                    ->options(\App\Models\Municipality::whereNotNull('citymunCode')->pluck('citymunDesc', 'citymunCode'))
+                                    ->reactive()
+                                    ->searchable()
+                                    ->afterStateUpdated(fn (callable $set) => $set('barangay', null)),
 
-                                TextInput::make('barangay')
+                                    Select::make('barangay')
+                                    ->label('Barangay')
                                     ->required()
-                                    ->maxLength(255),
+                                    ->searchable()
+                                    ->options(function (callable $get) {
+                                        $municipalityCode = $get('municipality'); // Get the selected municipality's code
+                                        if ($municipalityCode) {
+                                            return \App\Models\Barangay::where('citymunCode', $municipalityCode)
+                                                ->whereNotNull('brgyDesc') // Ensure no null descriptions
+                                                ->pluck('brgyDesc', 'id');
+                                        }
+                                        return [];
+                                    }),
 
                                 TextInput::make('street')
                                     ->required()
@@ -210,7 +228,7 @@ trait HasFarmerInfoComponents
                                         'Others' => 'Others',
                                     ]),
                                 ]),
-                                ]) ->icon('heroicon-o-credit-card'),  // end Personal Info tab
+                                ]) ->icon('heroicon-o-identification'),  // end Personal Info tab
     
                             Tab::make('Contact / IDs')
                                 ->schema([
@@ -309,7 +327,7 @@ trait HasFarmerInfoComponents
                                             ->maxLength(255),
                                         ]),  // end Fieldset contactId schema
                                 ])
-                                ->icon('heroicon-o-credit-card'),
+                                ->icon('heroicon-o-banknotes'),
 
 
 
@@ -368,7 +386,7 @@ trait HasFarmerInfoComponents
 
                                 ])
                                 ])
-                                ->icon('heroicon-o-credit-card'),
+                                ->icon('heroicon-o-users'),
 
 
 

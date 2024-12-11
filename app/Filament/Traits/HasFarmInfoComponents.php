@@ -39,7 +39,7 @@ trait HasFarmInfoComponents
                     return
                     Step::make('FarmInfo')
                     ->label(new HtmlString('<span class="sm:whitespace-normal md:whitespace-pre-line md:inline">Farm Information</span>'))
-                    ->icon('heroicon-o-users')
+                    ->icon('heroicon-o-chevron-up')
                     // ->description('Enter your Personal Details')
                     ->completedIcon('heroicon-m-hand-thumb-up')
 
@@ -57,12 +57,39 @@ trait HasFarmInfoComponents
                                     ->schema([
                                         TextInput::make('lot_hectare')->required(),
                                         TextInput::make('sitio')->required(),
-                                        TextInput::make('barangay')->required(),
-                                        TextInput::make('municipality')->required(),
-                                        TextInput::make('province')->required(),
+
+                                          Select::make('province')
+                                    ->options([
+                                        'Davao de Oro' => 'Davao de Oro', // The key must match the default value
+                                        'Davao del Sur' => 'Davao del Sur',
+                                    ])
+                                    ->default('Davao de Oro')
+                                    ->disabled(),
+
+                                    Select::make('municipality')
+                                    ->label('Municipality')
+                                    ->required()
+                                    ->options(\App\Models\Municipality::whereNotNull('citymunCode')->pluck('citymunDesc', 'citymunCode'))
+                                    ->reactive()
+                                    ->searchable()
+                                    ->afterStateUpdated(fn (callable $set) => $set('barangay', null)),
+
+                                    Select::make('barangay')
+                                    ->label('Barangay')
+                                    ->required()
+                                    ->searchable()
+                                    ->options(function (callable $get) {
+                                        $municipalityCode = $get('municipality'); // Get the selected municipality's code
+                                        if ($municipalityCode) {
+                                            return \App\Models\Barangay::where('citymunCode', $municipalityCode)
+                                                ->whereNotNull('brgyDesc') // Ensure no null descriptions
+                                                ->pluck('brgyDesc', 'id');
+                                        }
+                                        return [];
+                                    }),
 
                                     ])
-                                    ->icon('heroicon-o-credit-card'),
+                                    ->icon('heroicon-o-map-pin'),
 
 
                                     Tab::make('B.2.Boundaries')
@@ -96,20 +123,13 @@ trait HasFarmInfoComponents
 
 
 
-
-
-
-
-
-
-
                                         ]),
-                                        ]) ->icon('heroicon-o-credit-card'),  // end Personal Info tab
+                                        ]) ->icon('heroicon-o-code-bracket-square'),  // end Personal Info tab
 
 
 
 
-                                        Tab::make('B.3-7')
+                                        Tab::make('B.3-7.Planning Method')
                                         ->columns([
                                             'md' => 1,  // normal medium monitor
                                             'lg' => 2,  // my small monitor
@@ -127,7 +147,7 @@ trait HasFarmInfoComponents
                                             TextInput::make('population_density')->required(),
 
                                         ])
-                                        ->icon('heroicon-o-credit-card'),
+                                        ->icon('heroicon-o-calendar-date-range'),
 
 
                                         Tab::make('B.8.Population Density ')
@@ -149,7 +169,7 @@ trait HasFarmInfoComponents
                                         ->icon('heroicon-o-credit-card'),
 
 
-                                        Tab::make('B.9-13')
+                                        Tab::make('B.9-13.Land Category')
                                         ->columns([
                                             'md' => 1,  // normal medium monitor
                                             'lg' => 2,  // my small monitor
@@ -168,7 +188,7 @@ trait HasFarmInfoComponents
 
 
                                         ])
-                                        ->icon('heroicon-o-credit-card'),
+                                        ->icon('heroicon-o-map'),
 
 
 

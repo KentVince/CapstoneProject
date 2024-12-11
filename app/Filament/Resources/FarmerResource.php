@@ -25,7 +25,8 @@ class FarmerResource extends Resource implements HasShieldPermissions
     use HasRoles;
     protected static ?string $model = Farmer::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-user-circle';
+    protected static ?string $navigationLabel = 'Farmer Information';
     public static function getPermissionPrefixes(): array
     {
         return [
