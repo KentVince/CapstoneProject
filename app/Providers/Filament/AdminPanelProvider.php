@@ -55,14 +55,14 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
 
-                
-           
+
+
             ->authMiddleware([
                 Authenticate::class,
             ])
 
             ->plugins([
-              
+
 
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
                     ->gridColumns([
@@ -81,7 +81,9 @@ class AdminPanelProvider extends PanelProvider
                         'sm' => 2,
                     ]),
 
-            ]);
+
+            ])
+            ->viteTheme('resources/css/filament/admin/theme.css');
         }
 
     }

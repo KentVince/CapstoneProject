@@ -1,0 +1,299 @@
+@import '/vendor/filament/filament/resources/css/theme.css';
+
+@import './scrollbar.css';
+
+@config 'tailwind.config.js';
+
+
+
+.fi-sidebar,
+.fi-sidebar-header {
+    /* background: white;
+    border-right: 1px solid #E4E4E5; */
+
+    /* @apply dark:bg-gradient-to-b from-blue-800  to-red-700;
+    @apply bg-gradient-to-t from-blue-800 to-red-700 ; */
+
+    @apply bg-custom-color-sidebar;
+    @apply dark:bg-custom-color-sidebar;
+}
+
+.fi-body {
+    @apply bg-gray-950;
+}
+
+.fi-logo {
+    @apply text-white;
+}
+
+.fi-sidebar-item-icon, .fi-sidebar-item-label {
+    @apply text-white;
+    @apply dark:text-white;
+}
+
+.fi-sidebar-group-button > .fi-sidebar-group-label {
+    @apply text-cyan-400;
+    @apply dark:text-cyan-400;
+}
+
+.fi-sidebar-item.fi-active > .fi-sidebar-item-button {
+    @apply bg-gray-900/30;
+}
+
+.fi-sidebar-item-button:hover{
+    @apply bg-blue-900/90;
+}
+
+
+
+.fi-simple-layout {
+
+    @apply bg-gradient-to-r from-blue-800 to-red-500;
+}
+
+.fi-simple-main {
+
+    @apply bg-gray-950/10;
+    @apply dark:bg-gray-950/10;
+    @apply shadow-2xl;
+}
+
+/* .fi-simple-main > .fi-simple-page > .grid > .fi-form > .fi-form-actions > .fi-ac > button{
+    @apply bg-white;
+    @apply text-gray-700;
+    @apply rounded-full;
+} */
+
+.fi-simple-main > .fi-simple-page > .grid > .fi-form > .fi-form-actions > .fi-ac > button{
+    @apply bg-white;
+    @apply text-gray-700;
+    @apply rounded-full;
+}
+
+.fi-simple-main >  .fi-simple-page > .grid > .fi-simple-header > div,
+.fi-simple-main >  .fi-simple-page > .grid > .fi-simple-header > h1,
+.fi-simple-main >  .fi-simple-page > .grid > form > div > div > .fi-fo-field-wrp > div.grid > div.flex > .fi-fo-field-wrp-label > span
+{
+    @apply text-white;
+}
+
+.fi-header-heading {
+    @apply text-white;
+    /* @apply dark:text-blue-600; */
+    @apply uppercase;
+
+}
+
+.fi-layout {
+    /* @apply bg-indigo-500 */
+
+    /* @apply bg-gray-200/50;
+    @apply dark:bg-gray-800/50; */
+    /* background-image: url('/public/images/bg.jpg'); */
+
+    @apply dark:bg-gradient-to-br dark:from-blue-950/90 from-30% dark:via-blue-900/80 dark:to-blue-950/100 dark:to-60%;
+    @apply bg-gradient-to-br from-blue-950/90 from-30% via-blue-900/80 to-blue-950/100 to-60%;
+    /* @apply bg-gradient-to-t from-blue-800 to-red-700 ; */
+}
+
+.fi-ta{
+    /* @apply shadow-2xl;
+    @apply dark:shadow-xl;
+
+    @apply dark:shadow-gray-700;
+    @apply shadow-gray-800; */
+}
+.fi-ta-table,
+.fi-ta-table > tbody,
+.fi-ta-table > thead
+ {
+    @apply divide-white/5;
+}
+
+.fi-ta-row
+{
+    @apply hover:bg-white/5;
+}
+
+.fi-ta-ctn {
+    @apply dark:bg-transparent;
+    @apply bg-transparent;
+    @apply dark:ring-0;
+    @apply ring-0;
+    @apply divide-white/5;
+
+}
+
+.fi-ta-header-ctn {
+    @apply bg-gray-700/80;
+    @apply dark:bg-transparent;
+    @apply bg-transparent;
+    @apply outline-none;
+
+
+}
+
+/* .fi-ta-header-cell {
+    @apply dark:bg-gray-700/80;
+
+} */
+ .fi-ta-table > thead > tr,
+ .fi-pagination {
+    @apply dark:bg-sky-300/20;
+    @apply bg-sky-300/20;
+ }
+
+ .fi-ta-table > thead > tr > th {
+    @apply dark:text-sky-300;
+ }
+
+ .fi-ta-header-cell-label {
+    @apply dark:text-cyan-400;
+    @apply text-cyan-400;
+ }
+
+ .fi-ta-text-item-label {
+    @apply text-white;
+ }
+
+ .fi-ta-actions > .fi-link > .fi-link-icon,
+ .fi-ta-actions > .fi-link > span
+ {
+    @apply text-custom-400;
+ }
+
+ .fi-topbar > nav {
+    @apply dark:bg-custom-color-topnav;
+    @apply bg-custom-color-topnav;
+ }
+
+
+ /* pagination classes  */
+ .fi-pagination-overview {
+    @apply text-gray-200;
+ }
+
+ .fi-pagination-records-per-page-select > .fi-input-wrp
+ {
+    @apply bg-white/5;
+    @apply ring-white/20;
+ }
+
+ .fi-pagination-items
+ {
+    @apply bg-white/5;
+    @apply ring-white/20;
+    @apply divide-white/10;
+ }
+
+ .fi-pagination-item
+ {
+    @apply border-white/5;
+ }
+
+ .fi-pagination-item.fi-active > button > .fi-pagination-item-label
+ {
+    @apply text-blue-400;
+ }
+
+ .fi-pagination-item-button
+ {
+    @apply hover:bg-blue-600/10;
+    @apply focus-visible:ring-primary-500;
+    @apply bg-white/5;
+
+ }
+
+ .fi-pagination-item-label
+ {
+    @apply text-gray-200;
+ }
+
+.fi-pagination-records-per-page-select > .fi-input-wrp
+{
+    @apply bg-white/5;
+    @apply ring-white/20;
+    @apply [&:not(:has(.fi-ac-action:focus))]:focus-within:ring-primary-500;
+}
+
+.fi-pagination-records-per-page-select > .fi-input-wrp > div
+{
+    @apply border-white/10;
+}
+.fi-pagination-records-per-page-select > .fi-input-wrp > div > .fi-input-wrp-label,
+.fi-pagination-records-per-page-select > .fi-input-wrp > div.flex-1 > .fi-select-input
+{
+    @apply text-gray-300;
+}
+
+/* end Pagination class */
+/* ------------------------------------------------------------------------------------------------- */
+
+/* badge classes */
+
+.fi-badge.fi-color-custom
+{
+    @apply bg-custom-400/10;
+    @apply text-custom-400;
+    @apply ring-custom-400/30;
+}
+
+
+/* .fi-ta-search-field > .fi-input-wrp {
+    @apply dark:bg-white;
+}
+
+.fi-ta-search-field > .fi-input-wrp > div > .fi-input {
+    @apply dark:text-gray-700;
+} */
+
+
+.fi-tabs .fi-tabs-item:nth-child(1){
+    /* background: rgb(43, 43, 47);     */
+    /* @apply active:bg-violet-700; */
+    @apply dark:hover:bg-neutral-700;
+    @apply dark:bg-neutral-800;
+
+    @apply hover:bg-neutral-200;
+    @apply bg-neutral-300;
+}
+
+.fi-tabs .fi-tabs-item:nth-child(2){
+    @apply dark:hover:bg-neutral-700;
+    @apply dark:bg-neutral-800;
+
+    @apply hover:bg-neutral-200;
+    @apply bg-neutral-300;
+}
+
+.fi-tabs .fi-tabs-item:nth-child(3){
+    @apply dark:hover:bg-neutral-700;
+    @apply dark:bg-neutral-800;
+
+    @apply hover:bg-neutral-200;
+    @apply bg-neutral-300;
+}
+
+.fi-tabs .fi-tabs-item:nth-child(4){
+    @apply dark:hover:bg-neutral-700;
+    @apply dark:bg-neutral-800;
+
+    @apply hover:bg-neutral-200;
+    @apply bg-neutral-300;
+}
+
+.fi-tabs .fi-tabs-item:nth-child(5){
+    @apply dark:hover:bg-neutral-700;
+    @apply dark:bg-neutral-800;
+
+    @apply hover:bg-neutral-200;
+    @apply bg-neutral-300;
+}
+
+.fi-tabs .fi-tabs-item:nth-child(6){
+    @apply dark:hover:bg-neutral-700;
+    @apply dark:bg-neutral-800;
+
+    @apply hover:bg-neutral-200;
+    @apply bg-neutral-300;
+}
