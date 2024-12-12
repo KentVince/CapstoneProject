@@ -34,8 +34,6 @@ trait HasFarmInfoComponents
 
 
 
-
-
                     return
                     Step::make('FarmInfo')
                     ->label(new HtmlString('<span class="sm:whitespace-normal md:whitespace-pre-line md:inline">Farm Information</span>'))
@@ -58,7 +56,7 @@ trait HasFarmInfoComponents
                                         TextInput::make('lot_hectare')->required(),
                                         TextInput::make('sitio')->required(),
 
-                                          Select::make('province')
+                                        Select::make('province')
                                     ->options([
                                         'Davao de Oro' => 'Davao de Oro', // The key must match the default value
                                         'Davao del Sur' => 'Davao del Sur',

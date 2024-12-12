@@ -24,11 +24,12 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Wizard\Step;
 use Filament\Forms\Components\ToggleButtons;
 use App\Filament\Traits\Pds\HasfarmerAddress;
+use App\Traits\Operation\HasControl;
 
 trait HasFarmerInfoComponents
 {
  //   use HasfarmerAddress;
-
+    use HasControl;
     public function Step_FarmerInfo(?Farmer $farmer = null, ?bool $is_signup = false): Step
     {
 
@@ -59,8 +60,11 @@ trait HasFarmerInfoComponents
                                     ->label('')
                                     ->schema([
                                         
-                                      TextInput::make('app_no')
-                                        ->default('Kentoi-0001'),
+                                        TextInput::make('app_no')
+                                        ->label('Application No.')
+                                        ->default(fn () => (new class { use HasControl; })->generateControlNumber('COF')) // Temporary class to call trait method
+                                       // ->disable() // Make it read-only
+                                        ->required(),
 
                                      TextInput::make('crop')
                                         ->dehydrated()

@@ -9,9 +9,12 @@ use Illuminate\Support\Facades\DB;
 use Filament\Notifications\Notification;
 use App\Filament\Resources\FarmerResource;
 use Filament\Resources\Pages\CreateRecord;
+use App\Traits\Operation\HasControl;
+
 
 class CreateFarmer extends CreateRecord
 {
+    use HasControl;
     protected static string $resource = FarmerResource::class;
 
     protected static bool $canCreateAnother = false;
@@ -88,12 +91,17 @@ class CreateFarmer extends CreateRecord
         $user->assignRole($roleName);        
     }
     
+ 
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // set form data right before the create method is called
-        $data['user_id'] = $this->data['user_id']; // Ensure user_id is included
+        // Ensure user_id is set and generate app_no before saving
+        $data['user_id'] = auth()->id(); // Example: use authenticated user
+        $data['app_no'] = $this->generateControlNumber('COF');
         return $data;
     }
+   
+
 
     protected function getCreatedNotification(): ?Notification
     {
