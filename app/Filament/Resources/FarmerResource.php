@@ -76,6 +76,24 @@ class FarmerResource extends Resource implements HasShieldPermissions
         return $table
             ->columns([
                 //
+                Tables\Columns\TextColumn::make('app_no')
+                ->searchable(),
+                Tables\Columns\TextColumn::make('crop')
+                ->label('PO No.')
+                ->searchable(),
+                Tables\Columns\TextColumn::make('funding_source')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('lastname')
+                    ->searchable(),
+
+                    Tables\Columns\TextColumn::make('firstname')
+
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('middlename')
+                    ->searchable(),
+
+
             ])
             ->filters([
                 //
@@ -101,8 +119,9 @@ class FarmerResource extends Resource implements HasShieldPermissions
     {
         return [
 
-
-            'index' => Pages\RedirectToFarmerPage::route('/'),
+           'index2' => Pages\ListFarmers::route('/index2'),
+           'index' => Pages\RedirectToFarmerPage::route('/'),
+          //  'editfarmer' => Pages\RedirectToFarmerPage::route('/'),
             'create' => Pages\CreateFarmer::route('/create'),
             'edit' => Pages\EditFarmer::route('/{record}/edit'),
 
