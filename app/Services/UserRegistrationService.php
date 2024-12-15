@@ -69,6 +69,8 @@ class UserRegistrationService
     protected function createFarmer(array $data, User $user): Farmer
     {
 
+        dd($data);
+        
         return Farmer::create([
            'user_id' => $user->id,
            'app_no' => $data['app_no'] ?? '',
@@ -78,14 +80,14 @@ class UserRegistrationService
            'lastname' => $data['lastname'] ?? '',
            'firstname' => $data['firstname'] ?? '',
            'middlename' => $data['middlename'] ?? '',
-           'street' => $data['street'] ?? '',
+           'purok' => $data['purok'] ?? '',
            'barangay' => $data['barangay'] ?? '',
            'municipality' => $data['municipality'] ?? '',
            'province' => $data['province'] ?? '',
            'phone_no' => $data['phone_no'] ?? '',
            'sex' => $data['sex'] ?? '',
            'birthdate' => $data['birthdate'] ?? '',
-           'age' => $data['age'] ?? '',
+           'age' => $data['age'] ?? 0,
            'civil_status' => $data['civil_status'] ?? '',
            'pwd' => $data['pwd'] ?? '',
            'ip' => $data['ip'] ?? '',

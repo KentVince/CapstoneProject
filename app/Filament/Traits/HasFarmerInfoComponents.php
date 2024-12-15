@@ -63,11 +63,13 @@ trait HasFarmerInfoComponents
                                         TextInput::make('app_no')
                                         ->label('Application No.')
                                         ->default(fn () => (new class { use HasControl; })->generateControlNumber('COF')) // Temporary class to call trait method
-                                       // ->disable() // Make it read-only
-                                        ->required(),
+                                        ->disabled(fn ($get) => $get('id')) // Disable if the record has an ID (i.e., it's an existing record)
+                                        ->required() // Ensure it's required
+                                        ->readonly(fn ($get) => $get('id') ? true : false), // Make read-only if editing an existing record
 
                                      TextInput::make('crop')
                                         ->dehydrated()
+                                        ->hidden()
                                         ->default('Coffee'),
 
                                         Select::make('funding_source')
@@ -128,12 +130,13 @@ trait HasFarmerInfoComponents
                                         'Davao del Sur' => 'Davao del Sur',
                                     ])
                                     ->default('Davao de Oro')
+                                    ->hidden()
                                     ->disabled(),
 
                                     Select::make('municipality')
                                     ->label('Municipality')
                                     ->required()
-                                    ->options(\App\Models\Municipality::whereNotNull('citymunCode')->pluck('citymunDesc', 'citymunCode'))
+                                    ->options(\App\Models\Municipality::whereNotNull('code')->pluck('municipality', 'code'))
                                     ->reactive()
                                     ->searchable()
                                     ->afterStateUpdated(fn (callable $set) => $set('barangay', null)),
@@ -142,19 +145,33 @@ trait HasFarmerInfoComponents
                                     ->label('Barangay')
                                     ->required()
                                     ->searchable()
+                                    ->reactive()
                                     ->options(function (callable $get) {
                                         $municipalityCode = $get('municipality'); // Get the selected municipality's code
                                         if ($municipalityCode) {
-                                            return \App\Models\Barangay::where('citymunCode', $municipalityCode)
-                                                ->whereNotNull('brgyDesc') // Ensure no null descriptions
-                                                ->pluck('brgyDesc', 'id');
+                                            return \App\Models\Barangay::where('muni_filter', $municipalityCode)
+                                                ->whereNotNull('barangay') // Ensure no null descriptions
+                                                ->pluck('barangay', 'code');
+                                        }
+                                        return [];
+                                    })
+                                    ->afterStateUpdated(fn (callable $set) => $set('purok', null)),
+
+                                    Select::make('purok')
+                                    ->label('Purok')
+                                    ->required()
+                                    ->searchable()
+                                    ->reactive()
+                                    ->options(function (callable $get) {
+                                        $barangayCode = $get('barangay'); // Get the selected municipality's code
+                                      
+                                        if ($barangayCode) {
+                                            return \App\Models\Purok::where('purok_filter', $barangayCode)
+                                                ->whereNotNull('purok_sitio') // Ensure no null descriptions
+                                                ->pluck('purok_sitio', 'id');
                                         }
                                         return [];
                                     }),
-
-                                TextInput::make('street')
-                                    ->required()
-                                    ->maxLength(255),
                                
 
                              
@@ -167,14 +184,24 @@ trait HasFarmerInfoComponents
                                     ->searchable()
                                     ->required(),
 
-                                DatePicker::make('birthdate')
-                                    ->required(),
+                                    DatePicker::make('birthdate')
+                                    ->required()
+                                    ->reactive() // Enable reactivity to update the age dynamically
+                                    ->debounce(500) // Add a delay of 500ms before the calculation
+                                    ->afterStateUpdated(function (callable $set, $state) {
+                                        if ($state) {
+                                            $birthdate = Carbon::parse($state);
+                                            $age = $birthdate->diffInYears(Carbon::now()); // Accurately calculate the age
+                                            $set('age', $age); // Update the age field
+                                        }
+                                    }),
 
                                 TextInput::make('age')
                                     ->required()
-                                    ->maxLength(255),
+                                    ->maxLength(255)
+                                    ->disabled(), // Make the age field read-only
 
-                                Select::make('civil_status')
+                                    Select::make('civil_status')
                                     ->options([
                                         'single' => 'Single',
                                         'married' => 'Married',
@@ -183,12 +210,24 @@ trait HasFarmerInfoComponents
                                         'divorced' => 'Divorced',
                                     ])
                                     ->searchable()
-                                    ->required(),
-
-                                    TextInput::make('spouse')
+                                    ->required()
+                                    ->reactive() // Make the field reactive to changes
+                                    ->afterStateUpdated(function (callable $set, $state) {
+                                        if ($state === 'married') {
+                                            $set('spouse', null); // Clear the value for 'spouse'
+                                        } else {
+                                            $set('spouse', 'N/A'); // Set 'N/A' if not married
+                                        }
+                                    }),
+                                
+                                TextInput::make('spouse')
                                     ->placeholder('If married, name of spouse')
                                     ->required()
-                                    ->maxLength(255),
+                                    ->maxLength(255)
+                                    ->reactive() // React to changes in civil_status
+                                    ->disabled(function (callable $get) {
+                                        return $get('civil_status') !== 'married'; // Disable if not married
+                                    }),
 
                                     Select::make('ip')
                                     ->label('Ethnicity')
@@ -319,15 +358,12 @@ trait HasFarmerInfoComponents
                                             
 
                                             TextInput::make('bank_name')
-                                            ->required()
                                             ->maxLength(255),
         
                                         TextInput::make('bank_account_no')
-                                            ->required()
                                             ->maxLength(255),
         
                                         TextInput::make('bank_branch')
-                                            ->required()
                                             ->maxLength(255),
                                         ]),  // end Fieldset contactId schema
                                 ])
