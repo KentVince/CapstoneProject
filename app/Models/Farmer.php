@@ -22,6 +22,9 @@ class Farmer extends Model
         // return $this->belongsTo(User::class);
     }
 
-
+    public function farm()
+    {
+        return $this->hasOne(Farm::class, 'farmer_id'); // 'farmer_id' is the foreign key in the farms table
+    }
 
 }

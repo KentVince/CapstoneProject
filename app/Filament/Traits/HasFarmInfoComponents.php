@@ -32,6 +32,7 @@ trait HasFarmInfoComponents
     public function Step_FarmInfo(?Farm $farm = null, ?bool $is_signup = false): Step
     {
 
+        dd($this->formData);
 
 
                     return
@@ -47,13 +48,14 @@ trait HasFarmInfoComponents
 
                                 ->tabs([
                                     Tab::make('B.1.Farm Location')
+                                    ->default(fn()=>$this->formData['eligibilities'] ?? [[]])
                                     ->columns([
                                         'md' => 1,  // normal medium monitor
                                         'lg' => 2,  // my small monitor
                                         '2xl' => 3, // my large monitor
                                     ])
                                     ->schema([
-                                        TextInput::make('lot_hectare')->required(),
+                                        TextInput::make('lot_hectare')->required()  ->default($farm?->lot_hectare),
                                         TextInput::make('sitio')->required(),
 
                                         Select::make('province')
@@ -61,7 +63,7 @@ trait HasFarmInfoComponents
                                         'Davao de Oro' => 'Davao de Oro', // The key must match the default value
                                         'Davao del Sur' => 'Davao del Sur',
                                     ])
-                                    ->default('Davao de Oro')
+                                  //  ->default('Davao de Oro')
                                     ->disabled(),
 
                                     Select::make('municipality')
@@ -109,10 +111,14 @@ trait HasFarmInfoComponents
 
 
 
-                                                    TextInput::make('north')->required(),
-                                                    TextInput::make('south')->required(),
-                                                    TextInput::make('east')->required(),
-                                                    TextInput::make('west')->required(),
+                                                    TextInput::make('north')->required()
+                                                    ->default($this->formData['north'] ?? null),
+                                                    TextInput::make('south')->required()
+                                                    ->default($this->formData['south'] ?? null),
+                                                    TextInput::make('east')->required()
+                                                    ->default($this->formData['east'] ?? null),
+                                                    TextInput::make('west')->required()
+                                                    ->default($this->formData['west'] ?? null),
 
 
 
@@ -137,7 +143,8 @@ trait HasFarmInfoComponents
 
 
 
-                                            TextInput::make('variety')->required(),
+                                            TextInput::make('variety')->required()
+                                            ->default($this->formData['variety'] ?? null),
                                             TextInput::make('planning_method')->required(),
 
                                             DatePicker::make('date_of_sowing'),

@@ -151,23 +151,7 @@ class FarmerForm
 
     public function saveStepData(Component $livewire)
     {
-        /**
-         *  retrieve the current form entries
-         */
-
-        // $this->formData = $livewire->form->getState();
-        $this->formData = $livewire->data;
-        // if (method_exists($livewire, 'form') && $livewire->form) {
-
-        //     // $formState = $livewire->form->getState();
-        //     $formData = $livewire->data;
-
-        //     for debuging
-        //     Log::info('Form State: ', $formData);
-
-        //     // $this->formData = $formState;
-        //     $this->formData = $formData;
-        // }
+      
 
         $existingData = session('reg_data', []);
 

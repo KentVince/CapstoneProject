@@ -31,6 +31,11 @@ return [
         'name' => 'panel_user',
     ],
 
+    'auth' => [
+    'guard' => 'web',
+    'login' => '/admin/login',
+    ],
+
     'permission_prefixes' => [
         'resource' => [
             'view',

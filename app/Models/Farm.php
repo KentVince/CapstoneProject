@@ -9,5 +9,14 @@ class Farm extends Model
 {
     use HasFactory;
     protected $table = 'farms';
-    protected $guarded = [];
+    protected $guarded = ['farmer_id', 'created_at', 'updated_at',];
+
+
+
+    public function farmer()
+    {
+        return $this->belongsTo(Farmer::class, 'farmer_id'); // 'farmer_id' is the foreign key in the farms table
+    }
+
+
 }
