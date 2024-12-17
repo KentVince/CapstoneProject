@@ -28,6 +28,9 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->favicon(asset('images/CAFARM_LOGO.png'))
+            ->brandLogo(asset('images/favicon.png'))
+            ->brandLogoHeight('80px')
             ->login(Login::class)
             ->registration(Register::class)
             ->colors([

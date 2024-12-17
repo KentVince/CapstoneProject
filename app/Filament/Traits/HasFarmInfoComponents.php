@@ -53,6 +53,8 @@ trait HasFarmInfoComponents
                                         '2xl' => 3, // my large monitor
                                     ])
                                     ->schema([
+
+                                        TextInput::make('name')->label('Name of Farm')->required(),
                                         TextInput::make('lot_hectare')->required(),
                                         
 
@@ -64,6 +66,8 @@ trait HasFarmInfoComponents
                                     ->default('Davao de Oro')
                                     ->hidden()
                                     ->disabled(),
+
+                                    
 
                                     // Select::make('municipality')
                                     // ->label('Municipality')

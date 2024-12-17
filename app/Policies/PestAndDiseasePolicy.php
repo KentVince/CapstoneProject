@@ -3,10 +3,10 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\Farmer;
+use App\Models\PestAndDisease;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class FarmerPolicy
+class PestAndDiseasePolicy
 {
     use HandlesAuthorization;
 
@@ -15,15 +15,15 @@ class FarmerPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_farmer');
+        return $user->can('view_any_pest::and::disease');
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Farmer $farmer): bool
+    public function view(User $user, PestAndDisease $pestAndDisease): bool
     {
-        return $user->can('view_farmer');
+        return $user->can('view_pest::and::disease');
     }
 
     /**
@@ -31,23 +31,23 @@ class FarmerPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_farmer');
+        return $user->can('create_pest::and::disease');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Farmer $farmer): bool
+    public function update(User $user, PestAndDisease $pestAndDisease): bool
     {
-        return $user->can('update_farmer');
+        return $user->can('update_pest::and::disease');
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Farmer $farmer): bool
+    public function delete(User $user, PestAndDisease $pestAndDisease): bool
     {
-        return $user->can('delete_farmer');
+        return $user->can('delete_pest::and::disease');
     }
 
     /**
@@ -55,15 +55,15 @@ class FarmerPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_farmer');
+        return $user->can('delete_any_pest::and::disease');
     }
 
     /**
      * Determine whether the user can permanently delete.
      */
-    public function forceDelete(User $user, Farmer $farmer): bool
+    public function forceDelete(User $user, PestAndDisease $pestAndDisease): bool
     {
-        return $user->can('force_delete_farmer');
+        return $user->can('force_delete_pest::and::disease');
     }
 
     /**
@@ -71,15 +71,15 @@ class FarmerPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_farmer');
+        return $user->can('force_delete_any_pest::and::disease');
     }
 
     /**
      * Determine whether the user can restore.
      */
-    public function restore(User $user, Farmer $farmer): bool
+    public function restore(User $user, PestAndDisease $pestAndDisease): bool
     {
-        return $user->can('restore_farmer');
+        return $user->can('restore_pest::and::disease');
     }
 
     /**
@@ -87,15 +87,15 @@ class FarmerPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_farmer');
+        return $user->can('restore_any_pest::and::disease');
     }
 
     /**
      * Determine whether the user can replicate.
      */
-    public function replicate(User $user, Farmer $farmer): bool
+    public function replicate(User $user, PestAndDisease $pestAndDisease): bool
     {
-        return $user->can('replicate_farmer');
+        return $user->can('replicate_pest::and::disease');
     }
 
     /**
@@ -103,6 +103,6 @@ class FarmerPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_farmer');
+        return $user->can('reorder_pest::and::disease');
     }
 }

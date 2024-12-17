@@ -63,9 +63,14 @@ trait HasFarmerInfoComponents
                                         TextInput::make('app_no')
                                         ->label('Application No.')
                                         ->default(fn () => (new class { use HasControl; })->generateControlNumber('COF')) // Temporary class to call trait method
-                                        ->disabled(fn ($get) => $get('id')) // Disable if the record has an ID (i.e., it's an existing record)
+                                        ->disabled() // Disable if the record has an ID (i.e., it's an existing record)
                                         ->required() // Ensure it's required
                                         ->readonly(fn ($get) => $get('id') ? true : false), // Make read-only if editing an existing record
+
+                                        DatePicker::make('date_of_application')
+                                        ->default(Carbon::now()->format('Y-m-d')) // Ensure the date is in the correct format
+                                            ->disabled()
+                                            ->dehydrated(),
 
                                      TextInput::make('crop')
                                         ->dehydrated()
@@ -81,10 +86,7 @@ trait HasFarmerInfoComponents
                                             'Lender' => 'Lender',
                                         ]),
                 
-                                    DatePicker::make('date_of_application')
-                                    ->default(Carbon::now()->format('Y-m-d')) // Ensure the date is in the correct format
-                                        ->disabled()
-                                        ->dehydrated(),
+                                   
 
                                    
                                     ]),  // end Fieldset contactId schema
@@ -140,6 +142,8 @@ trait HasFarmerInfoComponents
                                     ->reactive()
                                     ->searchable()
                                     ->afterStateUpdated(fn (callable $set) => $set('barangay', null)),
+
+                           
 
                                     Select::make('barangay')
                                     ->label('Barangay')

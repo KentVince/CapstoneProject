@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('farms', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('farmer_id'); // Add foreign key column
+            $table->string('name');
             $table->string('lot_hectare');
             $table->string('sitio');
             $table->string('barangay');
