@@ -32,7 +32,7 @@ trait HasFarmInfoComponents
     public function Step_FarmInfo(?Farm $farm = null, ?bool $is_signup = false): Step
     {
 
-        dd($this->formData);
+
 
 
                     return
@@ -55,21 +55,32 @@ trait HasFarmInfoComponents
                                         '2xl' => 3, // my large monitor
                                     ])
                                     ->schema([
-                                        TextInput::make('lot_hectare')->required()  ->default($farm?->lot_hectare),
-                                        TextInput::make('sitio')->required(),
+                                        TextInput::make('lot_hectare')->required(),
+
 
                                         Select::make('province')
                                     ->options([
                                         'Davao de Oro' => 'Davao de Oro', // The key must match the default value
                                         'Davao del Sur' => 'Davao del Sur',
                                     ])
-                                  //  ->default('Davao de Oro')
+                                    ->default('Davao de Oro')
+                                    ->hidden()
                                     ->disabled(),
+
+                                    // Select::make('municipality')
+                                    // ->label('Municipality')
+                                    // ->required()
+                                    // ->options(\App\Models\Municipality::whereNotNull('code')->pluck('municipality', 'code'))
+                                    // ->reactive()
+                                    // ->searchable()
+                                    // ->afterStateUpdated(fn (callable $set) => $set('barangay', null)),
 
                                     Select::make('municipality')
                                     ->label('Municipality')
                                     ->required()
-                                    ->options(\App\Models\Municipality::whereNotNull('citymunCode')->pluck('citymunDesc', 'citymunCode'))
+                                    ->default('01') // Set the default municipality code to '01' (Compostela)
+                                    ->options(\App\Models\Municipality::whereNotNull('code')->pluck('municipality', 'code'))
+                                    ->disabled() // Disable the field so it cannot be edited
                                     ->reactive()
                                     ->searchable()
                                     ->afterStateUpdated(fn (callable $set) => $set('barangay', null)),
@@ -78,12 +89,30 @@ trait HasFarmInfoComponents
                                     ->label('Barangay')
                                     ->required()
                                     ->searchable()
+                                    ->reactive()
                                     ->options(function (callable $get) {
                                         $municipalityCode = $get('municipality'); // Get the selected municipality's code
                                         if ($municipalityCode) {
-                                            return \App\Models\Barangay::where('citymunCode', $municipalityCode)
-                                                ->whereNotNull('brgyDesc') // Ensure no null descriptions
-                                                ->pluck('brgyDesc', 'id');
+                                            return \App\Models\Barangay::where('muni_filter', $municipalityCode)
+                                                ->whereNotNull('barangay') // Ensure no null descriptions
+                                                ->pluck('barangay', 'code');
+                                        }
+                                        return [];
+                                    })
+                                    ->afterStateUpdated(fn (callable $set) => $set('purok', null)),
+
+                                    Select::make('purok')
+                                    ->label('Purok')
+                                    ->required()
+                                    ->searchable()
+                                    ->reactive()
+                                    ->options(function (callable $get) {
+                                        $barangayCode = $get('barangay'); // Get the selected municipality's code
+
+                                        if ($barangayCode) {
+                                            return \App\Models\Purok::where('purok_filter', $barangayCode)
+                                                ->whereNotNull('purok_sitio') // Ensure no null descriptions
+                                                ->pluck('purok_sitio', 'id');
                                         }
                                         return [];
                                     }),
