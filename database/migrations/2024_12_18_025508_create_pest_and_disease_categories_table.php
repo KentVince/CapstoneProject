@@ -11,15 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('barangays', function (Blueprint $table) {
-            $table->id();
-            $table->string('brgyCode')->unique();
-            $table->string('brgyDesc');
-            $table->string('regCode');
-            $table->string('provCode');
-            $table->string('citymunCode');
+        Schema::create('pest_and_disease_categories', function (Blueprint $table) {
+            $table->id(); // Primary key
+            $table->string('type'); // E.g., Pest, Disease
+            $table->string('name'); // Name of the pest or disease
+            $table->text('description')->nullable(); // Optional detailed information
             $table->timestamps();
-
         });
     }
 
@@ -28,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('barangays');
+        Schema::dropIfExists('pest_and_disease_categories');
     }
 };

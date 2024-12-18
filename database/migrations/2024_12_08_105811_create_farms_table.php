@@ -14,11 +14,14 @@ return new class extends Migration
         Schema::create('farms', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('farmer_id'); // Add foreign key column
+            $table->string('name');
             $table->string('lot_hectare');
             $table->string('sitio');
             $table->string('barangay');
             $table->string('municipality');
             $table->string('province');
+            $table->string('latitude');
+            $table->string('longitude');
             $table->string('north');
             $table->string('south');
             $table->string('east');
@@ -41,8 +44,8 @@ return new class extends Migration
 
          // Define the foreign key constraint
          $table->foreign('farmer_id')->references('id')->on('farmers')->onDelete('cascade');
-           
-           
+
+
         });
     }
 

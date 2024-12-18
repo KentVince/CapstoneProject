@@ -32,8 +32,8 @@
 }
 
 .fi-sidebar-group-button > .fi-sidebar-group-label {
-    @apply text-cyan-400;
-    @apply dark:text-cyan-400;
+    @apply text-amber-500;
+    @apply dark:text-amber-500;
 }
 
 .fi-sidebar-item.fi-active > .fi-sidebar-item-button {
@@ -133,6 +133,11 @@
 
 }
 
+
+
+
+
+
 /* .fi-ta-header-cell {
     @apply dark:bg-gray-700/80;
 
@@ -148,8 +153,8 @@
  }
 
  .fi-ta-header-cell-label {
-    @apply dark:text-cyan-400;
-    @apply text-cyan-400;
+    @apply dark:text-amber-500;
+    @apply text-amber-500;
  }
 
  .fi-ta-text-item-label {

@@ -15,8 +15,6 @@ class FarmerPolicy
      */
     public function viewAny(User $user): bool
     {
-        // return true;
-        // dd($user);
         return $user->can('view_any_farmer');
     }
 
@@ -25,7 +23,6 @@ class FarmerPolicy
      */
     public function view(User $user, Farmer $farmer): bool
     {
-
         return $user->can('view_farmer');
     }
 
@@ -42,9 +39,6 @@ class FarmerPolicy
      */
     public function update(User $user, Farmer $farmer): bool
     {
-        // dd($user);
-        // return true;
-
         return $user->can('update_farmer');
     }
 

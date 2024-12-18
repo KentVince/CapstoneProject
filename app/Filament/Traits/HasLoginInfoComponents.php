@@ -27,6 +27,9 @@ trait HasLoginInfoComponents
             ])
             ->schema([
                 // User fields
+                
+
+
                 TextInput::make('name')
                     ->default($this->formData['name'] ?? null)
                     ->label('Username')

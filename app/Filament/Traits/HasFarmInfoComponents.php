@@ -55,6 +55,8 @@ trait HasFarmInfoComponents
                                         '2xl' => 3, // my large monitor
                                     ])
                                     ->schema([
+
+                                        TextInput::make('name')->label('Name of Farm')->required(),
                                         TextInput::make('lot_hectare')->required(),
 
 
@@ -66,6 +68,8 @@ trait HasFarmInfoComponents
                                     ->default('Davao de Oro')
                                     ->hidden()
                                     ->disabled(),
+
+
 
                                     // Select::make('municipality')
                                     // ->label('Municipality')
@@ -138,7 +142,10 @@ trait HasFarmInfoComponents
                                                  ->schema([
 
 
-
+                                                    TextInput::make('latitude')->required()
+                                                    ->default($this->formData['latitude'] ?? null),
+                                                    TextInput::make('longitude')->required()
+                                                    ->default($this->formData['longitude'] ?? null),
 
                                                     TextInput::make('north')->required()
                                                     ->default($this->formData['north'] ?? null),

@@ -9,7 +9,8 @@ class Barangay extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['brgyDesc', 'municipality_id'];
+    protected $table = 'barangays';
+    protected $fillable = ['barangay', 'mun_filter'];
 
     public function municipality()
     {

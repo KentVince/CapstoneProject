@@ -15,7 +15,9 @@ class UserRegistrationService
     public function registerUser(array $arraydata): User
     {
 
+
         $data = reset($arraydata);
+
         DB::beginTransaction();
         try {
 
@@ -23,6 +25,8 @@ class UserRegistrationService
             $user = $this->createUser($data);
             $farmer = $this->createFarmer($data, $user);
             $this->createFarm($data, $user);
+           // $this->createFarmerNames($data, $farmer);
+           // $this->createFarmerInfo($data, $farmer);
 
            // $this->createFarmerApp($data, $farmer);
           //   $this->createPersonnelAddresses($data, $farmer);
@@ -66,11 +70,25 @@ class UserRegistrationService
         ]);
     }
 
+
+
+    // protected function createFarmerInfo(array $data, Farmer $farmer)
+    // {
+    //     $farmer->farmerinfo()->create(reset($data['farmerinfo']));
+    // }
+
+
+    // protected function createFarmerNames(array $data, Farmer $farmer)
+    // {
+    //     $farmer->farmernames()->create(reset($data['farmernames']));
+    // }
+
+
     protected function createFarmer(array $data, User $user): Farmer
     {
 
-        dd($data);
-        
+     //   dd($data);
+
         return Farmer::create([
            'user_id' => $user->id,
            'app_no' => $data['app_no'] ?? '',
@@ -125,8 +143,9 @@ class UserRegistrationService
 
         return Farm::create([
             'farmer_id' => $farmer->id, // Use the actual farmer ID
+            'name' => $data['name'] ?? '',
            'lot_hectare' => $data['lot_hectare'] ?? '',
-           'sitio' => $data['sitio'] ?? '',
+           'purok' => $data['purok'] ?? '',
            'barangay' => $data['barangay'] ?? '',
            'municipality' => $data['municipality'] ?? '',
            'province' => $data['province'] ?? '',
@@ -134,6 +153,8 @@ class UserRegistrationService
            'south' => $data['south'] ?? '',
            'municipality' => $data['municipality'] ?? '',
            'province' => $data['province'] ?? '',
+           'latitude' => $data['latitude'] ?? '',
+           'longitude' => $data['longitude'] ?? '',
            'east' => $data['east'] ?? '',
            'west' => $data['west'] ?? '',
            'variety' => $data['variety'] ?? '',

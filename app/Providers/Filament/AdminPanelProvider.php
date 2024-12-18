@@ -6,6 +6,7 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\Widgets;
 use Filament\PanelProvider;
+use Filament\Facades\Filament;
 use App\Filament\Pages\Auth\Login;
 use Filament\Support\Colors\Color;
 use App\Filament\Pages\Auth\Register;
@@ -28,6 +29,9 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->favicon(asset('images/CAFARM_LOGO.png'))
+            ->brandLogo(asset('images/favicon.png'))
+            ->brandLogoHeight('80px')
             ->login(Login::class)
             ->registration(Register::class)
             ->colors([
@@ -84,6 +88,18 @@ class AdminPanelProvider extends PanelProvider
 
             ])
             ->viteTheme('resources/css/filament/admin/theme.css');
+        }
+
+        public function boot(): void
+        {
+            Filament::serving(function () {
+                Filament::registerNavigationGroups([
+                    'Dashboard',         // First group
+                    'Pest and Disease',  // Second group
+                    'Reports',           // Third group
+                    'Settings',          // Fourth group
+                ]);
+            });
         }
 
     }

@@ -22,8 +22,8 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         $this->call([
-            BarangaySeeder::class,
-            MunicipalitySeeder::class,
+
+            PestAndDiseaseCategoriesSeeder::class,
         ]);
 
     }
