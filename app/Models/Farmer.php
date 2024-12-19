@@ -12,7 +12,7 @@ class Farmer extends Model
 {
     use HasFactory;
     protected $table = 'farmers';
-    protected $guarded = [];
+    protected $guarded = ['name'];
 
 
 
@@ -73,6 +73,11 @@ public function pestAndDiseases()
 public function farms()
 {
     return $this->hasMany(Farm::class, 'farmer_id', 'id');
+}
+
+public function farm(): HasOne
+{
+    return $this->hasOne(Farm::class, 'farmer_id', 'id');
 }
 
 }

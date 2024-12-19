@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::table('pest_and_disease', function (Blueprint $table) {
             //
-            $table->string('qr_code')->nullable()->after('date_detected'); // Adjust the position as needed
+            // $table->string('qr_code')->nullable()->after('date_detected'); // Adjust the position as needed
+            $table->string('qr_code');
+            $table->text('options');
         });
     }
 
@@ -23,7 +25,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('pest_and_disease', function (Blueprint $table) {
-            //
+            $table->dropColumn('qr_code');
+            $table->dropColumn('options');
         });
     }
 };

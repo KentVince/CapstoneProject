@@ -10,37 +10,38 @@ class Farm extends Model
     use HasFactory;
     protected $table = 'farms';
 
+    protected $guarded = [];
 
 
-    protected $fillable = [
+    // protected $fillable = [
 
-        'farmer_id',
-        'name',
-        'lot_hectare',
-        'purok',
-        'barangay',
-        'municipality',
-        'province',
-        'north',
-        'south',
-        'east',
-        'west',
-        'variety',
-        'planning_method',
-        'date_of_sowing',
-        'date_of_planning',
-        'date_of_harvest',
-        'population_density',
-        'age_group',
-        'no_of_hills',
-        'land_category',
-        'soil_type',
-        'topography',
-        'source_of_irrigation',
-        'tenurial_status',
+    //     'farmer_id',
+    //     'name',
+    //     'lot_hectare',
+    //     'sitio',
+    //     'barangay',
+    //     'municipality',
+    //     'province',
+    //     'north',
+    //     'south',
+    //     'east',
+    //     'west',
+    //     'variety',
+    //     'planning_method',
+    //     'date_of_sowing',
+    //     'date_of_planning',
+    //     'date_of_harvest',
+    //     'population_density',
+    //     'age_group',
+    //     'no_of_hills',
+    //     'land_category',
+    //     'soil_type',
+    //     'topography',
+    //     'source_of_irrigation',
+    //     'tenurial_status',
 
 
-     ];
+    //  ];
 
      public function soilAnalyses()
 {

@@ -41,11 +41,9 @@ trait HasFarmInfoComponents
                     ->icon('heroicon-o-chevron-up')
                     // ->description('Enter your Personal Details')
                     ->completedIcon('heroicon-m-hand-thumb-up')
-
                     ->schema([
 
                             Tabs::make('Farm Information')
-
                                 ->tabs([
                                     Tab::make('B.1.Farm Location')
                                     ->default(fn()=>$this->formData['eligibilities'] ?? [[]])
@@ -85,6 +83,7 @@ trait HasFarmInfoComponents
                                     ->default('01') // Set the default municipality code to '01' (Compostela)
                                     ->options(\App\Models\Municipality::whereNotNull('code')->pluck('municipality', 'code'))
                                     ->disabled() // Disable the field so it cannot be edited
+                                    ->dehydrated(true)
                                     ->reactive()
                                     ->searchable()
                                     ->afterStateUpdated(fn (callable $set) => $set('barangay', null)),

@@ -44,6 +44,10 @@ class PestAndDisease extends Model
         'longtitude',
     ];
 
+    protected $casts = [
+        'options' => 'array'
+    ];
+
     /**
      * Relationship: PestAndDisease belongs to a Farmer
      */

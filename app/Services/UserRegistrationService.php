@@ -145,7 +145,7 @@ class UserRegistrationService
             'farmer_id' => $farmer->id, // Use the actual farmer ID
             'name' => $data['name'] ?? '',
            'lot_hectare' => $data['lot_hectare'] ?? '',
-           'purok' => $data['purok'] ?? '',
+           'sitio' => $data['purok'] ?? '',
            'barangay' => $data['barangay'] ?? '',
            'municipality' => $data['municipality'] ?? '',
            'province' => $data['province'] ?? '',

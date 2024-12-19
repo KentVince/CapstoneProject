@@ -8,7 +8,9 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\PestAndDisease;
 use Filament\Resources\Resource;
+use Filament\Tables\Actions\Action;
 use Filament\Forms\Components\Section;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Filament\Forms\Components\ViewField;
 use Filament\Tables\Columns\ImageColumn;
@@ -54,13 +56,14 @@ class PestAndDiseaseResource extends Resource
 
                  
 
-                ViewField::make('qr_code_preview')
-            ->view('components.qr-code', [
-                'url' => fn ($record) => $record && $record->qr_code
-                    ? Storage::disk('public')->url($record->qr_code)
-                    : null,
-            ])
-            ->label('QR Code Preview'),
+            //     ViewField::make('qr_code_preview')
+            // ->view('components.qr-code', [
+            //     'url' => fn ($record) => $record && $record->qr_code
+            //         ? Storage::disk('public')->url($record->qr_code)
+            //         : null,
+            // ])
+            // ->label('QR Code Preview')
+            // ,
 
          
 
@@ -148,6 +151,13 @@ class PestAndDiseaseResource extends Resource
         ->actions([
             Tables\Actions\EditAction::make(),
             Tables\Actions\DeleteAction::make(),
+            Action::make('qr-action')
+            ->fillForm(fn(Model $record) => [
+                'qr-options' => \LaraZeus\Qr\Facades\Qr::getDefaultOptions(),// or $record->qr-options
+                'qr-data' => 'https://',// or $record->url
+            ])
+            ->form(\LaraZeus\Qr\Facades\Qr::getFormSchema('qr-data', 'qr-options'))
+            ->action(fn($data) => dd($data)),
         ])
         ->bulkActions([
             Tables\Actions\DeleteBulkAction::make(),

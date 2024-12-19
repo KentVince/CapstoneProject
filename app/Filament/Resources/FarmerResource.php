@@ -74,6 +74,7 @@ class FarmerResource extends Resource implements HasShieldPermissions
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn($query) => $query->when(!auth()->user()->hasRole('super_admin'), fn($q) => $q->where('user_id', auth()->id())))
             ->columns([
                 //
                 Tables\Columns\TextColumn::make('app_no')

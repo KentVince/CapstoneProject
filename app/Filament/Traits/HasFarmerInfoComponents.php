@@ -64,6 +64,7 @@ trait HasFarmerInfoComponents
                                         ->label('Application No.')
                                         ->default(fn () => (new class { use HasControl; })->generateControlNumber('COF')) // Temporary class to call trait method
                                         ->disabled() // Disable if the record has an ID (i.e., it's an existing record)
+                                        ->dehydrated()
                                         ->required() // Ensure it's required
                                         ->readonly(fn ($get) => $get('id') ? true : false), // Make read-only if editing an existing record
 
@@ -203,9 +204,9 @@ trait HasFarmerInfoComponents
                                 TextInput::make('age')
                                     ->required()
                                     ->maxLength(255)
-                                    ->disabled(), // Make the age field read-only
-
-                                    Select::make('civil_status')
+                                    ->disabled()
+                                    ->dehydrated(), // Make the age field read-only
+                                Select::make('civil_status')
                                     ->options([
                                         'single' => 'Single',
                                         'married' => 'Married',
@@ -226,7 +227,8 @@ trait HasFarmerInfoComponents
                                 
                                 TextInput::make('spouse')
                                     ->placeholder('If married, name of spouse')
-                                    ->required()
+                                    // ->required()
+                                    ->requiredIf('civil_status', 'married')
                                     ->maxLength(255)
                                     ->reactive() // React to changes in civil_status
                                     ->disabled(function (callable $get) {

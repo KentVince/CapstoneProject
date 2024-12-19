@@ -42,6 +42,7 @@ class CreateFarmer extends CreateRecord
 
     public function finalSave(): void
     {   
+        
         DB::beginTransaction();
         try {
             $this->saveWithUserCreation();  // Call your save method
@@ -59,7 +60,9 @@ class CreateFarmer extends CreateRecord
 
     protected function saveWithUserCreation(): void
     {        
-        $firstName = $this->data['farmernames'][array_key_first($this->data['farmernames'])]['first_name'];
+        // dd($this->data);
+        $firstName = $this->data['firstname']." ".$this->data['lastname'];
+        // $firstName = $this->data['farmernames'][array_key_first($this->data['farmernames'])]['first_name'];
         $email = $this->data['contactId']['email_add'] ?? '';
         
         // if ($email == null) {
@@ -98,6 +101,8 @@ class CreateFarmer extends CreateRecord
         // Ensure user_id is set and generate app_no before saving
         $data['user_id'] = auth()->id(); // Example: use authenticated user
         $data['app_no'] = $this->generateControlNumber('COF');
+        $data['crop'] = 'Coffee';
+        $data['province'] = 'Davao de Oro';
         return $data;
     }
    
