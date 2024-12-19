@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class PestAndDisease extends Model
 {
@@ -21,6 +23,8 @@ class PestAndDisease extends Model
      // Specify the key type (integer)
      protected $keyType = 'int';
 
+
+     
 
 
     // Mass-assignable fields
@@ -61,5 +65,26 @@ class PestAndDisease extends Model
         return $this->belongsTo(PestAndDiseaseCategory::class, 'category_id');
     }
 
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            // Generate QR code data
+            $qrCodeData = json_encode([
+                'Case ID' => $model->case_id,
+                'Severity' => $model->severity,
+                'Date Detected' => $model->date_detected,
+            ]);
+
+            // Generate QR code and save to public disk
+            $filePath = "qr-codes/{$model->case_id}.png";
+            $qrCode = QrCode::format('png')->size(300)->generate($qrCodeData);
+            Storage::disk('public')->put($filePath, $qrCode);
+
+            // Save file path to qr_code field
+            $model->qr_code = $filePath;
+        });
+    }
+
+    
 
 }

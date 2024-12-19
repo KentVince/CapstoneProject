@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('app_no');
             $table->string('crop');
+           
             $table->string('funding_source');
             $table->date('date_of_application');
             $table->string('lastname');
