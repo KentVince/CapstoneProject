@@ -102,19 +102,9 @@ class UserResource extends Resource
         ->filters([
             //
         ])
-    ->actions([
-                    Tables\Actions\ActionGroup::make([
-                        Tables\Actions\ViewAction::make(),
-                        Tables\Actions\EditAction::make(),
-                        Tables\Actions\DeleteAction::make(),
-                    ])
-                    ->icon('heroicon-m-ellipsis-vertical')
-                    ->tooltip('Actions')
-                    ->button()
-                    ->color('gray')
-                    ->label('') // no button text
-                ])
-                ->actionsColumnLabel('Action') // ✅ this adds the header label
+        ->actions([
+            Tables\Actions\EditAction::make(),
+        ])
         ->bulkActions([
             Tables\Actions\BulkActionGroup::make([
                 Tables\Actions\DeleteBulkAction::make(),
