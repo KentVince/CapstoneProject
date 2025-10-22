@@ -68,6 +68,8 @@ trait HasFarmerInfoComponents
                                         ->required() // Ensure it's required
                                         ->readonly(fn ($get) => $get('id') ? true : false), // Make read-only if editing an existing record
 
+                                      
+
                                         DatePicker::make('date_of_application')
                                         ->default(Carbon::now()->format('Y-m-d')) // Ensure the date is in the correct format
                                             ->disabled()

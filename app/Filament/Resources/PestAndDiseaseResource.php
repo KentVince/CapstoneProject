@@ -20,6 +20,19 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\PestAndDiseaseResource\Pages;
 use App\Filament\Resources\PestAndDiseaseResource\RelationManagers;
 
+use Endroid\QrCode\Builder\BuilderRegistry;
+use Endroid\QrCode\Builder\BuilderInterface;
+use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
+
+
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
+
+
+
+
+
 class PestAndDiseaseResource extends Resource
 {
     protected static ?string $model = PestAndDisease::class;
@@ -151,13 +164,51 @@ class PestAndDiseaseResource extends Resource
         ->actions([
             Tables\Actions\EditAction::make(),
             Tables\Actions\DeleteAction::make(),
-            Action::make('qr-action')
-            ->fillForm(fn(Model $record) => [
-                'qr-options' => \LaraZeus\Qr\Facades\Qr::getDefaultOptions(),// or $record->qr-options
-                'qr-data' => 'https://',// or $record->url
-            ])
-            ->form(\LaraZeus\Qr\Facades\Qr::getFormSchema('qr-data', 'qr-options'))
-            ->action(fn($data) => dd($data)),
+            // Action::make('qr-action')
+            // ->fillForm(fn(Model $record) => [
+            //     'qr-options' => \LaraZeus\Qr\Facades\Qr::getDefaultOptions(),// or $record->qr-options
+            //     'qr-data' => 'https://',// or $record->url
+            // ])
+            // ->form(\LaraZeus\Qr\Facades\Qr::getFormSchema('qr-data', 'qr-options'))
+            // ->action(fn($data) => dd($data)),
+            Action::make('Generate QR')
+    ->icon('heroicon-o-qr-code')
+    ->color('success')
+    ->action(function (Model $record) {
+        try {
+            $folder = 'pest_disease_qr';
+            if (!Storage::disk('public')->exists($folder)) {
+                Storage::disk('public')->makeDirectory($folder);
+            }
+
+            $fileName = "{$folder}/case_{$record->id}.png";
+
+            $builder = new BuilderRegistry();
+            $builder = $builder->getBuilder(PngWriter::class);
+
+            $result = $builder
+                ->data("Pest/Disease Case ID: {$record->id}")
+                ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
+                ->size(300)
+                ->margin(10)
+                ->build();
+
+            Storage::disk('public')->put($fileName, $result->getString());
+            $record->update(['qr_code' => $fileName]);
+
+            \Filament\Notifications\Notification::make()
+                ->title('QR Code Generated ✅')
+                ->success()
+                ->body('QR Code for this record has been successfully generated.')
+                ->send();
+        } catch (\Throwable $th) {
+            \Filament\Notifications\Notification::make()
+                ->title('QR Code Generation Failed ⚠️')
+                ->body($th->getMessage())
+                ->danger()
+                ->send();
+        }
+    }),
         ])
         ->bulkActions([
             Tables\Actions\DeleteBulkAction::make(),

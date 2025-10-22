@@ -2,131 +2,146 @@
 
 namespace App\Filament\Resources;
 
-
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Farmer;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Filament\Resources\Resource;
-use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Section;
-use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Database\Eloquent\Builder;
+use Filament\Forms\Components\ViewField;
 use App\Filament\Pages\Componets\FarmerForm;
 use App\Filament\Resources\FarmerResource\Pages;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\FarmerResource\RelationManagers;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
+use Filament\Notifications\Notification;
 
 class FarmerResource extends Resource implements HasShieldPermissions
 {
-    use HasRoles;
     protected static ?string $model = Farmer::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user-circle';
     protected static ?string $navigationLabel = 'Farmer Information';
+    protected static ?string $pluralLabel = 'Farmers';
+
     public static function getPermissionPrefixes(): array
     {
         return [
-            'view',
-            'view_any',
-            'create',
-            'update',
-            'restore',
-            'restore_any',
-            'replicate',
-            'reorder',
-            'delete',
-            'delete_any',
-            'force_delete',
-            'force_delete_any',
-            // 'publish'
+            'view', 'view_any', 'create', 'update', 'restore', 'restore_any',
+            'replicate', 'reorder', 'delete', 'delete_any',
+            'force_delete', 'force_delete_any',
         ];
     }
 
-
     public static function form(Form $form): Form
+    {
+        $farmerForm = new FarmerForm($form->getModelInstance());
+
+        return $form->schema([
+            Section::make('Farmer Details')
+                ->schema($farmerForm->getAccountSchema())
+                ->columns(2),
+
+            Section::make('QR Code')
+                ->description('This QR Code is automatically generated based on the farmer’s Application Number.')
+                ->schema([
+                    ViewField::make('qr_code')
+                        ->label('QR Code Preview')
+                        ->view('components.qr-code')
+                        ->visible(fn ($record) => filled($record?->qr_code)),
+                ])
+                ->collapsible(),
+        ]);
+    }
+
+public static function table(Table $table): Table
 {
+    return $table
+        ->columns([
+            // 🟩 QR Thumbnail Column (no redirect)
+            Tables\Columns\ViewColumn::make('qr_code')
+                ->label('QR Code')
+                ->view('components.qr-inline')
+                ->alignCenter()
+                ->state(fn ($record) => $record), // ✅ this passes the entire record, not just the string
 
-    $farmerForm = new FarmerForm($form->getModelInstance()); // Pass the model/record
+            // 🟦 Clickable Application Number — goes to Edit page
+            Tables\Columns\TextColumn::make('app_no')
+                ->label('Application No.')
+                ->searchable()
+                ->sortable()
+                ->color('primary')
+                ->formatStateUsing(fn ($state) => strtoupper($state))
+                ->extraAttributes([
+                    'class' => 'cursor-pointer hover:underline text-blue-600',
+                    'title' => 'Click to edit this record',
+                ])
+                ->getStateUsing(fn ($record) => $record->app_no)
+                ->url(fn ($record): string => FarmerResource::getUrl('edit', ['record' => $record])),
 
-        return $form
-            ->schema([
-                Section::make()
-                    ->columns([
-                        'sm' => 2,
-                        'm' => 1,
-                        'lg' => 1,
-                        '2xl' => 1,
-                        'screen' => 1,
-                    ])
-                    ->schema($farmerForm->getAccountSchema()), // Get wizard schema for PDS entry
-            ]);
+            Tables\Columns\TextColumn::make('lastname')
+                ->label('Last Name')
+                ->searchable(),
+
+            Tables\Columns\TextColumn::make('firstname')
+                ->label('First Name')
+                ->searchable(),
+
+            Tables\Columns\TextColumn::make('barangay')
+                ->label('Barangay')
+                ->searchable(),
+
+            Tables\Columns\TextColumn::make('created_at')
+                ->label('Date Added')
+                ->date('M d, Y')
+                ->sortable(),
+        ])
+        ->recordUrl(null) // ✅ disables full-row redirect
 
 
+        ->actions([
+            Tables\Actions\EditAction::make(),
+        ])
+
+            
+        
+
+        
+        ->bulkActions([
+            Tables\Actions\DeleteBulkAction::make(),
+        ]);
 }
 
 
-
-
-    public static function table(Table $table): Table
-    {
-        return $table
-            ->modifyQueryUsing(fn($query) => $query->when(!auth()->user()->hasRole('super_admin'), fn($q) => $q->where('user_id', auth()->id())))
-            ->columns([
-                //
-                Tables\Columns\TextColumn::make('app_no')
-                ->searchable(),
-                Tables\Columns\TextColumn::make('crop')
-                ->label('PO No.')
-                ->searchable(),
-                Tables\Columns\TextColumn::make('funding_source')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('lastname')
-                    ->searchable(),
-
-                    Tables\Columns\TextColumn::make('firstname')
-
-                    ->searchable(),
-
-                Tables\Columns\TextColumn::make('middlename')
-                    ->searchable(),
-
-
-            ])
-            ->filters([
-                //
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
-    }
-
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
     {
         return [
-
-           'index2' => Pages\ListFarmers::route('/index2'),
-           'index' => Pages\RedirectToFarmerPage::route('/'),
-          //  'editfarmer' => Pages\RedirectToFarmerPage::route('/'),
+            'index2' => Pages\ListFarmers::route('/index2'),
+            'index' => Pages\RedirectToFarmerPage::route('/'),
             'create' => Pages\CreateFarmer::route('/create'),
             'edit' => Pages\EditFarmer::route('/{record}/edit'),
-
-
         ];
+    }
+
+    public static function afterSave(Farmer $record): void
+    {
+        if ($record->qr_code) {
+            Notification::make()
+                ->title('QR Code Generated Successfully ✅')
+                ->body("QR for {$record->app_no} has been generated and saved.")
+                ->success()
+                ->send();
+        } else {
+            Notification::make()
+                ->title('⚠ QR Code not generated')
+                ->body('Please check storage permissions or configuration.')
+                ->warning()
+                ->send();
+        }
     }
 }

@@ -31,6 +31,8 @@ Route::get('/test-qr', function () {
     return QRCodeGenerator::generate($data);
 });
 
+
+
 // Route::get('/pest-and-disease/{id}/qrcode', function ($id) {
 //     $case = PestAndDisease::where('case_id', $id)->firstOrFail(); // Use case_id to find the record
 

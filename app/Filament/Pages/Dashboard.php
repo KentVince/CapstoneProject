@@ -33,7 +33,7 @@ class Dashboard extends \Filament\Pages\Dashboard
     public function getCasesBySeverity()
     {
         return PestAndDisease::selectRaw('severity, COUNT(*) as count')
-            ->where('treatment_status', 'Active') // Filter for active cases
+            // ->where('treatment_status', 'Active') // Filter for active cases
             ->groupBy('severity')
             ->pluck('count', 'severity');
     }
@@ -58,9 +58,9 @@ class Dashboard extends \Filament\Pages\Dashboard
 
             
 
-        $this->pestData = PestAndDisease::selectRaw('COUNT(*) as count, type')
-            ->groupBy('type')
-            ->pluck('count', 'type');
+        // $this->pestData = PestAndDisease::selectRaw('COUNT(*) as count, type')
+        //     ->groupBy('type')
+        //     ->pluck('count', 'type');
 
         $this->pestAndDiseaseData = DB::table('pest_and_disease')
             ->select(DB::raw("DATE_FORMAT(date_detected, '%Y-%m') as month"), DB::raw('COUNT(*) as total_cases'))

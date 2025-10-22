@@ -6,6 +6,9 @@ use App\Models\User;
 use Filament\Actions;
 use App\Models\Farmer;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Filament\Notifications\Notification;
 use App\Filament\Resources\FarmerResource;
 use Filament\Resources\Pages\CreateRecord;
@@ -16,102 +19,115 @@ class CreateFarmer extends CreateRecord
 {
     use HasControl;
     protected static string $resource = FarmerResource::class;
-
     protected static bool $canCreateAnother = false;
 
     protected function getFormActions(): array
-    {        
-        return [
-            // comment to get rid  of Save button
-            
-            // Action::make('save')
-            //     ->label('Save')
-            //     ->action(function (): void {
-            //         DB::beginTransaction();
-            //         try {
-            //             $this->saveWithUserCreation(); 
-            //             DB::commit();
-            //         } catch (\Throwable $th) {
-            //             DB::rollBack();
-            //             throw $th;
-            //         }                    
-            //     })
-            //     ->color('primary'), 
-        ];
+    {
+        return [];
     }
 
     public function finalSave(): void
-    {   
-        
+    {
         DB::beginTransaction();
         try {
             $this->saveWithUserCreation();  // Call your save method
             DB::commit();
 
-            // Optionally show a success message or redirect the user
-            session()->flash('success', 'farmer registered successfully.');
+            session()->flash('success', 'Farmer registered successfully.');
             $this->redirect("/");
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th->getMessage());
-            throw $th; // Handle the error (you can show a custom error message here)
+             \Illuminate\Support\Facades\Log::error("Farmer creation failed: " . $th->getMessage());
+            throw $th;
         }
     }
 
-    protected function saveWithUserCreation(): void
-    {        
-        // dd($this->data);
-        $firstName = $this->data['firstname']." ".$this->data['lastname'];
-        // $firstName = $this->data['farmernames'][array_key_first($this->data['farmernames'])]['first_name'];
-        $email = $this->data['contactId']['email_add'] ?? '';
-        
-        // if ($email == null) {
-        //     throw new \Exception('Email required.');
-        // }
+protected function saveWithUserCreation(): void
+{
+    $firstName = $this->data['firstname'] . " " . $this->data['lastname'];
+    $email = $this->data['contactId']['email_add'] ?? '';
 
-        // Create or get existing user by email
-        $user = User::firstOrCreate([
-            'email' => $email,
-        ], [
+    $user = User::firstOrCreate(
+        ['email' => $email],
+        [
             'name' => $firstName,
-            'password' => bcrypt('11111111'), // Default password
-        ]);
-        
-        // set form data with the newly created user's ID
-        $this->data['user_id'] = $user->id;              
-        $this->create(); 
-        
-        // Get the created farmer's ID (after create() is called)
-        $farmer = Farmer::where('user_id', $user->id)->first();
-        
-        // Save the farmer_id to the User model
-        if ($farmer) {
-            $user->farmer_id = $farmer->id;
-            $user->save(); // Update the user with the farmer_id
+            'password' => bcrypt('11111111'),
+        ]
+    );
+
+    // ✅ Actually capture the created Farmer instance
+    $this->data['user_id'] = $user->id;
+    $farmer = Farmer::create($this->data);
+
+    if (!$farmer) {
+        Log::warning("⚠ Failed to create Farmer record for user {$user->id}");
+        return;
+    }
+
+    // ✅ Relink user
+    $user->farmer_id = $farmer->id;
+    $user->assignRole('panel_user');
+    $user->save();
+
+ // ✅ Generate and store QR Code safely
+// ✅ Generate and store QR Code safely (no Log calls)
+try {
+    $qrFolder = 'public/qrcodes';
+    $relativeFolder = 'qrcodes';
+
+    // Ensure folder exists
+    if (!Storage::exists($qrFolder)) {
+        Storage::makeDirectory($qrFolder);
+    }
+
+    // Define file path and public URL
+    $filename = "{$farmer->app_no}.png";
+    $qrPath = "{$relativeFolder}/{$filename}";
+    $fullPath = Storage::path("public/{$qrPath}");
+
+    // Generate QR with farmer info
+    QrCode::format('png')
+        ->size(300)
+        ->margin(1)
+        ->errorCorrection('H')
+        ->generate(
+            "CAFARM Farmer: {$farmer->app_no}\nName: {$farmer->firstname} {$farmer->lastname}",
+            $fullPath
+        );
+
+    // Save relative path to database
+    $farmer->update(['qr_code' => $qrPath]);
+
+    // ✅ Show success notification
+    \Filament\Notifications\Notification::make()
+        ->title('QR Code Generated ✅')
+        ->body("QR code for <b>{$farmer->app_no}</b> created successfully.")
+        ->success()
+        ->send();
+
+        } catch (\Throwable $th) {
+            // ⚠️ QR failed — proceed without interrupting save
+            \Filament\Notifications\Notification::make()
+                ->title('QR Generation Skipped ⚠️')
+                ->body('The QR code could not be generated, but the farmer record was still saved.')
+                ->warning()
+                ->send();
         }
 
-        $roleName = 'panel_user'; // Set initial role for newly registered users
-        $user->assignRole($roleName);        
-    }
-    
- 
+}
+
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // Ensure user_id is set and generate app_no before saving
-        $data['user_id'] = auth()->id(); // Example: use authenticated user
+        $data['user_id'] = auth()->id();
         $data['app_no'] = $this->generateControlNumber('COF');
         $data['crop'] = 'Coffee';
         $data['province'] = 'Davao de Oro';
         return $data;
     }
-   
-
 
     protected function getCreatedNotification(): ?Notification
     {
-        // Return null to suppress the default notification
-        // and show our custom Notif above.
         return null;
     }
 }

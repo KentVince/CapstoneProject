@@ -23,8 +23,8 @@ class UserResource extends Resource
 
     protected static ?string $navigationGroup = 'User Management';
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
-
-
+    protected static ?string $navigationLabel = 'Web App Users';
+     protected static ?int $navigationSort = 4;
     public static function form(Form $form): Form
     {
         return $form
@@ -102,9 +102,19 @@ class UserResource extends Resource
         ->filters([
             //
         ])
-        ->actions([
-            Tables\Actions\EditAction::make(),
-        ])
+    ->actions([
+                    Tables\Actions\ActionGroup::make([
+                        Tables\Actions\ViewAction::make(),
+                        Tables\Actions\EditAction::make(),
+                        Tables\Actions\DeleteAction::make(),
+                    ])
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->tooltip('Actions')
+                    ->button()
+                    ->color('gray')
+                    ->label('') // no button text
+                ])
+                ->actionsColumnLabel('Action') // ✅ this adds the header label
         ->bulkActions([
             Tables\Actions\BulkActionGroup::make([
                 Tables\Actions\DeleteBulkAction::make(),

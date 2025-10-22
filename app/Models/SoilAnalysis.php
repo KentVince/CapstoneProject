@@ -2,69 +2,56 @@
 
 namespace App\Models;
 
-use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Database\Eloquent\Model;
-use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class SoilAnalysis extends Model
 {
-   
+    use HasFactory;
 
-    use HasFactory,HasRoles,HasPanelShield;
+    protected $table = 'soil_analysis'; // ✅ matches your migration
 
-    // Define the table name (optional if Laravel conventions are followed)
-    protected $table = 'soil_analysis';
-
-     // Explicitly define the primary key
-     protected $primaryKey = 'soil_test_id';
-
-     // If the primary key is not auto-incrementing
-     public $incrementing = true;
- 
-     // Specify the key type (integer)
-     protected $keyType = 'int';
-
-    // Mass-assignable attributes
     protected $fillable = [
         'farmer_id',
         'farm_id',
+        'farm_name',
+        'crop_variety',
+        'soil_type',
+        'date_collected',
+        'location',
         'ref_no',
         'submitted_by',
-        'date_collected',
         'date_submitted',
         'date_analyzed',
         'lab_no',
         'field_no',
-        'soil_type',
-        'pH_level',
-        'w_om',
-        'p_ppm',
-        'k_ppm',
-        'wb_om',
-        'wb_oc',
-        'crop_variety',
-        'nutrient_req_N',
-        'nutrient_req_P2O3',
-        'nutrient_req_K2O',
-        'lime_req',
-        'pH_preference',
+        'ph_level',
+        'nitrogen',
+        'phosphorus',
+        'potassium',
         'organic_matter',
+        'recommendation',
     ];
 
-    /**
-     * Relationship: SoilAnalysis belongs to a Farmer
-     */
+    protected $casts = [
+        'date_collected' => 'date',
+        'date_submitted' => 'date',
+        'date_analyzed' => 'date',
+        'ph_level' => 'float',
+        'nitrogen' => 'float',
+        'phosphorus' => 'float',
+        'potassium' => 'float',
+        'organic_matter' => 'float',
+    ];
+
+    // Optional relationships
     public function farmer()
     {
-        return $this->belongsTo(Farmer::class, 'farmer_id', 'id');
+        return $this->belongsTo(Farmer::class);
     }
 
-    /**
-     * Relationship: SoilAnalysis belongs to a Farm
-     */
     public function farm()
     {
-        return $this->belongsTo(Farm::class, 'farm_id', 'id');
+        return $this->belongsTo(Farm::class);
     }
 }

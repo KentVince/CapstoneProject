@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Filament\Filament;
+use LaraZeus\Qr\QrServiceProvider;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -12,6 +14,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         //
+       //  $this->app->register(QrServiceProvider::class);
     }
 
     /**

@@ -12,7 +12,7 @@ export default {
         extend: {
             colors: {
                 'custom-color': {
-                    'sidebar': '#166534',
+                    'sidebar': '#1e5631',
                     'topnav': '#15803d',
                     'banner': '#f2911b',
                     1: '#ffff',

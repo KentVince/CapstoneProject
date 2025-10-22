@@ -15,13 +15,14 @@ class CafarmMap extends Page
 
     protected static ?string $navigationLabel = 'CAFARM Map';
     protected static ?string $navigationGroup = 'Maps';
+    protected static ?int $navigationSort = 3;
     protected static ?string $slug = 'cafarm-map';
     protected static ?string $navigationIcon = 'heroicon-o-map';
     protected static string $view = 'filament.pages.cafarm-map';
 
     public function getPestAndDiseaseCases()
     {
-        return PestAndDisease::select('latitude', 'longitude', 'name', 'type')->get();
+        return PestAndDisease::select('latitude', 'longitude', 'pest', 'type')->get();
     }
 
     // Get the first location for the map's initial view

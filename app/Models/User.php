@@ -47,8 +47,14 @@ class User extends Authenticatable
     ];
 
 
-    public function farmer() : HasOne {
-        return $this->hasOne(Farmer::class, 'id', 'farmer_id');
-    }
+    // public function farmer() : HasOne {
+    //     return $this->hasOne(Farmer::class, 'id', 'farmer_id');
+    // }
+
+    public function farmer()
+{
+    return $this->belongsTo(Farmer::class, 'farmer_id');
+}
+
 
 }
