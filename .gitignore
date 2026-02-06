@@ -17,3 +17,6 @@ yarn-error.log
 /.idea
 /.vscode
 config/cafarm-d907a-1101360aa35c.json
+# Firebase / Google Credentials
+storage/app/firebase/*.json
+config/*.json
