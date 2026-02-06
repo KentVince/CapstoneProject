@@ -25,22 +25,29 @@
                 <option value="all">All Barangays</option>
             </select>
 
-            <select id="pestFilter"
-                    onchange="filterMarkers()"
-                    class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white text-sm py-2 px-3 min-w-[200px] focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition">
-                <option value="all">All Pest & Diseases</option>
-                @foreach($this->getPestTypes() as $type)
-                    <option value="{{ $type }}">{{ $type }}</option>
+            <select id="farmFilter"
+                    onchange="filterByFarm()"
+                    class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white text-sm py-2 px-3 min-w-[180px] focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition">
+                <option value="all">All Farms</option>
+                @foreach($this->getAllFarms() as $farm)
+                    <option value="{{ $farm->id }}">{{ $farm->name }}</option>
                 @endforeach
             </select>
 
-            <select id="statusFilter"
+            <select id="categoryFilter"
+                    onchange="handleCategoryChange()"
+                    class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white text-sm py-2 px-3 min-w-[200px] focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition">
+                <option value="all">All Categories</option>
+                <option value="pest">1. Pests</option>
+                <option value="disease">2. Diseases</option>
+                <option value="soil">3. Soil Fertility</option>
+            </select>
+
+            <select id="itemFilter"
                     onchange="filterMarkers()"
-                    class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white text-sm py-2 px-3 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition">
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="disapproved">Disapproved</option>
+                    class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white text-sm py-2 px-3 min-w-[200px] focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
+                    style="display: none;">
+                <option value="all">All Items</option>
             </select>
 
             <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800">
@@ -71,6 +78,14 @@
                 <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
                     <img src="/images/disease-icon.png" alt="Disease" class="w-4 h-4">
                     <span class="text-xs font-medium text-blue-700 dark:text-blue-300">Disease</span>
+                </div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                    <img src="/images/soil-icon.png" alt="Soil Fertility" class="w-4 h-4">
+                    <span class="text-xs font-medium text-green-700 dark:text-green-300">Soil Fertility</span>
+                </div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
+                    <img src="/images/farm.png" alt="Farm" class="w-4 h-4">
+                    <span class="text-xs font-medium text-yellow-700 dark:text-yellow-300">Farm</span>
                 </div>
             </div>
 
@@ -125,6 +140,43 @@
     <div id="map"
          style="height: 800px; width: 100%;"
          class="rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+    </div>
+
+    {{-- HEATMAP LEGEND --}}
+    <div class="mt-4">
+        <div class="flex items-center gap-3">
+            <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Heatmap:</span>
+            <div class="flex-1 max-w-sm">
+                <div class="h-4 rounded-lg overflow-hidden" style="background: linear-gradient(to right, #ffffb2 0%, #fecc5c 25%, #fd8d3c 50%, #f03b20 75%, #bd0026 100%);"></div>
+                <div class="flex justify-between mt-1">
+                    <span class="text-[10px] text-gray-600 dark:text-gray-400">Low</span>
+                    <span class="text-[10px] text-gray-600 dark:text-gray-400">Medium</span>
+                    <span class="text-[10px] text-gray-600 dark:text-gray-400">High</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- DATA TABLE --}}
+    <div class="mt-6" id="dataTableContainer" style="display: none;">
+        <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Filtered Data</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    Showing <span id="tableCount" class="font-semibold text-emerald-600 dark:text-emerald-400">0</span> records
+                </p>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead id="tableHead" class="bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 uppercase text-xs">
+                        <!-- Dynamic headers will be inserted here -->
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <!-- Dynamic rows will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
 </x-filament::page>
@@ -233,6 +285,10 @@
 document.addEventListener('DOMContentLoaded', function () {
 
     const allPestCases = @json($this->getPestAndDiseaseCases());
+    const soilAnalysisData = @json($this->getSoilAnalysisLocations());
+    const pestsList = @json($this->getPestsList());
+    const diseasesList = @json($this->getDiseasesList());
+    const allFarms = @json($this->getAllFarms());
 
 
     const map = L.map('map')
@@ -309,9 +365,26 @@ document.addEventListener('DOMContentLoaded', function () {
         popupAnchor: [0, -35],
     });
 
+    const soilIcon = L.icon({
+        iconUrl: '/images/soil-icon.png',
+        iconSize: [30, 41],
+        iconAnchor: [15, 41],
+        popupAnchor: [0, -35],
+    });
+
+    const farmIcon = L.icon({
+        iconUrl: '/images/farm.png',
+        iconSize: [35, 35],
+        iconAnchor: [17, 17],
+        popupAnchor: [0, -17],
+    });
+
     function getTypeIcon(type) {
         if (!type) return pestIcon;
-        return type.toLowerCase() === 'disease' ? diseaseIcon : pestIcon;
+        if (type.toLowerCase() === 'disease') return diseaseIcon;
+        if (type.toLowerCase() === 'soil') return soilIcon;
+        if (type.toLowerCase() === 'farm') return farmIcon;
+        return pestIcon;
     }
 
     function createPopupContent(item) {
@@ -349,6 +422,51 @@ document.addEventListener('DOMContentLoaded', function () {
                         ${item.validation_status ?? 'pending'}
                     </span>
                 </div>
+            </div>
+        </div>`;
+    }
+
+    function createSoilPopupContent(item) {
+        const date = item.date_collected
+            ? new Date(item.date_collected).toLocaleDateString()
+            : 'N/A';
+
+        return `
+        <div class="popup-container">
+            <div class="no-image-placeholder" style="background: linear-gradient(135deg, #86efac 0%, #10b981 100%);">
+                <span style="color: white; font-weight: bold;">Soil Analysis</span>
+            </div>
+            <div class="popup-content">
+                <div class="popup-title">${item.farm_name ?? 'Unknown Farm'}</div>
+                <div class="popup-detail">
+                    <span class="popup-label">Date Collected</span>
+                    <span class="popup-value">${date}</span>
+                </div>
+                <div class="popup-detail">
+                    <span class="popup-label">pH Level</span>
+                    <span class="popup-value">${item.ph_level ?? 'N/A'}</span>
+                </div>
+                <div class="popup-detail">
+                    <span class="popup-label">Nitrogen</span>
+                    <span class="popup-value">${item.nitrogen ?? 'N/A'}%</span>
+                </div>
+                <div class="popup-detail">
+                    <span class="popup-label">Phosphorus</span>
+                    <span class="popup-value">${item.phosphorus ?? 'N/A'} ppm</span>
+                </div>
+                <div class="popup-detail">
+                    <span class="popup-label">Potassium</span>
+                    <span class="popup-value">${item.potassium ?? 'N/A'} ppm</span>
+                </div>
+                <div class="popup-detail">
+                    <span class="popup-label">Organic Matter</span>
+                    <span class="popup-value">${item.organic_matter ?? 'N/A'}%</span>
+                </div>
+                ${item.recommendation ? `
+                <div style="margin-top: 8px; padding: 8px; background: #f0fdf4; border-radius: 6px;">
+                    <span class="popup-label">Recommendation:</span>
+                    <p style="font-size: 11px; color: #166534; margin-top: 4px;">${item.recommendation}</p>
+                </div>` : ''}
             </div>
         </div>`;
     }
@@ -421,57 +539,236 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ================= FILTERING =================
 
-    function getFilteredCases() {
-        const pf = document.getElementById('pestFilter').value;
-        const sf = document.getElementById('statusFilter').value;
+    function getFilteredData() {
+        const categoryVal = document.getElementById('categoryFilter').value;
+        const itemVal = document.getElementById('itemFilter').value;
 
-        return allPestCases.filter(c =>
-            (pf === 'all' || c.pest === pf) &&
-            (sf === 'all' || (c.validation_status ?? 'pending') === sf)
-        );
+        let data = [];
+
+        if (categoryVal === 'all') {
+            // Show all: pests, diseases, and soil analysis
+            data = allPestCases.map(c => ({ ...c, dataType: 'pest_disease' }))
+                .concat(soilAnalysisData.map(s => ({ ...s, dataType: 'soil', type: 'soil' })));
+        } else if (categoryVal === 'soil') {
+            // Show only soil analysis
+            data = soilAnalysisData.map(s => ({ ...s, dataType: 'soil', type: 'soil' }));
+        } else if (categoryVal === 'disease') {
+            // Show only diseases based on database type
+            let filtered = allPestCases.filter(c => {
+                return c.type.toLowerCase() === 'disease';
+            });
+
+            // Apply item filter if selected
+            if (itemVal !== 'all') {
+                filtered = filtered.filter(c => c.pest === itemVal);
+            }
+
+            data = filtered.map(c => ({ ...c, dataType: 'pest_disease' }));
+        } else if (categoryVal === 'pest') {
+            // Show only pests based on database type
+            let filtered = allPestCases.filter(c => {
+                return c.type.toLowerCase() === 'pest';
+            });
+
+            // Apply item filter if selected
+            if (itemVal !== 'all') {
+                filtered = filtered.filter(c => c.pest === itemVal);
+            }
+
+            data = filtered.map(c => ({ ...c, dataType: 'pest_disease' }));
+        }
+
+        return data;
     }
 
     let heatmapMode = false;
 
     function rebuildAll() {
-        let cases = getFilteredCases();
+        let data = getFilteredData();
 
         // Apply geographic filter
         const munVal = document.getElementById('municipalityFilter').value;
         const brgyVal = document.getElementById('barangayFilter').value;
+        const farmVal = document.getElementById('farmFilter').value;
 
-        if (brgyVal !== 'all' && barangayGeoData) {
+        // Apply farm filter first (most specific)
+        if (farmVal !== 'all') {
+            const selectedFarm = allFarms.find(f => f.id == farmVal);
+            if (selectedFarm) {
+                // Filter data to show only items related to this farm
+                data = data.filter(c => {
+                    if (c.dataType === 'soil') {
+                        return c.farm_id == farmVal;
+                    } else {
+                        // For pest/disease, check if coordinates match farm location (within small radius)
+                        const distance = Math.sqrt(
+                            Math.pow(parseFloat(c.latitude) - parseFloat(selectedFarm.latitude), 2) +
+                            Math.pow(parseFloat(c.longitude) - parseFloat(selectedFarm.longitude), 2)
+                        );
+                        return distance < 0.01; // Approximate proximity check
+                    }
+                });
+            }
+        } else if (brgyVal !== 'all' && barangayGeoData) {
             const feature = barangayGeoData.features.find(
                 f => f.properties.Brgy === brgyVal
             );
             if (feature) {
-                cases = cases.filter(c => pointInFeature(c.latitude, c.longitude, feature));
+                data = data.filter(c => pointInFeature(c.latitude, c.longitude, feature));
             }
         } else if (munVal !== 'all' && municipalGeoData) {
             const feature = municipalGeoData.features.find(
                 f => f.properties.MUN === munVal
             );
             if (feature) {
-                cases = cases.filter(c => pointInFeature(c.latitude, c.longitude, feature));
+                data = data.filter(c => pointInFeature(c.latitude, c.longitude, feature));
             }
         }
 
         // Rebuild markers
         pestMarkers.clearLayers();
-        cases.forEach(c => {
+        data.forEach(c => {
             if (!c.latitude || !c.longitude) return;
-            L.marker([c.latitude, c.longitude], {
+
+            const marker = L.marker([c.latitude, c.longitude], {
                 icon: getTypeIcon(c.type)
-            }).bindPopup(createPopupContent(c))
-              .addTo(pestMarkers);
+            });
+
+            // Use different popup content based on data type
+            if (c.dataType === 'soil') {
+                marker.bindPopup(createSoilPopupContent(c));
+            } else {
+                marker.bindPopup(createPopupContent(c));
+            }
+
+            marker.addTo(pestMarkers);
         });
 
-        document.getElementById('countNumber').textContent = cases.length;
+        // Add farm markers
+        if (farmVal === 'all') {
+            // Show all farm markers when "All Farms" is selected, filtered by geography
+            let farmsToShow = allFarms;
+
+            // Apply geographic filter to farms
+            if (brgyVal !== 'all' && barangayGeoData) {
+                const feature = barangayGeoData.features.find(
+                    f => f.properties.Brgy === brgyVal
+                );
+                if (feature) {
+                    farmsToShow = farmsToShow.filter(farm =>
+                        pointInFeature(parseFloat(farm.latitude), parseFloat(farm.longitude), feature)
+                    );
+                }
+            } else if (munVal !== 'all' && municipalGeoData) {
+                const feature = municipalGeoData.features.find(
+                    f => f.properties.MUN === munVal
+                );
+                if (feature) {
+                    farmsToShow = farmsToShow.filter(farm =>
+                        pointInFeature(parseFloat(farm.latitude), parseFloat(farm.longitude), feature)
+                    );
+                }
+            }
+
+            farmsToShow.forEach(farm => {
+                if (!farm.latitude || !farm.longitude) return;
+
+                const farmMarker = L.marker([parseFloat(farm.latitude), parseFloat(farm.longitude)], {
+                    icon: farmIcon
+                });
+
+                const farmPopupContent = `
+                <div class="popup-container">
+                    <div class="no-image-placeholder" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);">
+                        <span style="color: white; font-weight: bold;">Farm Location</span>
+                    </div>
+                    <div class="popup-content">
+                        <div class="popup-title">${farm.name}</div>
+                        <div class="popup-detail">
+                            <span class="popup-label">Barangay</span>
+                            <span class="popup-value">${farm.barangay ?? 'N/A'}</span>
+                        </div>
+                        <div class="popup-detail">
+                            <span class="popup-label">Municipality</span>
+                            <span class="popup-value">${farm.municipality ?? 'N/A'}</span>
+                        </div>
+                        <div class="popup-detail">
+                            <span class="popup-label">Coordinates</span>
+                            <span class="popup-value">${parseFloat(farm.latitude).toFixed(6)}, ${parseFloat(farm.longitude).toFixed(6)}</span>
+                        </div>
+                    </div>
+                </div>`;
+
+                farmMarker.bindPopup(farmPopupContent);
+                farmMarker.addTo(pestMarkers);
+            });
+        } else if (farmVal !== 'all') {
+            // Show only the selected farm marker
+            const selectedFarm = allFarms.find(f => f.id == farmVal);
+            if (selectedFarm) {
+                const farmMarker = L.marker([parseFloat(selectedFarm.latitude), parseFloat(selectedFarm.longitude)], {
+                    icon: farmIcon
+                });
+
+                const farmPopupContent = `
+                <div class="popup-container">
+                    <div class="no-image-placeholder" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);">
+                        <span style="color: white; font-weight: bold;">Farm Location</span>
+                    </div>
+                    <div class="popup-content">
+                        <div class="popup-title">${selectedFarm.name}</div>
+                        <div class="popup-detail">
+                            <span class="popup-label">Barangay</span>
+                            <span class="popup-value">${selectedFarm.barangay ?? 'N/A'}</span>
+                        </div>
+                        <div class="popup-detail">
+                            <span class="popup-label">Municipality</span>
+                            <span class="popup-value">${selectedFarm.municipality ?? 'N/A'}</span>
+                        </div>
+                        <div class="popup-detail">
+                            <span class="popup-label">Coordinates</span>
+                            <span class="popup-value">${parseFloat(selectedFarm.latitude).toFixed(6)}, ${parseFloat(selectedFarm.longitude).toFixed(6)}</span>
+                        </div>
+                    </div>
+                </div>`;
+
+                farmMarker.bindPopup(farmPopupContent);
+                farmMarker.addTo(pestMarkers);
+            }
+        }
+
+        // Update count to include farm markers when showing all
+        let totalCount = data.length;
+        if (farmVal === 'all') {
+            // Count filtered farms
+            let farmsToCount = allFarms;
+            if (brgyVal !== 'all' && barangayGeoData) {
+                const feature = barangayGeoData.features.find(f => f.properties.Brgy === brgyVal);
+                if (feature) {
+                    farmsToCount = farmsToCount.filter(farm =>
+                        pointInFeature(parseFloat(farm.latitude), parseFloat(farm.longitude), feature)
+                    );
+                }
+            } else if (munVal !== 'all' && municipalGeoData) {
+                const feature = municipalGeoData.features.find(f => f.properties.MUN === munVal);
+                if (feature) {
+                    farmsToCount = farmsToCount.filter(farm =>
+                        pointInFeature(parseFloat(farm.latitude), parseFloat(farm.longitude), feature)
+                    );
+                }
+            }
+            totalCount += farmsToCount.length;
+        } else if (farmVal !== 'all') {
+            totalCount += 1; // Add 1 for the selected farm
+        }
+        document.getElementById('countNumber').textContent = totalCount;
 
         // Show either heatmap or pins based on toggle
         if (heatmapMode) {
             map.removeLayer(pestMarkers);
-            updateHeatmap(cases);
+            // Only create heatmap for pest/disease data, not soil analysis
+            const heatData = data.filter(d => d.dataType === 'pest_disease');
+            updateHeatmap(heatData);
         } else {
             if (heatLayer) {
                 map.removeLayer(heatLayer);
@@ -479,6 +776,34 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             map.addLayer(pestMarkers);
         }
+
+        // Update data table
+        let farmsForTable = [];
+        if (farmVal === 'all') {
+            farmsForTable = allFarms;
+            // Apply geographic filter to farms for table
+            if (brgyVal !== 'all' && barangayGeoData) {
+                const feature = barangayGeoData.features.find(f => f.properties.Brgy === brgyVal);
+                if (feature) {
+                    farmsForTable = farmsForTable.filter(farm =>
+                        pointInFeature(parseFloat(farm.latitude), parseFloat(farm.longitude), feature)
+                    );
+                }
+            } else if (munVal !== 'all' && municipalGeoData) {
+                const feature = municipalGeoData.features.find(f => f.properties.MUN === munVal);
+                if (feature) {
+                    farmsForTable = farmsForTable.filter(farm =>
+                        pointInFeature(parseFloat(farm.latitude), parseFloat(farm.longitude), feature)
+                    );
+                }
+            }
+        } else if (farmVal !== 'all') {
+            const selectedFarm = allFarms.find(f => f.id == farmVal);
+            if (selectedFarm) {
+                farmsForTable = [selectedFarm];
+            }
+        }
+        updateDataTable(data, farmsForTable);
     }
 
     window.toggleHeatmapView = function () {
@@ -558,8 +883,9 @@ document.addEventListener('DOMContentLoaded', function () {
     window.filterByMunicipality = function () {
         const munVal = document.getElementById('municipalityFilter').value;
 
-        // Reset barangay
+        // Reset barangay and farm
         populateBarangayDropdown(munVal);
+        document.getElementById('farmFilter').value = 'all';
 
         if (munVal === 'all') {
             setHighlight(null);
@@ -579,6 +905,9 @@ document.addEventListener('DOMContentLoaded', function () {
     window.filterByBarangay = function () {
         const brgyVal = document.getElementById('barangayFilter').value;
 
+        // Reset farm filter
+        document.getElementById('farmFilter').value = 'all';
+
         if (brgyVal === 'all') {
             // Zoom back to selected municipality
             const munVal = document.getElementById('municipalityFilter').value;
@@ -597,7 +926,238 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
 
+    window.filterByFarm = function () {
+        const farmVal = document.getElementById('farmFilter').value;
+
+        if (farmVal === 'all') {
+            // Reset to current barangay or municipality view
+            const brgyVal = document.getElementById('barangayFilter').value;
+            const munVal = document.getElementById('municipalityFilter').value;
+
+            if (brgyVal !== 'all' && barangayGeoData) {
+                const feature = barangayGeoData.features.find(f => f.properties.Brgy === brgyVal);
+                setHighlight(feature);
+            } else if (munVal !== 'all' && municipalGeoData) {
+                const feature = municipalGeoData.features.find(f => f.properties.MUN === munVal);
+                setHighlight(feature);
+            } else {
+                setHighlight(null);
+            }
+        } else {
+            // Zoom to selected farm
+            const selectedFarm = allFarms.find(f => f.id == farmVal);
+            if (selectedFarm) {
+                setHighlight(null);
+                map.setView([parseFloat(selectedFarm.latitude), parseFloat(selectedFarm.longitude)], 15);
+            }
+        }
+
+        rebuildAll();
+    };
+
+
+    window.handleCategoryChange = function () {
+        const categoryVal = document.getElementById('categoryFilter').value;
+        const itemFilter = document.getElementById('itemFilter');
+
+        // Clear the item filter
+        itemFilter.innerHTML = '<option value="all">All Items</option>';
+
+        if (categoryVal === 'pest') {
+            // Show pest list from database categories
+            itemFilter.style.display = 'block';
+            pestsList.forEach(pest => {
+                const opt = document.createElement('option');
+                opt.value = pest;
+                opt.textContent = pest;
+                itemFilter.appendChild(opt);
+            });
+        } else if (categoryVal === 'disease') {
+            // Show disease list from database categories
+            itemFilter.style.display = 'block';
+            diseasesList.forEach(disease => {
+                const opt = document.createElement('option');
+                opt.value = disease;
+                opt.textContent = disease;
+                itemFilter.appendChild(opt);
+            });
+        } else {
+            // Hide item filter for 'all' or 'soil'
+            itemFilter.style.display = 'none';
+        }
+
+        rebuildAll();
+    };
+
     window.filterMarkers = () => rebuildAll();
+
+
+    // ================= DATA TABLE =================
+
+    function updateDataTable(data, farmData = []) {
+        const tableContainer = document.getElementById('dataTableContainer');
+        const tableHead = document.getElementById('tableHead');
+        const tableBody = document.getElementById('tableBody');
+        const tableCount = document.getElementById('tableCount');
+
+        const categoryVal = document.getElementById('categoryFilter').value;
+        const munVal = document.getElementById('municipalityFilter').value;
+        const farmVal = document.getElementById('farmFilter').value;
+
+        // Show table only if municipality is selected and there's data
+        if (munVal === 'all' || (data.length === 0 && farmData.length === 0)) {
+            tableContainer.style.display = 'none';
+            return;
+        }
+
+        tableContainer.style.display = 'block';
+
+        // Determine what type of data to display
+        let headers = [];
+        let rows = [];
+
+        if (farmVal !== 'all' || categoryVal === 'all') {
+            // Show combined data when farm is selected or showing all
+            if (data.length > 0) {
+                // Determine headers based on data type
+                const hasPestDisease = data.some(d => d.dataType === 'pest_disease');
+                const hasSoil = data.some(d => d.dataType === 'soil');
+
+                if (hasPestDisease && !hasSoil) {
+                    // Pest & Disease table
+                    headers = ['Case ID', 'Pest/Disease', 'Type', 'Severity', 'Confidence', 'Date Detected', 'Area (ha)', 'Location'];
+                    rows = data.filter(d => d.dataType === 'pest_disease').map(item => [
+                        item.case_id || 'N/A',
+                        item.pest || 'N/A',
+                        `<span class="px-2 py-1 text-xs font-semibold rounded-full ${item.type === 'pest' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'}">${item.type || 'N/A'}</span>`,
+                        `<span class="px-2 py-1 text-xs font-semibold rounded-full ${
+                            item.severity === 'high' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
+                            item.severity === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                            'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                        }">${item.severity || 'N/A'}</span>`,
+                        item.confidence ? `${(item.confidence * 100).toFixed(1)}%` : 'N/A',
+                        item.date_detected ? new Date(item.date_detected).toLocaleDateString() : 'N/A',
+                        item.area || 'N/A',
+                        `${item.barangay || 'N/A'}, ${item.municipality || 'N/A'}`
+                    ]);
+                } else if (hasSoil && !hasPestDisease) {
+                    // Soil Analysis table
+                    headers = ['Farm Name', 'Date Collected', 'pH Level', 'Nitrogen (%)', 'Phosphorus (ppm)', 'Potassium (ppm)', 'Organic Matter (%)', 'Location'];
+                    rows = data.filter(d => d.dataType === 'soil').map(item => [
+                        item.farm_name || 'N/A',
+                        item.date_collected ? new Date(item.date_collected).toLocaleDateString() : 'N/A',
+                        `<span class="px-2 py-1 text-xs font-semibold rounded-full ${
+                            item.ph_level < 5.5 ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
+                            item.ph_level >= 6.0 && item.ph_level < 7.0 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                            'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                        }">${item.ph_level ? item.ph_level.toFixed(2) : 'N/A'}</span>`,
+                        item.nitrogen ? item.nitrogen.toFixed(2) : 'N/A',
+                        item.phosphorus ? item.phosphorus.toFixed(2) : 'N/A',
+                        item.potassium ? item.potassium.toFixed(2) : 'N/A',
+                        item.organic_matter ? item.organic_matter.toFixed(2) : 'N/A',
+                        `${item.barangay || 'N/A'}, ${item.municipality || 'N/A'}`
+                    ]);
+                } else {
+                    // Mixed data
+                    headers = ['Type', 'Name/ID', 'Details', 'Date', 'Location'];
+                    rows = data.map(item => {
+                        if (item.dataType === 'soil') {
+                            return [
+                                '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">Soil</span>',
+                                item.farm_name || 'N/A',
+                                `pH: ${item.ph_level ? item.ph_level.toFixed(2) : 'N/A'}`,
+                                item.date_collected ? new Date(item.date_collected).toLocaleDateString() : 'N/A',
+                                `${item.barangay || 'N/A'}, ${item.municipality || 'N/A'}`
+                            ];
+                        } else {
+                            return [
+                                `<span class="px-2 py-1 text-xs font-semibold rounded-full ${item.type === 'pest' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'}">${item.type || 'N/A'}</span>`,
+                                item.pest || 'N/A',
+                                `Severity: ${item.severity || 'N/A'}`,
+                                item.date_detected ? new Date(item.date_detected).toLocaleDateString() : 'N/A',
+                                `${item.barangay || 'N/A'}, ${item.municipality || 'N/A'}`
+                            ];
+                        }
+                    });
+                }
+            }
+
+            // Add farm data if showing all farms
+            if (farmData.length > 0 && farmVal === 'all') {
+                if (rows.length === 0) {
+                    // Only farms to show
+                    headers = ['Farm Name', 'Barangay', 'Municipality', 'Coordinates'];
+                    rows = farmData.map(farm => [
+                        farm.name || 'N/A',
+                        farm.barangay || 'N/A',
+                        farm.municipality || 'N/A',
+                        `${parseFloat(farm.latitude).toFixed(6)}, ${parseFloat(farm.longitude).toFixed(6)}`
+                    ]);
+                }
+            }
+        } else if (categoryVal === 'pest' || categoryVal === 'disease') {
+            // Pest & Disease table
+            headers = ['Case ID', 'Pest/Disease', 'Type', 'Severity', 'Confidence', 'Date Detected', 'Area (ha)', 'Location'];
+            rows = data.filter(d => d.dataType === 'pest_disease').map(item => [
+                item.case_id || 'N/A',
+                item.pest || 'N/A',
+                `<span class="px-2 py-1 text-xs font-semibold rounded-full ${item.type === 'pest' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'}">${item.type || 'N/A'}</span>`,
+                `<span class="px-2 py-1 text-xs font-semibold rounded-full ${
+                    item.severity === 'high' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
+                    item.severity === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                    'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                }">${item.severity || 'N/A'}</span>`,
+                item.confidence ? `${(item.confidence * 100).toFixed(1)}%` : 'N/A',
+                item.date_detected ? new Date(item.date_detected).toLocaleDateString() : 'N/A',
+                item.area || 'N/A',
+                `${item.barangay || 'N/A'}, ${item.municipality || 'N/A'}`
+            ]);
+        } else if (categoryVal === 'soil') {
+            // Soil Analysis table
+            headers = ['Farm Name', 'Date Collected', 'pH Level', 'Nitrogen (%)', 'Phosphorus (ppm)', 'Potassium (ppm)', 'Organic Matter (%)', 'Location'];
+            rows = data.filter(d => d.dataType === 'soil').map(item => [
+                item.farm_name || 'N/A',
+                item.date_collected ? new Date(item.date_collected).toLocaleDateString() : 'N/A',
+                `<span class="px-2 py-1 text-xs font-semibold rounded-full ${
+                    item.ph_level < 5.5 ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
+                    item.ph_level >= 6.0 && item.ph_level < 7.0 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                    'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                }">${item.ph_level ? item.ph_level.toFixed(2) : 'N/A'}</span>`,
+                item.nitrogen ? item.nitrogen.toFixed(2) : 'N/A',
+                item.phosphorus ? item.phosphorus.toFixed(2) : 'N/A',
+                item.potassium ? item.potassium.toFixed(2) : 'N/A',
+                item.organic_matter ? item.organic_matter.toFixed(2) : 'N/A',
+                `${item.barangay || 'N/A'}, ${item.municipality || 'N/A'}`
+            ]);
+        }
+
+        // Update table count
+        tableCount.textContent = rows.length;
+
+        // Build table headers
+        tableHead.innerHTML = `
+            <tr>
+                ${headers.map(h => `<th class="px-4 py-3 text-left font-semibold">${h}</th>`).join('')}
+            </tr>
+        `;
+
+        // Build table rows
+        if (rows.length > 0) {
+            tableBody.innerHTML = rows.map(row => `
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                    ${row.map(cell => `<td class="px-4 py-3 text-gray-700 dark:text-gray-300">${cell}</td>`).join('')}
+                </tr>
+            `).join('');
+        } else {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="${headers.length}" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                        No data available for the selected filters
+                    </td>
+                </tr>
+            `;
+        }
+    }
 
 
     // ================= BOUNDARY LAYERS =================

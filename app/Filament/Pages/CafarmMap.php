@@ -5,6 +5,8 @@ namespace App\Filament\Pages;
 use Filament\Pages\Page;
 use App\Models\PestAndDisease;
 use App\Models\PestAndDiseaseCategory;
+use App\Models\SoilAnalysis;
+use App\Models\Farm;
 
 class CafarmMap extends Page
 {
@@ -39,6 +41,7 @@ class CafarmMap extends Page
         )
         ->whereNotNull('latitude')
         ->whereNotNull('longitude')
+        ->where('validation_status', 'approved') // Only show approved records
         ->get()
         ->map(function ($item) use ($categoryTypes) {
             if ($item->image_path) {
@@ -54,16 +57,64 @@ class CafarmMap extends Page
         });
     }
 
-    // Get unique pest/disease types for filtering
-    public function getPestTypes()
+    // Get pests only (from categories)
+    public function getPestsList()
     {
-        return PestAndDisease::whereNotNull('pest')
-            ->whereNotNull('latitude')
-            ->whereNotNull('longitude')
+        return PestAndDiseaseCategory::where('type', 'pest')
+            ->whereNotNull('name')
             ->distinct()
-            ->pluck('pest')
+            ->pluck('name')
             ->sort()
             ->values();
+    }
+
+    // Get diseases only (from categories)
+    public function getDiseasesList()
+    {
+        return PestAndDiseaseCategory::where('type', 'disease')
+            ->whereNotNull('name')
+            ->distinct()
+            ->pluck('name')
+            ->sort()
+            ->values();
+    }
+
+    // Get soil analysis data with farm coordinates
+    public function getSoilAnalysisLocations()
+    {
+        return SoilAnalysis::select(
+            'soil_analysis.id',
+            'soil_analysis.farm_id',
+            'soil_analysis.farm_name',
+            'soil_analysis.date_collected',
+            'soil_analysis.ph_level',
+            'soil_analysis.nitrogen',
+            'soil_analysis.phosphorus',
+            'soil_analysis.potassium',
+            'soil_analysis.organic_matter',
+            'soil_analysis.recommendation',
+            'farms.latitude',
+            'farms.longitude',
+            'farms.barangay',
+            'farms.municipality'
+        )
+        ->join('farms', 'soil_analysis.farm_id', '=', 'farms.id')
+        ->whereNotNull('farms.latitude')
+        ->whereNotNull('farms.longitude')
+        ->get()
+        ->map(function ($item) {
+            return $item;
+        });
+    }
+
+    // Get all registered farms
+    public function getAllFarms()
+    {
+        return Farm::select('id', 'name', 'latitude', 'longitude', 'barangay', 'municipality')
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->orderBy('name')
+            ->get();
     }
 
     // Get the first location for the map's initial view
