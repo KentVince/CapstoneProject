@@ -31,8 +31,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-     'firebase' => [
-        'server_key' => env('FIREBASE_SERVER_KEY'),
+    'firebase' => [
+        'credentials' => env('FIREBASE_CREDENTIALS', storage_path('app/firebase/cafarm-firebase.json')),
     ],
+
+
 
 ];

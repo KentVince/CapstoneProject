@@ -8,7 +8,7 @@
         <a 
             href="{{ Storage::url($getRecord()->qr_code) }}" 
             download="{{ $getRecord()->app_no }}_QR.png"
-            class="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700"
+            class="px-4 py-2 text-gray-500 bg-green-600 rounded-md hover:bg-green-700"
         >
             ⬇️ Download QR Code
         </a>

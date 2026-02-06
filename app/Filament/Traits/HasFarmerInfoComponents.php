@@ -26,6 +26,7 @@ use Filament\Forms\Components\ToggleButtons;
 use App\Filament\Traits\Pds\HasfarmerAddress;
 use App\Traits\Operation\HasControl;
 
+
 trait HasFarmerInfoComponents
 {
  //   use HasfarmerAddress;
@@ -35,68 +36,64 @@ trait HasFarmerInfoComponents
 
         return
             Step::make('Farmer Info')
-            ->label(new HtmlString('<span class="sm:whitespace-normal md:whitespace-pre-line md:inline">Farmer Information</span>'))
+            ->label(fn (Get $get): HtmlString => new HtmlString(
+                '<span class="sm:whitespace-normal md:whitespace-pre-line md:inline">' .
+                (($get('user_type') ?? 'farmer') === 'agricultural_professional' ? 'Information' : 'Farmer Information') .
+                '</span>'
+            ))
             ->icon('heroicon-o-user')
             // ->description('Enter your Personal Details')
             ->completedIcon('heroicon-m-hand-thumb-up')
            
             ->schema([
 
+                    Grid::make()
+                        ->columns([
+                            'md' => 1,
+                            'lg' => 2,
+                            '2xl' => 3,
+                        ])
+                        ->schema([
+                            TextInput::make('app_no')
+                                ->label('Application No.')
+                                ->default(fn () => (new class { use HasControl; })->generateControlNumber('COF'))
+                                ->disabled()
+                                ->dehydrated()
+                                ->readonly(fn ($get) => $get('id') ? true : false),
 
+                            DatePicker::make('date_of_application')
+                                ->default(Carbon::now()->format('Y-m-d'))
+                                ->disabled()
+                                ->dehydrated(),
 
-              
+                            TextInput::make('crop')
+                                ->dehydrated()
+                                ->hidden()
+                                ->default('Coffee'),
+
+                            Select::make('funding_source')
+                                ->searchable()
+                                ->visible(fn (Get $get): bool => $get('user_type') !== 'agricultural_professional')
+                                ->options([
+                                    'Self-Financed' => 'Self-Financed',
+                                    'Borrowing' => 'Borrowing',
+                                    'Lender' => 'Lender',
+                                ]),
+
+                            Select::make('agency')
+                                ->label('Agency')
+                                ->searchable()
+                                ->visible(fn (Get $get): bool => $get('user_type') === 'agricultural_professional')
+                                ->required(fn (Get $get): bool => $get('user_type') === 'agricultural_professional')
+                                ->options([
+                                    'MAGRO' => 'MAGRO',
+                                    'PAGRO' => 'PAGRO',
+                                    'DDOSC' => 'DDOSC',
+                                ]),
+                        ]),
+
                     Tabs::make('Basic Information')
-                   
                         ->tabs([
-                            Tab::make('Farm Information')
-                            ->schema([
-                                Grid::make('farmerinfo')
-                                   // ->when($farmer != null, fn($grid) => $grid->relationship('contactId'))
-                                    ->columns([
-                                        'md' => 1,  // normal medium monitor
-                                        'lg' => 2,  // my small monitor
-                                        '2xl' => 3, // my large monitor
-                                    ])
-                                    ->label('')
-                                    ->schema([
-                                        
-                                        TextInput::make('app_no')
-                                        ->label('Application No.')
-                                        ->default(fn () => (new class { use HasControl; })->generateControlNumber('COF')) // Temporary class to call trait method
-                                        ->disabled() // Disable if the record has an ID (i.e., it's an existing record)
-                                        ->dehydrated()
-                                        ->required() // Ensure it's required
-                                        ->readonly(fn ($get) => $get('id') ? true : false), // Make read-only if editing an existing record
-
-                                      
-
-                                        DatePicker::make('date_of_application')
-                                        ->default(Carbon::now()->format('Y-m-d')) // Ensure the date is in the correct format
-                                            ->disabled()
-                                            ->dehydrated(),
-
-                                     TextInput::make('crop')
-                                        ->dehydrated()
-                                        ->hidden()
-                                        ->default('Coffee'),
-
-                                        Select::make('funding_source')
-                                        ->searchable()
-                                        ->required()
-                                        ->options([
-                                            'Self-Financed' => 'Self-Financed',
-                                            'Borrowing' => 'Borrowing',
-                                            'Lender' => 'Lender',
-                                        ]),
-                
-                                   
-
-                                   
-                                    ]),  // end Fieldset contactId schema
-                            ])
-                            ->icon('heroicon-o-user'),
-
-
                             Tab::make('Basic Info')
                                 // ->extraAttributes(['class' => 'personal-info-test'])
                               
@@ -118,15 +115,15 @@ trait HasFarmerInfoComponents
                                     
                                     
                                 TextInput::make('lastname')
-                                    ->required()
+                                    //->required()
                                     ->maxLength(255),
 
                                 TextInput::make('firstname')
-                                    ->required()
+                                    //->required()
                                     ->maxLength(255),
 
                                 TextInput::make('middlename')
-                                    ->required()
+                                    //->required()
                                     ->maxLength(255),
 
                                     Select::make('province')
@@ -140,7 +137,7 @@ trait HasFarmerInfoComponents
 
                                     Select::make('municipality')
                                     ->label('Municipality')
-                                    ->required()
+                                    //->required()
                                     ->options(\App\Models\Municipality::whereNotNull('code')->pluck('municipality', 'code'))
                                     ->reactive()
                                     ->searchable()
@@ -150,7 +147,7 @@ trait HasFarmerInfoComponents
 
                                     Select::make('barangay')
                                     ->label('Barangay')
-                                    ->required()
+                                    //->required()
                                     ->searchable()
                                     ->reactive()
                                     ->options(function (callable $get) {
@@ -166,7 +163,7 @@ trait HasFarmerInfoComponents
 
                                     Select::make('purok')
                                     ->label('Purok')
-                                    ->required()
+                                    //->required()
                                     ->searchable()
                                     ->reactive()
                                     ->options(function (callable $get) {
@@ -188,11 +185,11 @@ trait HasFarmerInfoComponents
                                         'Male' => 'Male',
                                         'Female' => 'Female',
                                     ])
-                                    ->searchable()
-                                    ->required(),
+                                    ->searchable(),
+                                    //->required(),
 
                                     DatePicker::make('birthdate')
-                                    ->required()
+                                    //->required()
                                     ->reactive() // Enable reactivity to update the age dynamically
                                     ->debounce(500) // Add a delay of 500ms before the calculation
                                     ->afterStateUpdated(function (callable $set, $state) {
@@ -204,7 +201,7 @@ trait HasFarmerInfoComponents
                                     }),
 
                                 TextInput::make('age')
-                                    ->required()
+                                    //->required()
                                     ->maxLength(255)
                                     ->disabled()
                                     ->dehydrated(), // Make the age field read-only
@@ -217,29 +214,31 @@ trait HasFarmerInfoComponents
                                         'divorced' => 'Divorced',
                                     ])
                                     ->searchable()
-                                    ->required()
-                                    ->reactive() // Make the field reactive to changes
+                                    //->required()
+                                    ->visible(fn (Get $get): bool => $get('user_type') !== 'agricultural_professional')
+                                    ->reactive()
                                     ->afterStateUpdated(function (callable $set, $state) {
                                         if ($state === 'married') {
-                                            $set('spouse', null); // Clear the value for 'spouse'
+                                            $set('spouse', null);
                                         } else {
-                                            $set('spouse', 'N/A'); // Set 'N/A' if not married
+                                            $set('spouse', 'N/A');
                                         }
                                     }),
-                                
+
                                 TextInput::make('spouse')
                                     ->placeholder('If married, name of spouse')
-                                    // ->required()
                                     ->requiredIf('civil_status', 'married')
                                     ->maxLength(255)
-                                    ->reactive() // React to changes in civil_status
+                                    ->visible(fn (Get $get): bool => $get('user_type') !== 'agricultural_professional')
+                                    ->reactive()
                                     ->disabled(function (callable $get) {
-                                        return $get('civil_status') !== 'married'; // Disable if not married
+                                        return $get('civil_status') !== 'married';
                                     }),
 
                                     Select::make('ip')
                                     ->label('Ethnicity')
-                                    ->required()
+                                    //->required()
+                                    ->visible(fn (Get $get): bool => $get('user_type') !== 'agricultural_professional')
                                     ->options([
                                         'Non-ip' => 'Non-ip',
                                         'Bisaya' => 'Bisaya / Binisaya',
@@ -260,11 +259,12 @@ trait HasFarmerInfoComponents
                                     ->searchable()
                                     ,
 
-        
+
 
                                     Select::make('pwd')
                                     ->label('Disability')
-                                    ->required()
+                                    //->required()
+                                    ->visible(fn (Get $get): bool => $get('user_type') !== 'agricultural_professional')
                                     ->searchable()
                                     ->options([
                                         'No' => 'No',
@@ -300,7 +300,7 @@ trait HasFarmerInfoComponents
                                             TextInput::make('phone_no')
                                                 ->default($this->formData['phone_no'] ?? null)
                                                 ->maxLength(20)
-                                                ->required()
+                                                //->required()
                                                 ->label('Mobile No.'),
 
                                                 
@@ -308,7 +308,7 @@ trait HasFarmerInfoComponents
                                             TextInput::make('email_add')
                                                 ->default($this->formData['email_add'] ?? null)
                                                 ->email()
-                                                ->required()
+                                                //->required()
                                                 ->hidden($is_signup)
                                                 ->label('Email Add:'),
     
@@ -353,6 +353,7 @@ trait HasFarmerInfoComponents
 
 
                                 Tab::make('Bank Information')
+                                ->visible(fn (Get $get): bool => $get('user_type') !== 'agricultural_professional')
                                 ->schema([
                                     Grid::make()
                                       //  ->when($farmer != null, fn($grid) => $grid->relationship('contactId'))
@@ -381,6 +382,7 @@ trait HasFarmerInfoComponents
 
 
                                 Tab::make('Beneficiaries')
+                                ->visible(fn (Get $get): bool => $get('user_type') !== 'agricultural_professional')
                                 ->schema([
                                     Grid::make()
                                     //    ->when($farmer != null, fn($grid) => $grid->relationship('contactId'))
@@ -393,42 +395,42 @@ trait HasFarmerInfoComponents
                                         ->schema([
                                             
                                         TextInput::make('primary_beneficiaries')
-                                            ->required()
+                                            //->required()
                                             ->maxLength(255),
             
                                         TextInput::make('primary_beneficiaries_age')
                                             ->label('Age')
-                                            ->required()
+                                            //->required()
                                             ->maxLength(255),
             
                                         TextInput::make('primary_beneficiaries_relationship')
                                             ->label('Relationship')
-                                            ->required()
+                                            //->required()
                                             ->maxLength(255),
             
                                         TextInput::make('secondary_beneficiaries')
-                                            ->required()
+                                            //->required()
                                             ->maxLength(255),
             
                                         TextInput::make('secondary_beneficiaries_age')
                                             ->label('Age')
-                                            ->required()
+                                            //->required()
                                             ->maxLength(255),
             
                                         TextInput::make('secondary_beneficiaries_relationship')
                                             ->label('Relationship')
-                                            ->required()
+                                            //->required()
                                             ->maxLength(255),
 
 
                                             TextInput::make('assignee')
                                            
-                                            ->required()
+                                            //->required()
                                             ->maxLength(255),
 
                                             TextInput::make('reason_assignment')
                                            
-                                            ->required()
+                                            //->required()
                                             ->maxLength(255),
 
 

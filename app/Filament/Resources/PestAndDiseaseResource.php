@@ -28,6 +28,13 @@ use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
 
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use App\Services\FcmNotificationService;
+use Filament\Forms\Components\Textarea;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\Grid;
+use Filament\Infolists\Infolist;
 
 
 
@@ -141,29 +148,227 @@ class PestAndDiseaseResource extends Resource
     {
         return $table
         ->columns([
-            ImageColumn::make('qr_code')
-                ->label('QR Code')
-                ->height(50), // Adjust size as needed
+            // ImageColumn::make('qr_code')
+            //     ->label('QR Code')
+            //     ->height(50), // Adjust size as needed
+
+            Tables\Columns\ImageColumn::make('image_path')
+                ->label('Image')
+                ->disk('public')
+                ->height(60)
+                ->width(60)
+                ->square()
+                ->checkFileExistence(false)
+                ->extraImgAttributes(['class' => 'rounded-lg object-cover cursor-pointer hover:opacity-75 transition-opacity'])
+                ->action(
+                    Action::make('viewFromImage')
+                        ->modalHeading(fn (PestAndDisease $record) => "Detection: {$record->pest}")
+                        ->modalWidth('3xl')
+                        ->extraModalWindowAttributes(['class' => 'p-2'])
+                        ->modalContent(fn (PestAndDisease $record) => view('filament.resources.pest-and-disease.view-modal', ['record' => $record]))
+                        ->modalFooterActions(fn (PestAndDisease $record, Action $action) => [
+                            Action::make('approve')
+                                ->label('Approve')
+                                ->icon('heroicon-o-check-circle')
+                                ->color('success')
+                                ->size('lg')
+                                ->extraAttributes(['class' => 'px-8 py-3 mx-2'])
+                                ->requiresConfirmation()
+                                ->modalHeading('Approve Detection')
+                                ->modalDescription('Are you sure you want to approve this detection?')
+                                ->action(function () use ($record, $action) {
+                                    $record->update([
+                                        'validation_status' => 'approved',
+                                        'expert_comments' => null,
+                                        'validated_by' => Auth::id(),
+                                        'validated_at' => now(),
+                                    ]);
+
+                                    // Send FCM notification to farmer
+                                    if ($record->app_no) {
+                                        FcmNotificationService::sendValidationNotification(
+                                            $record->app_no,
+                                            'approved',
+                                            $record->pest,
+                                            $record->id
+                                        );
+                                    }
+
+                                    Notification::make()
+                                        ->title('Detection Approved')
+                                        ->success()
+                                        ->send();
+                                    $action->cancel();
+                                })
+                                ->visible(fn () => $record->validation_status !== 'approved'),
+
+                            Action::make('disapprove')
+                                ->label('Disapprove')
+                                ->icon('heroicon-o-x-circle')
+                                ->color('danger')
+                                ->size('lg')
+                                ->extraAttributes(['class' => 'px-8 py-3 mx-2'])
+                                ->form([
+                                    Textarea::make('expert_comments')
+                                        ->label('Comments (Required)')
+                                        ->placeholder('Please provide reason for disapproval...')
+                                        ->required()
+                                        ->rows(3),
+                                ])
+                                ->action(function (array $data) use ($record, $action) {
+                                    $record->update([
+                                        'validation_status' => 'disapproved',
+                                        'expert_comments' => $data['expert_comments'],
+                                        'validated_by' => Auth::id(),
+                                        'validated_at' => now(),
+                                    ]);
+
+                                    // Send FCM notification to farmer
+                                    if ($record->app_no) {
+                                        FcmNotificationService::sendValidationNotification(
+                                            $record->app_no,
+                                            'disapproved',
+                                            $record->pest,
+                                            $record->id,
+                                            $data['expert_comments']
+                                        );
+                                    }
+
+                                    Notification::make()
+                                        ->title('Detection Disapproved')
+                                        ->body('Comments have been saved.')
+                                        ->warning()
+                                        ->send();
+                                    $action->cancel();
+                                })
+                                ->visible(fn () => $record->validation_status !== 'disapproved'),
+                        ])
+                        ->modalFooterActionsAlignment(\Filament\Support\Enums\Alignment::Center)
+                ),
 
             Tables\Columns\TextColumn::make('date_detected')->date(),
-            // Tables\Columns\TextColumn::make('farmer.firstname')->label('Farmer'),
-            Tables\Columns\TextColumn::make('farm.name')->label('Farm Name'),
-           
-        
-            Tables\Columns\TextColumn::make('type'),
-            Tables\Columns\TextColumn::make('name'),
+            Tables\Columns\TextColumn::make('pest'),
             Tables\Columns\TextColumn::make('severity')->badge(),
-        //    Tables\Columns\ImageColumn::make('image_url')->label('Image'),
-            Tables\Columns\TextColumn::make('diagnosis_result'),
-            Tables\Columns\TextColumn::make('recommended_treatment'),
-            Tables\Columns\TextColumn::make('treatment_status'),
+            Tables\Columns\TextColumn::make('confidence')
+                ->label('Confidence')
+                ->suffix('%'),
+            Tables\Columns\TextColumn::make('validation_status')
+                ->label('Status')
+                ->badge()
+                ->color(fn (string $state): string => match ($state) {
+                    'pending' => 'warning',
+                    'approved' => 'success',
+                    'disapproved' => 'danger',
+                }),
+            Tables\Columns\TextColumn::make('validator.name')
+                ->label('Validated By')
+                ->placeholder('—'),
         ])
         ->filters([
-            //
+            Tables\Filters\SelectFilter::make('validation_status')
+                ->label('Status')
+                ->options([
+                    'pending' => 'Pending',
+                    'approved' => 'Approved',
+                    'disapproved' => 'Disapproved',
+                ]),
         ])
         ->actions([
-            Tables\Actions\EditAction::make(),
-            Tables\Actions\DeleteAction::make(),
+            Tables\Actions\ActionGroup::make([
+                Action::make('view')
+                    ->label('View Details')
+                    ->icon('heroicon-o-eye')
+                    ->color('info')
+                    ->modalHeading(fn (PestAndDisease $record) => "Detection: {$record->pest}")
+                    ->modalWidth('3xl')
+                    ->extraModalWindowAttributes(['class' => 'p-2'])
+                    ->modalContent(fn (PestAndDisease $record) => view('filament.resources.pest-and-disease.view-modal', ['record' => $record]))
+                    ->modalFooterActions(fn (PestAndDisease $record, Action $action) => [
+                        Action::make('approve')
+                            ->label('Approve')
+                            ->icon('heroicon-o-check-circle')
+                            ->color('success')
+                            ->size('lg')
+                            ->extraAttributes(['class' => 'px-8 py-3 mx-2'])
+                            ->requiresConfirmation()
+                            ->modalHeading('Approve Detection')
+                            ->modalDescription('Are you sure you want to approve this detection?')
+                            ->action(function () use ($record, $action) {
+                                $record->update([
+                                    'validation_status' => 'approved',
+                                    'expert_comments' => null,
+                                    'validated_by' => Auth::id(),
+                                    'validated_at' => now(),
+                                ]);
+
+                                // Send FCM notification to farmer
+                                if ($record->app_no) {
+                                    FcmNotificationService::sendValidationNotification(
+                                        $record->app_no,
+                                        'approved',
+                                        $record->pest,
+                                        $record->id
+                                    );
+                                }
+
+                                Notification::make()
+                                    ->title('Detection Approved')
+                                    ->success()
+                                    ->send();
+                                $action->cancel();
+                            })
+                            ->visible(fn () => $record->validation_status !== 'approved'),
+
+                        Action::make('disapprove')
+                            ->label('Disapprove')
+                            ->icon('heroicon-o-x-circle')
+                            ->color('danger')
+                            ->size('lg')
+                            ->extraAttributes(['class' => 'px-8 py-3 mx-2'])
+                            ->form([
+                                Textarea::make('expert_comments')
+                                    ->label('Comments (Required)')
+                                    ->placeholder('Please provide reason for disapproval...')
+                                    ->required()
+                                    ->rows(3),
+                            ])
+                            ->action(function (array $data) use ($record, $action) {
+                                $record->update([
+                                    'validation_status' => 'disapproved',
+                                    'expert_comments' => $data['expert_comments'],
+                                    'validated_by' => Auth::id(),
+                                    'validated_at' => now(),
+                                ]);
+
+                                // Send FCM notification to farmer
+                                if ($record->app_no) {
+                                    FcmNotificationService::sendValidationNotification(
+                                        $record->app_no,
+                                        'disapproved',
+                                        $record->pest,
+                                        $record->id,
+                                        $data['expert_comments']
+                                    );
+                                }
+
+                                Notification::make()
+                                    ->title('Detection Disapproved')
+                                    ->body('Comments have been saved.')
+                                    ->warning()
+                                    ->send();
+                                $action->cancel();
+                            })
+                            ->visible(fn () => $record->validation_status !== 'disapproved'),
+                    ])
+                    ->modalFooterActionsAlignment(\Filament\Support\Enums\Alignment::Center),
+                Tables\Actions\DeleteAction::make(),
+            ])
+                ->icon('heroicon-m-ellipsis-vertical')
+                ->tooltip('Actions')
+                ->button()
+                ->color('gray')
+                ->label('')
+          
             // Action::make('qr-action')
             // ->fillForm(fn(Model $record) => [
             //     'qr-options' => \LaraZeus\Qr\Facades\Qr::getDefaultOptions(),// or $record->qr-options
@@ -171,48 +376,51 @@ class PestAndDiseaseResource extends Resource
             // ])
             // ->form(\LaraZeus\Qr\Facades\Qr::getFormSchema('qr-data', 'qr-options'))
             // ->action(fn($data) => dd($data)),
-            Action::make('Generate QR')
-    ->icon('heroicon-o-qr-code')
-    ->color('success')
-    ->action(function (Model $record) {
-        try {
-            $folder = 'pest_disease_qr';
-            if (!Storage::disk('public')->exists($folder)) {
-                Storage::disk('public')->makeDirectory($folder);
-            }
+    //         Action::make('Generate QR')
+    // ->icon('heroicon-o-qr-code')
+    // ->color('success')
+    // ->action(function (Model $record) {
+    //     try {
+    //         $folder = 'pest_disease_qr';
+    //         if (!Storage::disk('public')->exists($folder)) {
+    //             Storage::disk('public')->makeDirectory($folder);
+    //         }
 
-            $fileName = "{$folder}/case_{$record->id}.png";
+    //         $fileName = "{$folder}/case_{$record->id}.png";
 
-            $builder = new BuilderRegistry();
-            $builder = $builder->getBuilder(PngWriter::class);
+    //         $builder = new BuilderRegistry();
+    //         $builder = $builder->getBuilder(PngWriter::class);
 
-            $result = $builder
-                ->data("Pest/Disease Case ID: {$record->id}")
-                ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
-                ->size(300)
-                ->margin(10)
-                ->build();
+    //         $result = $builder
+    //             ->data("Pest/Disease Case ID: {$record->id}")
+    //             ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
+    //             ->size(300)
+    //             ->margin(10)
+    //             ->build();
 
-            Storage::disk('public')->put($fileName, $result->getString());
-            $record->update(['qr_code' => $fileName]);
+    //         Storage::disk('public')->put($fileName, $result->getString());
+    //         $record->update(['qr_code' => $fileName]);
 
-            \Filament\Notifications\Notification::make()
-                ->title('QR Code Generated ✅')
-                ->success()
-                ->body('QR Code for this record has been successfully generated.')
-                ->send();
-        } catch (\Throwable $th) {
-            \Filament\Notifications\Notification::make()
-                ->title('QR Code Generation Failed ⚠️')
-                ->body($th->getMessage())
-                ->danger()
-                ->send();
-        }
-    }),
+    //         \Filament\Notifications\Notification::make()
+    //             ->title('QR Code Generated ✅')
+    //             ->success()
+    //             ->body('QR Code for this record has been successfully generated.')
+    //             ->send();
+    //     } catch (\Throwable $th) {
+    //         \Filament\Notifications\Notification::make()
+    //             ->title('QR Code Generation Failed ⚠️')
+    //             ->body($th->getMessage())
+    //             ->danger()
+    //             ->send();
+    //     }
+    // }),
         ])
+          ->actionsColumnLabel('Action') // ✅ this adds the header label
         ->bulkActions([
             Tables\Actions\DeleteBulkAction::make(),
-        ]);
+        ])
+        ->poll('10s') // Auto-refresh every 10 seconds when Flutter syncs new data
+        ->defaultSort('date_detected', 'desc');
     }
 
     public static function getRelations(): array

@@ -3,6 +3,7 @@
 namespace App\Filament\Pages\Componets;
 
 use App\Models\Farmer;
+use Filament\Forms\Get;
 use Livewire\Component;
 use Filament\Pages\Page;
 use Illuminate\Support\HtmlString;
@@ -76,6 +77,7 @@ class FarmerForm
                     ,
 
                 $this->Step_FarmInfo()
+                    ->visible(fn (Get $get): bool => ($get('user_type') ?? 'farmer') !== 'agricultural_professional')
                     ->afterValidation(fn(Component $livewire) => $this->saveStepData($livewire))
                     ,
 
@@ -133,16 +135,16 @@ class FarmerForm
                 // modify $this->data in CreatePersonnel->finalSave() accordingly
                 //
                 // ->statePath('data')
+            ->submitAction(new HtmlString(Blade::render(<<<BLADE
+                <x-filament::button
+                    type="submit"
+                    size="sm"
+                    wire:click="create"
+                >
+                    Save Changes
+                </x-filament::button>
+            BLADE)))
 
-                ->submitAction(new HtmlString(Blade::render(<<<BLADE
-                    <x-filament::button
-                        type="button"
-                        size="sm"
-                        wire:click="finalSave"
-                    >
-                        Save
-                    </x-filament::button>
-                BLADE)))
                 ,
         ];
     }

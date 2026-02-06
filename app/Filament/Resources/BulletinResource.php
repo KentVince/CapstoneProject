@@ -2,144 +2,107 @@
 
 namespace App\Filament\Resources;
 
+use App\Models\Bulletin;
 use Filament\Forms;
 use Filament\Tables;
-use App\Models\Bulletin;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
+use Filament\Notifications\Notification;
 use Filament\Forms\Components\Section;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\RichEditor;
 use App\Filament\Resources\BulletinResource\Pages;
-use App\Helpers\FirebaseNotification; // ✅ Added this import
+use Illuminate\Support\Facades\Auth;
 
 class BulletinResource extends Resource
 {
     protected static ?string $model = Bulletin::class;
-    protected static ?string $navigationIcon = 'heroicon-o-information-circle';
-    protected static ?string $navigationLabel = 'Bulletins / Announcements';
+
+    protected static ?string $navigationIcon = 'heroicon-o-megaphone';
+    protected static ?string $navigationLabel = 'Bulletins';
     protected static ?string $pluralModelLabel = 'Bulletins';
+    protected static ?string $navigationGroup = 'Information Center';
+    protected static ?int $navigationSort = 5;
 
     public static function form(Form $form): Form
     {
         return $form->schema([
             Section::make('Bulletin Details')
-                ->columns([
-                    'md' => 1,
-                    'lg' => 1,
-                    '2xl' => 1,
-                ])
+                ->description('Create or update public announcements, events, or notices.')
                 ->schema([
-                    Forms\Components\Hidden::make('created_by')
-                        ->default(fn() => auth()->id()),
+                    TextInput::make('title')
+                        ->label('Title')
+                        ->required()
+                        ->maxLength(255),
 
-                    Forms\Components\Select::make('category')
+                    Select::make('category')
                         ->label('Category')
                         ->options([
                             'Announcement' => 'Announcement',
                             'Event' => 'Event',
                             'Notice' => 'Notice',
                         ])
+                        ->default('Announcement')
                         ->required(),
 
-                    Forms\Components\TextInput::make('title')
-                        ->label('Title')
-                        ->required()
-                        ->maxLength(255),
+                    DatePicker::make('date_posted')
+                        ->label('Date Posted')
+                        ->default(now())
+                        ->required(),
 
-                    Forms\Components\Textarea::make('content')
+                    RichEditor::make('content')
                         ->label('Content')
                         ->required()
-                        ->rows(4),
-
-                    Forms\Components\Hidden::make('date_posted')
-                        ->label('Date Posted'),
-
-                    // ✅ Updated toggle with Firebase Notification
-                    Forms\Components\Toggle::make('notification_sent')
-                        ->label('Send Notification')
-                        ->default(false)
-                        ->reactive()
-                        ->afterStateUpdated(function (callable $set, $state, $record) {
-                            if ($state) {
-                                // Automatically set date_posted
-                                $set('date_posted', now()->toDateString());
-
-                                // ✅ Send push notification
-                                // try {
-                                //     FirebaseNotification::send(
-                                //         $record->title ?? 'New Announcement',
-                                //         $record->content ?? 'A new CAFARM bulletin is available.'
-                                //     );
-                                // } catch (\Throwable $e) {
-                                //     \Log::error('❌ Firebase Notification Error: ' . $e->getMessage());
-                                    
-                                // }
-                                 // ✅ Send notification
-                            FirebaseNotification::send(
-                                $record->category . ' Update',
-                                $record->title
-                            );
-
-
-                            } else {
-                                $set('date_posted', null);
-                            }
-                        }),
-                ]),
+                        ->toolbarButtons([
+                            'bold', 'italic', 'underline', 'bulletList',
+                            'orderedList', 'link', 'undo', 'redo',
+                        ]),
+                ])
+                ->columns(2),
         ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table->columns([
-            Tables\Columns\TextColumn::make('category')
-                ->label('Category')
-                ->sortable()
-                ->badge(),
-
             Tables\Columns\TextColumn::make('title')
                 ->label('Title')
                 ->searchable()
-                ->limit(50),
-
-            Tables\Columns\TextColumn::make('content')
-                ->label('Content')
-                ->limit(80)
+                ->sortable()
+                ->limit(40)
                 ->wrap(),
 
-            Tables\Columns\BooleanColumn::make('notification_sent')
-                ->label('Notified'),
+            Tables\Columns\TextColumn::make('category')
+                ->label('Category')
+                ->badge()
+                ->colors([
+                    'success' => 'Event',
+                    'warning' => 'Notice',
+                    'info' => 'Announcement',
+                ]),
 
             Tables\Columns\TextColumn::make('date_posted')
-                ->label('Date Posted')
-                ->date('M d, Y')
+                ->label('Posted On')
+                ->date('Y-m-d')
+                ->sortable(),
+
+            Tables\Columns\TextColumn::make('created_by')
+                ->label('Posted By')
+                ->formatStateUsing(fn ($state) => $state ?? 'Admin')
                 ->sortable(),
         ])
-        ->filters([])
-        // ->actions([
-        //     Tables\Actions\EditAction::make(),
-        // ])
-
-            ->actions([
-                    Tables\Actions\ActionGroup::make([
-                        Tables\Actions\ViewAction::make(),
-                        Tables\Actions\EditAction::make(),
-                        Tables\Actions\DeleteAction::make(),
-                    ])
-                    ->icon('heroicon-m-ellipsis-vertical')
-                    ->tooltip('Actions')
-                    ->button()
-                    ->color('yellow')
-                    ->label('') // no button text
-                ])
-                ->actionsColumnLabel('Action') // ✅ this adds the header label
-
-
+        ->actions([
+            Tables\Actions\EditAction::make(),
+            Tables\Actions\DeleteAction::make(),
+        ])
         ->bulkActions([
-            Tables\Actions\BulkActionGroup::make([
-                Tables\Actions\DeleteBulkAction::make(),
-            ]),
-        ]);
+            Tables\Actions\DeleteBulkAction::make(),
+        ])
+        ->defaultSort('date_posted', 'desc');
     }
 
     public static function getRelations(): array
@@ -151,7 +114,33 @@ class BulletinResource extends Resource
     {
         return [
             'index' => Pages\ListBulletins::route('/'),
-            'edit'  => Pages\EditBulletin::route('/{record}/edit'),
+            'create' => Pages\CreateBulletin::route('/create'),
+            'edit' => Pages\EditBulletin::route('/{record}/edit'),
         ];
+    }
+
+    /**
+     * 🧠 Hook before save to auto-fill author and send notification flag
+     */
+    public static function beforeSave(Bulletin $record): void
+    {
+        if (! $record->created_by) {
+            $record->created_by = Auth::user()->name ?? 'System';
+        }
+
+        // Reset notification flag to false (for mobile push later)
+        $record->notification_sent = false;
+    }
+
+    /**
+     * 📢 After saving, show success toast in Filament
+     */
+    public static function afterSave(Bulletin $record): void
+    {
+        Notification::make()
+            ->title('Bulletin Saved Successfully ✅')
+            ->body("Bulletin <b>{$record->title}</b> has been posted.")
+            ->success()
+            ->send();
     }
 }

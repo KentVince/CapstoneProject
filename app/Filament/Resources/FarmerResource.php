@@ -15,6 +15,7 @@ use App\Filament\Pages\Componets\FarmerForm;
 use App\Filament\Resources\FarmerResource\Pages;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Builder;
 
 class FarmerResource extends Resource implements HasShieldPermissions
 {
@@ -51,7 +52,10 @@ class FarmerResource extends Resource implements HasShieldPermissions
                         ->visible(fn ($record) => filled($record?->qr_code)),
                 ])
                 ->collapsible(),
+
+                
         ]);
+        
     }
 
 public static function table(Table $table): Table
@@ -79,29 +83,54 @@ public static function table(Table $table): Table
                 ->getStateUsing(fn ($record) => $record->app_no)
                 ->url(fn ($record): string => FarmerResource::getUrl('edit', ['record' => $record])),
 
-            Tables\Columns\TextColumn::make('lastname')
-                ->label('Last Name')
-                ->searchable(),
+        Tables\Columns\TextColumn::make('full_name')
+            ->label('Full Name')
+            ->getStateUsing(function ($record) {
+                $middleInitial = $record->middlename ? strtoupper(substr($record->middlename, 0, 1)) . '.' : '';
+                return "{$record->lastname}, {$record->firstname} {$middleInitial}";
+            })
+            ->searchable(['lastname', 'firstname', 'middlename'])
+            ->sortable(['lastname', 'firstname', 'middlename']),
 
-            Tables\Columns\TextColumn::make('firstname')
-                ->label('First Name')
-                ->searchable(),
+        Tables\Columns\TextColumn::make('barangay_name')
+            ->label('Barangay')
+            ->sortable()
+            ->searchable(query: function ($query, $search) {
+                $query->whereHas('barangayData', function ($q) use ($search) {
+                    $q->where('barangay', 'like', "%{$search}%");
+                });
+            }),
 
-            Tables\Columns\TextColumn::make('barangay')
-                ->label('Barangay')
-                ->searchable(),
 
-            Tables\Columns\TextColumn::make('created_at')
-                ->label('Date Added')
-                ->date('M d, Y')
+
+            Tables\Columns\TextColumn::make('phone_no')
+                ->label('phone_no')
+             
                 ->sortable(),
         ])
         ->recordUrl(null) // ✅ disables full-row redirect
 
 
         ->actions([
-            Tables\Actions\EditAction::make(),
+            
+
+             Tables\Actions\ActionGroup::make([
+                     
+                        Tables\Actions\EditAction::make(),
+                        Tables\Actions\DeleteAction::make(),
+                        
+                    ])
+                     ->icon('heroicon-m-ellipsis-vertical')
+                    ->tooltip('Actions')
+                    ->button()
+                    ->color('gray')
+                    ->label('') // no button text
+
+
+
+
         ])
+           ->actionsColumnLabel('Action') // ✅ this adds the header label
 
             
         

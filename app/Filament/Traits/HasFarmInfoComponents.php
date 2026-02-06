@@ -54,8 +54,12 @@ trait HasFarmInfoComponents
                                     ])
                                     ->schema([
 
-                                        TextInput::make('name')->label('Name of Farm')->required(),
-                                        TextInput::make('lot_hectare')->required(),
+                                        TextInput::make('name')->label('Name of Farm')
+                                        // ->required()
+                                        ,
+                                        TextInput::make('lot_hectare')
+                                        // ->required()
+                                        ,
 
 
                                         Select::make('province')
@@ -79,7 +83,7 @@ trait HasFarmInfoComponents
 
                                     Select::make('municipality')
                                     ->label('Municipality')
-                                    ->required()
+                                    // ->required()
                                     ->default('01') // Set the default municipality code to '01' (Compostela)
                                     ->options(\App\Models\Municipality::whereNotNull('code')->pluck('municipality', 'code'))
                                     ->disabled() // Disable the field so it cannot be edited
@@ -90,7 +94,7 @@ trait HasFarmInfoComponents
 
                                     Select::make('barangay')
                                     ->label('Barangay')
-                                    ->required()
+                                    // ->required()
                                     ->searchable()
                                     ->reactive()
                                     ->options(function (callable $get) {
@@ -106,7 +110,7 @@ trait HasFarmInfoComponents
 
                                     Select::make('purok')
                                     ->label('Purok')
-                                    ->required()
+                                    // ->required()
                                     ->searchable()
                                     ->reactive()
                                     ->options(function (callable $get) {
@@ -141,18 +145,24 @@ trait HasFarmInfoComponents
                                                  ->schema([
 
 
-                                                    TextInput::make('latitude')->required()
+                                                    TextInput::make('latitude')
+                                                    // ->required()
                                                     ->default($this->formData['latitude'] ?? null),
-                                                    TextInput::make('longitude')->required()
+                                                    TextInput::make('longitude')
+                                                    // ->required()
                                                     ->default($this->formData['longitude'] ?? null),
 
-                                                    TextInput::make('north')->required()
+                                                    TextInput::make('north')
+                                                    // ->required()
                                                     ->default($this->formData['north'] ?? null),
-                                                    TextInput::make('south')->required()
+                                                    TextInput::make('south')
+                                                    // ->required()
                                                     ->default($this->formData['south'] ?? null),
-                                                    TextInput::make('east')->required()
+                                                    TextInput::make('east')
+                                                    // ->required()
                                                     ->default($this->formData['east'] ?? null),
-                                                    TextInput::make('west')->required()
+                                                    TextInput::make('west')
+                                                    // ->required()
                                                     ->default($this->formData['west'] ?? null),
 
 
@@ -178,13 +188,18 @@ trait HasFarmInfoComponents
 
 
 
-                                            TextInput::make('variety')->required()
+                                            TextInput::make('variety')
+                                            // ->required()
                                             ->default($this->formData['variety'] ?? null),
-                                            TextInput::make('planning_method')->required(),
+                                            TextInput::make('planning_method')
+                                            // ->required()
+                                            ,
 
                                             DatePicker::make('date_of_sowing'),
                                             DatePicker::make('date_of_planning'),
-                                            TextInput::make('population_density')->required(),
+                                            TextInput::make('population_density')
+                                            // ->required()
+                                            ,
 
                                         ])
                                         ->icon('heroicon-o-calendar-date-range'),
@@ -201,8 +216,12 @@ trait HasFarmInfoComponents
 
 
 
-                                            TextInput::make('age_group')->required(),
-                                            TextInput::make('no_of_hills')->required(),
+                                            TextInput::make('age_group')
+                                            // ->required()
+                                            ,
+                                            TextInput::make('no_of_hills')
+                                            // ->required()
+                                            ,
 
 
                                         ])
@@ -219,11 +238,21 @@ trait HasFarmInfoComponents
 
 
 
-                                            TextInput::make('land_category')->required(),
-                                            TextInput::make('soil_type')->required(),
-                                            TextInput::make('topography')->required(),
-                                            TextInput::make('source_of_irrigation')->required(),
-                                            TextInput::make('tenurial_status')->required(),
+                                            TextInput::make('land_category')
+                                            // ->required()
+                                            ,
+                                            TextInput::make('soil_type')
+                                            // ->required()
+                                            ,
+                                            TextInput::make('topography')
+                                            // ->required()
+                                            ,
+                                            TextInput::make('source_of_irrigation')
+                                            // ->required()
+                                            ,
+                                            TextInput::make('tenurial_status')
+                                            // ->required()
+                                            ,
 
 
 

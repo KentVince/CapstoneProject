@@ -41,19 +41,28 @@ class PestAndDisease extends Model
 
 
     // ✅ Mass-assignable fields (QR code fields removed)
-protected $fillable = [
-    'date_detected',
-    'pest',
-    'severity',
-    'image_url',
-    'latitude',
-    'longitude',
-    'area',
-    'confidence',
-];
+
+
+
+    protected $fillable = [
+        'app_no',
+        'pest',
+        'confidence',
+        'latitude',
+        'longitude',
+        'area',
+        'date_detected',
+        'severity',
+        'image_path',
+        'validation_status',
+        'expert_comments',
+        'validated_by',
+        'validated_at',
+    ];
 
     protected $casts = [
         'options' => 'array',
+        'validated_at' => 'datetime',
     ];
 
     /**
@@ -78,5 +87,13 @@ protected $fillable = [
     public function category()
     {
         return $this->belongsTo(PestAndDiseaseCategory::class, 'category_id');
+    }
+
+    /**
+     * Relationship: PestAndDisease validated by a User (Expert)
+     */
+    public function validator()
+    {
+        return $this->belongsTo(User::class, 'validated_by', 'id');
     }
 }

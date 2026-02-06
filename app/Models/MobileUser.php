@@ -19,6 +19,7 @@ class MobileUser extends Authenticatable
         'barangay',
         'contact_no',
         'email',
+        'fcm_token',
         'farm_location',
         'farm_size',
     ];

@@ -24,7 +24,7 @@ class QRCodeGenerator
         // Save QR Code to public storage
         $filePath = 'qr-codes/' . uniqid() . '.png';
         $result->saveToFile(public_path($filePath));
-
+        
         // Return the public URL of the QR Code
         return asset($filePath);
     }

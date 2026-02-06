@@ -10,6 +10,12 @@ class ListPestAndDiseases extends ListRecords
 {
     protected static string $resource = PestAndDiseaseResource::class;
 
+    // Auto-refresh table every 10 seconds when Flutter syncs new data
+    protected function getTablePollingInterval(): ?string
+    {
+        return '10s';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

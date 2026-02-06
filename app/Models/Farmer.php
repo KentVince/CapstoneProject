@@ -29,6 +29,43 @@ class Farmer extends Model
 
     protected $table = 'farmers';
     protected $guarded = ['name'];
+    protected $fillable = [
+        'app_no',
+        'user_type',
+        'agency',
+        'date_of_application',
+        'funding_source',
+        'lastname',
+        'firstname',
+        'middlename',
+        'municipality',
+        'barangay',
+        'purok',
+        'sex',
+        'birthdate',
+        'age',
+        'civil_status',
+        'spouse',
+        'ip',
+        'pwd',
+        'phone_no',
+        'email_add',
+        'bank_name',
+        'bank_account_no',
+        'bank_branch',
+        'primary_beneficiaries',
+        'primary_beneficiaries_age',
+        'primary_beneficiaries_relationship',
+        'secondary_beneficiaries',
+        'secondary_beneficiaries_age',
+        'secondary_beneficiaries_relationship',
+        'assignee',
+        'reason_assignment',
+        'crop',
+        'province',
+        'user_id',
+        'qr_code',
+    ];
 
     /*
     |--------------------------------------------------------------------------
@@ -59,7 +96,15 @@ class Farmer extends Model
     {
         return $this->hasOne(Farm::class, 'farmer_id', 'id');
     }
+public function barangayData()
+{
+    return $this->belongsTo(Barangay::class, 'barangay', 'code');
+}
 
+public function getBarangayNameAttribute(): ?string
+{
+    return optional($this->barangayData)->barangay;
+}
     /*
     |--------------------------------------------------------------------------
     | QR Code Auto-Generation (Endroid)

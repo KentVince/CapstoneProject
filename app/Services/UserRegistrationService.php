@@ -24,7 +24,11 @@ class UserRegistrationService
             // dd($data);
             $user = $this->createUser($data);
             $farmer = $this->createFarmer($data, $user);
-            $this->createFarm($data, $user);
+
+            $userType = $data['user_type'] ?? 'farmer';
+            if ($userType !== 'agricultural_professional') {
+                $this->createFarm($data, $user);
+            }
            // $this->createFarmerNames($data, $farmer);
            // $this->createFarmerInfo($data, $farmer);
 
@@ -92,6 +96,8 @@ class UserRegistrationService
         return Farmer::create([
            'user_id' => $user->id,
            'app_no' => $data['app_no'] ?? '',
+           'user_type' => $data['user_type'] ?? 'farmer',
+           'agency' => $data['agency'] ?? null,
            'crop' => $data['crop'] ?? '',
            'funding_source' => $data['funding_source'] ?? '',
            'date_of_application' => $data['date_of_application'] ?? '',

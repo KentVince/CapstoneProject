@@ -4,301 +4,720 @@
 
 @config 'tailwind.config.js';
 
-
+/* ================================================================================================ */
+/* SIDEBAR STYLES */
+/* ================================================================================================ */
 
 .fi-sidebar,
 .fi-sidebar-header {
-    /* background: white;
-    border-right: 1px solid #E4E4E5; */
-
-    /* @apply dark:bg-gradient-to-b from-blue-800  to-red-700;
-    @apply bg-gradient-to-t from-blue-800 to-red-700 ; */
-
+    
     @apply bg-custom-color-sidebar;
     @apply dark:bg-custom-color-sidebar;
 }
 
 .fi-body {
-    @apply bg-gray-950;
+    @apply bg-gray-100;
+    @apply dark:bg-gray-950;
 }
 
 .fi-logo {
     @apply text-white;
 }
+.dark\:text-gray-500:is(.dark *) {
+  --tw-text-opacity: 1;
+  color: rgb(200 122 29);
+}
 
-.fi-sidebar-item-icon, .fi-sidebar-item-label {
+.fi-sidebar-item-icon{
+    color: rgb(200 122 29);
+}
+
+ .fi-sidebar-item-label {
     @apply text-white;
-    @apply dark:text-white;
 }
 
 .fi-sidebar-group-button > .fi-sidebar-group-label {
-    @apply text-amber-500;
-    @apply dark:text-amber-500;
+    @apply text-emerald-100;
+    @apply dark:text-emerald-400;
 }
 
 .fi-sidebar-item.fi-active > .fi-sidebar-item-button {
-    @apply bg-gray-900/30;
+    @apply bg-emerald-700/50;
+    @apply dark:bg-emerald-600/30;
 }
 
-.fi-sidebar-item-button:hover{
-    @apply bg-blue-900/90;
+.fi-sidebar-item-button:hover {
+    @apply bg-emerald-700/40;
+    @apply dark:bg-emerald-700/50;
 }
 
-
+/* ================================================================================================ */
+/* LAYOUT STYLES */
+/* ================================================================================================ */
 
 .fi-simple-layout {
-
-    @apply bg-gradient-to-r from-green-800 dark:bg-green-800/80;;
+    @apply bg-gradient-to-br from-emerald-100 to-emerald-200;
+    @apply dark:bg-gradient-to-r dark:from-green-800 dark:bg-green-800/80;
 }
 
 .fi-simple-main {
-
-    @apply bg-gray-950/10;
+    @apply bg-white/90;
     @apply dark:bg-gray-950/10;
     @apply shadow-2xl;
 }
 
-/* .fi-simple-main > .fi-simple-page > .grid > .fi-form > .fi-form-actions > .fi-ac > button{
-    @apply bg-white;
-    @apply text-gray-700;
-    @apply rounded-full;
-} */
-
-.fi-simple-main > .fi-simple-page > .grid > .fi-form > .fi-form-actions > .fi-ac > button{
-    @apply bg-white;
-    @apply text-gray-700;
+.fi-simple-main > .fi-simple-page > .grid > .fi-form > .fi-form-actions > .fi-ac > button {
+    @apply bg-emerald-500;
+    @apply dark:bg-white;
+    @apply text-white;
+    @apply dark:text-gray-700;
     @apply rounded-full;
 }
 
-.fi-simple-main >  .fi-simple-page > .grid > .fi-simple-header > div,
-.fi-simple-main >  .fi-simple-page > .grid > .fi-simple-header > h1,
-.fi-simple-main >  .fi-simple-page > .grid > form > div > div > .fi-fo-field-wrp > div.grid > div.flex > .fi-fo-field-wrp-label > span
-{
-    @apply text-white;
+.fi-simple-main > .fi-simple-page > .grid > .fi-simple-header > div,
+.fi-simple-main > .fi-simple-page > .grid > .fi-simple-header > h1,
+.fi-simple-main > .fi-simple-page > .grid > form > div > div > .fi-fo-field-wrp > div.grid > div.flex > .fi-fo-field-wrp-label > span {
+    @apply text-emerald-800;
+    @apply dark:text-white;
 }
 
 .fi-header-heading {
-    @apply text-white;
-    /* @apply dark:text-blue-600; */
+    @apply text-emerald-800;
+    @apply dark:text-white;
     @apply uppercase;
-
 }
 
+/* Main Layout Background */
 .fi-layout {
-    /* @apply bg-indigo-500 */
-
-    /* @apply bg-gray-200/50;
-    @apply dark:bg-gray-800/50; */
-    /* background-image: url('/public/images/bg.jpg'); */
-
-    @apply dark:bg-gradient-to-br dark:from-green-900/90 from-30% dark:via-green-800/80 dark:to-green-900/100 dark:to-60%;
-    @apply bg-gradient-to-br from-green-900/90 from-30% via-green-900/80 to-green-950/100 to-60%;
-    /* @apply bg-gradient-to-t from-blue-800 to-red-700 ; */
+    @apply bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50;
+    @apply dark:bg-gradient-to-br dark:from-green-900/90 dark:from-30% dark:via-green-800/80 dark:to-green-900/100 dark:to-60%;
 }
 
-.fi-ta{
-    /* @apply shadow-2xl;
-    @apply dark:shadow-xl;
-
-    @apply dark:shadow-gray-700;
-    @apply shadow-gray-800; */
-}
-.fi-ta-table,
-.fi-ta-table > tbody,
-.fi-ta-table > thead
- {
-    @apply divide-white/5;
+/* Top Navigation */
+.fi-topbar > nav {
+    @apply bg-custom-color-topnav;
+    @apply dark:bg-custom-color-topnav;
 }
 
-.fi-ta-row
-{
-    @apply hover:bg-white/5;
+/* ================================================================================================ */
+/* MODERN TABLE STYLES */
+/* ================================================================================================ */
+
+/* Table Container - Card Style */
+.fi-ta {
+    @apply rounded-2xl;
+    @apply shadow-xl;
+    @apply relative;
+    background-color: #fefef1;
+    @apply border border-gray-200;
+    @apply dark:border-white/10;
+    @apply dark:shadow-black/20;
+}
+
+.dark .fi-ta {
+    background-color: #003432;
 }
 
 .fi-ta-ctn {
-    @apply dark:bg-transparent;
-    @apply bg-transparent;
-    @apply dark:ring-0;
+    background-color: #fefef1;
     @apply ring-0;
-    @apply divide-white/5;
-
+    @apply rounded-2xl;
+    @apply overflow-hidden;
 }
 
+.dark .fi-ta-ctn {
+    background-color: #003432;
+}
+
+/* Table Header Container */
 .fi-ta-header-ctn {
-    @apply bg-gray-700/80;
-    @apply dark:bg-transparent;
-    @apply bg-transparent;
-    @apply outline-none;
-
-
+    background-color: #fefef1;
+    @apply border-b border-gray-200;
+    @apply dark:border-white/10;
+    @apply px-3 py-3;
 }
 
-
-
-
-
-
-/* .fi-ta-header-cell {
-    @apply dark:bg-gray-700/80;
-
-} */
- .fi-ta-table > thead > tr,
- .fi-pagination {
-    @apply dark:bg-sky-300/20;
-    @apply bg-sky-300/20;
- }
-
- .fi-ta-table > thead > tr > th {
-    @apply dark:text-sky-300;
- }
-
- .fi-ta-header-cell-label {
-    @apply dark:text-amber-500;
-    @apply text-amber-500;
- }
-
- .fi-ta-text-item-label {
-    @apply text-white;
- }
-
- .fi-ta-actions > .fi-link > .fi-link-icon,
- .fi-ta-actions > .fi-link > span
- {
-    @apply text-custom-400;
- }
-
- .fi-topbar > nav {
-    @apply dark:bg-custom-color-topnav;
-    @apply bg-custom-color-topnav;
- }
-
-
- /* pagination classes  */
- .fi-pagination-overview {
-    @apply text-gray-200;
- }
-
- .fi-pagination-records-per-page-select > .fi-input-wrp
- {
-    @apply bg-white/5;
-    @apply ring-white/20;
- }
-
- .fi-pagination-items
- {
-    @apply bg-white/5;
-    @apply ring-white/20;
-    @apply divide-white/10;
- }
-
- .fi-pagination-item
- {
-    @apply border-white/5;
- }
-
- .fi-pagination-item.fi-active > button > .fi-pagination-item-label
- {
-    @apply text-blue-400;
- }
-
- .fi-pagination-item-button
- {
-    @apply hover:bg-blue-600/10;
-    @apply focus-visible:ring-primary-500;
-    @apply bg-white/5;
-
- }
-
- .fi-pagination-item-label
- {
-    @apply text-gray-200;
- }
-
-.fi-pagination-records-per-page-select > .fi-input-wrp
-{
-    @apply bg-white/5;
-    @apply ring-white/20;
-    @apply [&:not(:has(.fi-ac-action:focus))]:focus-within:ring-primary-500;
+.dark .fi-ta-header-ctn {
+    background-color: #003432;
 }
 
-.fi-pagination-records-per-page-select > .fi-input-wrp > div
-{
-    @apply border-white/10;
+/* Search Field Styling */
+.fi-ta-search-field .fi-input-wrp {
+    @apply bg-white border-gray-300;
+    @apply dark:bg-white/10 dark:border-white/20;
+    @apply rounded-xl;
+    @apply ring-0;
+    transition: all 0.3s ease;
 }
-.fi-pagination-records-per-page-select > .fi-input-wrp > div > .fi-input-wrp-label,
-.fi-pagination-records-per-page-select > .fi-input-wrp > div.flex-1 > .fi-select-input
-{
+
+.fi-ta-search-field .fi-input-wrp:focus-within {
+    @apply bg-white border-emerald-400;
+    @apply dark:bg-white/15 dark:border-emerald-400/50;
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15);
+}
+
+.fi-ta-search-field .fi-input {
+    @apply text-gray-800;
+    @apply dark:text-white;
+    @apply placeholder-gray-400;
+    @apply dark:placeholder-white/50;
+}
+
+/* Table Structure */
+.fi-ta-table {
+    @apply w-full;
+}
+
+.fi-ta-table > thead > tr {
+    background-color: #fefef1;
+    border-bottom: 2px solid;
+    @apply border-emerald-200;
+    @apply dark:border-emerald-500/30;
+}
+
+.dark .fi-ta-table > thead > tr {
+    background-color: #003432;
+}
+
+.fi-ta-table > thead > tr > th {
+    @apply py-2.5 px-3;
+    @apply text-left;
+    @apply font-semibold;
+    @apply text-emerald-700;
+    @apply dark:text-emerald-300;
+    @apply text-sm;
+    @apply uppercase;
+    @apply tracking-wider;
+}
+
+.fi-ta-header-cell-label {
+    @apply text-emerald-700;
+    @apply dark:text-emerald-300;
+    @apply font-semibold;
+    @apply text-sm;
+    @apply uppercase;
+    @apply tracking-wider;
+}
+
+/* Table Body */
+.fi-ta-table > tbody {
+    @apply divide-y divide-gray-100;
+    @apply dark:divide-white/5;
+}
+
+/* Table Rows */
+.fi-ta-row {
+    @apply transition-colors duration-200 ease-in-out;
+    background-color: #fefef1;
+    position: relative;
+    z-index: auto;
+}
+
+.dark .fi-ta-row {
+    background-color: #003432;
+}
+
+.fi-ta-row:nth-child(even) {
+    background-color: #f7f7e8;
+}
+
+.dark .fi-ta-row:nth-child(even) {
+    background-color: #004540;
+}
+
+.fi-ta-row:hover {
+    background-color: #f0f0de;
+}
+
+.dark .fi-ta-row:hover {
+    background-color: #005550;
+}
+
+/* Table Cells */
+.fi-ta-cell {
+    @apply py-2 px-3;
+    @apply text-gray-700;
+    @apply dark:text-white/90;
+    @apply text-sm;
+}
+
+.fi-ta-text-item-label {
+    @apply text-gray-800;
+    @apply dark:text-white;
+    @apply font-medium;
+}
+
+/* Action Buttons */
+.fi-ta-actions {
+    @apply flex gap-1;
+}
+
+.fi-ta-actions > .fi-link {
+    @apply px-2.5 py-1;
+    @apply rounded-lg;
+    @apply transition-all duration-200;
+    @apply bg-gray-100;
+    @apply dark:bg-white/5;
+    @apply hover:bg-gray-200;
+    @apply dark:hover:bg-white/10;
+}
+
+.fi-ta-actions > .fi-link > .fi-link-icon {
+    @apply text-emerald-600;
+    @apply dark:text-emerald-400;
+    @apply w-4 h-4;
+}
+
+.fi-ta-actions > .fi-link > span {
+    @apply text-emerald-600;
+    @apply dark:text-emerald-400;
+    @apply text-sm;
+    @apply font-medium;
+}
+
+.fi-ta-actions > .fi-link:hover > .fi-link-icon,
+.fi-ta-actions > .fi-link:hover > span {
+    @apply text-emerald-700;
+    @apply dark:text-emerald-300;
+}
+
+/* Edit Action */
+.fi-ta-actions > .fi-link[href*="edit"],
+.fi-ta-actions .fi-link.fi-color-warning {
+    @apply bg-amber-100;
+    @apply dark:bg-amber-500/10;
+    @apply hover:bg-amber-200;
+    @apply dark:hover:bg-amber-500/20;
+}
+
+.fi-ta-actions > .fi-link[href*="edit"] > .fi-link-icon,
+.fi-ta-actions > .fi-link[href*="edit"] > span,
+.fi-ta-actions .fi-link.fi-color-warning > .fi-link-icon,
+.fi-ta-actions .fi-link.fi-color-warning > span {
+    @apply text-amber-600;
+    @apply dark:text-amber-400;
+}
+
+/* Delete Action */
+.fi-ta-actions .fi-link.fi-color-danger {
+    @apply bg-red-100;
+    @apply dark:bg-red-500/10;
+    @apply hover:bg-red-200;
+    @apply dark:hover:bg-red-500/20;
+}
+
+.fi-ta-actions .fi-link.fi-color-danger > .fi-link-icon,
+.fi-ta-actions .fi-link.fi-color-danger > span {
+    @apply text-red-600;
+    @apply dark:text-red-400;
+}
+
+/* View Action */
+.fi-ta-actions .fi-link.fi-color-info,
+.fi-ta-actions > .fi-link[href*="view"] {
+    @apply bg-sky-100;
+    @apply dark:bg-sky-500/10;
+    @apply hover:bg-sky-200;
+    @apply dark:hover:bg-sky-500/20;
+}
+
+.fi-ta-actions .fi-link.fi-color-info > .fi-link-icon,
+.fi-ta-actions .fi-link.fi-color-info > span,
+.fi-ta-actions > .fi-link[href*="view"] > .fi-link-icon,
+.fi-ta-actions > .fi-link[href*="view"] > span {
+    @apply text-sky-600;
+    @apply dark:text-sky-400;
+}
+
+/* Empty State */
+.fi-ta-empty-state {
+    @apply py-12;
+}
+
+.fi-ta-empty-state-icon {
     @apply text-gray-300;
+    @apply dark:text-white/30;
+    @apply w-12 h-12;
 }
 
-/* end Pagination class */
-/* ------------------------------------------------------------------------------------------------- */
+.fi-ta-empty-state-heading {
+    @apply text-gray-500;
+    @apply dark:text-white/70;
+    @apply text-lg font-medium;
+}
 
-/* badge classes */
+.fi-ta-empty-state-description {
+    @apply text-gray-400;
+    @apply dark:text-white/50;
+}
 
-.fi-badge.fi-color-custom
-{
+/* ================================================================================================ */
+/* MODERN PAGINATION STYLES */
+/* ================================================================================================ */
+
+.fi-pagination {
+    background-color: #fefef1;
+    @apply px-3 py-3;
+    @apply border-t border-gray-200;
+    @apply dark:border-white/10;
+}
+
+.dark .fi-pagination {
+    background-color: #003432;
+}
+
+.fi-pagination-overview {
+    @apply text-gray-600;
+    @apply dark:text-white/70;
+    @apply text-sm;
+}
+
+.fi-pagination-items {
+    @apply bg-gray-100;
+    @apply dark:bg-white/5;
+    @apply rounded-xl;
+    @apply ring-1 ring-gray-200;
+    @apply dark:ring-white/10;
+    @apply divide-x divide-gray-200;
+    @apply dark:divide-white/10;
+    @apply overflow-hidden;
+}
+
+.fi-pagination-item {
+    @apply border-0;
+}
+
+.fi-pagination-item-button {
+    @apply bg-transparent;
+    @apply hover:bg-emerald-100;
+    @apply dark:hover:bg-emerald-500/20;
+    @apply transition-all duration-200;
+    @apply px-3 py-1.5;
+}
+
+.fi-pagination-item-label {
+    @apply text-gray-700;
+    @apply dark:text-white/80;
+    @apply text-sm;
+    @apply font-medium;
+}
+
+.fi-pagination-item.fi-active .fi-pagination-item-button {
+    @apply bg-emerald-100;
+    @apply dark:bg-emerald-500/30;
+}
+
+.fi-pagination-item.fi-active .fi-pagination-item-label {
+    @apply text-emerald-700;
+    @apply dark:text-emerald-400;
+    @apply font-semibold;
+}
+
+.fi-pagination-records-per-page-select .fi-input-wrp {
+    @apply bg-gray-100;
+    @apply dark:bg-white/5;
+    @apply ring-1 ring-gray-200;
+    @apply dark:ring-white/10;
+    @apply rounded-xl;
+    @apply border-0;
+}
+
+.fi-pagination-records-per-page-select .fi-input-wrp:focus-within {
+    @apply ring-emerald-400/50;
+}
+
+.fi-pagination-records-per-page-select .fi-input-wrp > div {
+    @apply border-gray-200;
+    @apply dark:border-white/10;
+}
+
+.fi-pagination-records-per-page-select .fi-input-wrp-label,
+.fi-pagination-records-per-page-select .fi-select-input {
+    @apply text-gray-600;
+    @apply dark:text-white/80;
+}
+
+/* ================================================================================================ */
+/* BADGE STYLES */
+/* ================================================================================================ */
+
+.fi-badge {
+    @apply rounded-full;
+    @apply px-3 py-1;
+    @apply text-xs;
+    @apply font-semibold;
+    @apply uppercase;
+    @apply tracking-wide;
+}
+
+.fi-badge.fi-color-success {
+    @apply bg-emerald-100 text-emerald-700 ring-1 ring-emerald-300;
+    @apply dark:bg-emerald-500/20 dark:text-emerald-400 dark:ring-emerald-500/30;
+}
+
+.fi-badge.fi-color-danger {
+    @apply bg-red-100 text-red-700 ring-1 ring-red-300;
+    @apply dark:bg-red-500/20 dark:text-red-400 dark:ring-red-500/30;
+}
+
+.fi-badge.fi-color-warning {
+    @apply bg-amber-100 text-amber-700 ring-1 ring-amber-300;
+    @apply dark:bg-amber-500/20 dark:text-amber-400 dark:ring-amber-500/30;
+}
+
+.fi-badge.fi-color-info {
+    @apply bg-sky-100 text-sky-700 ring-1 ring-sky-300;
+    @apply dark:bg-sky-500/20 dark:text-sky-400 dark:ring-sky-500/30;
+}
+
+.fi-badge.fi-color-gray {
+    @apply bg-gray-100 text-gray-700 ring-1 ring-gray-300;
+    @apply dark:bg-gray-500/20 dark:text-gray-400 dark:ring-gray-500/30;
+}
+
+.fi-badge.fi-color-primary {
+    @apply bg-emerald-100 text-emerald-700 ring-1 ring-emerald-300;
+    @apply dark:bg-emerald-500/20 dark:text-emerald-400 dark:ring-emerald-500/30;
+}
+
+.fi-badge.fi-color-custom {
     @apply bg-custom-400/10;
     @apply text-custom-400;
     @apply ring-custom-400/30;
 }
 
+/* ================================================================================================ */
+/* TABLE FILTER STYLES */
+/* ================================================================================================ */
 
-/* .fi-ta-search-field > .fi-input-wrp {
-    @apply dark:bg-white;
+.fi-ta-filters {
+    @apply bg-gray-50 border border-gray-200;
+    @apply dark:bg-white/5 dark:border-white/10;
+    @apply rounded-xl;
+    @apply p-4;
 }
 
-.fi-ta-search-field > .fi-input-wrp > div > .fi-input {
-    @apply dark:text-gray-700;
-} */
-
-
-.fi-tabs .fi-tabs-item:nth-child(1){
-    /* background: rgb(43, 43, 47);     */
-    /* @apply active:bg-violet-700; */
-    @apply dark:hover:bg-neutral-700;
-    @apply dark:bg-neutral-800;
-
-    @apply hover:bg-neutral-200;
-    @apply bg-neutral-300;
+.fi-ta-filters-trigger {
+    @apply bg-gray-100 border border-gray-200;
+    @apply dark:bg-white/5 dark:border-white/10;
+    @apply hover:bg-gray-200;
+    @apply dark:hover:bg-white/10;
+    @apply rounded-xl;
+    @apply text-gray-700;
+    @apply dark:text-white/80;
+    @apply transition-all duration-200;
 }
 
-.fi-tabs .fi-tabs-item:nth-child(2){
-    @apply dark:hover:bg-neutral-700;
-    @apply dark:bg-neutral-800;
+/* ================================================================================================ */
+/* TABS STYLES */
+/* ================================================================================================ */
 
-    @apply hover:bg-neutral-200;
-    @apply bg-neutral-300;
+.fi-tabs {
+    @apply bg-transparent;
+    @apply gap-2;
 }
 
-.fi-tabs .fi-tabs-item:nth-child(3){
-    @apply dark:hover:bg-neutral-700;
-    @apply dark:bg-neutral-800;
-
-    @apply hover:bg-neutral-200;
-    @apply bg-neutral-300;
+.fi-tabs-item {
+    @apply rounded-xl;
+    @apply px-4 py-2;
+    @apply transition-all duration-200;
+    @apply bg-gray-100;
+    @apply dark:bg-white/5;
+    @apply hover:bg-gray-200;
+    @apply dark:hover:bg-white/10;
+    @apply border border-transparent;
 }
 
-.fi-tabs .fi-tabs-item:nth-child(4){
-    @apply dark:hover:bg-neutral-700;
-    @apply dark:bg-neutral-800;
-
-    @apply hover:bg-neutral-200;
-    @apply bg-neutral-300;
+.fi-tabs-item.fi-active {
+    @apply bg-emerald-100 border-emerald-300;
+    @apply dark:bg-emerald-500/20 dark:border-emerald-500/30;
 }
 
-.fi-tabs .fi-tabs-item:nth-child(5){
-    @apply dark:hover:bg-neutral-700;
-    @apply dark:bg-neutral-800;
-
-    @apply hover:bg-neutral-200;
-    @apply bg-neutral-300;
+.fi-tabs-item-label {
+    @apply text-gray-700;
+    @apply dark:text-white/80;
+    @apply text-sm;
+    @apply font-medium;
 }
 
-.fi-tabs .fi-tabs-item:nth-child(6){
-    @apply dark:hover:bg-neutral-700;
-    @apply dark:bg-neutral-800;
+.fi-tabs-item.fi-active .fi-tabs-item-label {
+    @apply text-emerald-700;
+    @apply dark:text-emerald-400;
+}
 
-    @apply hover:bg-neutral-200;
-    @apply bg-neutral-300;
+/* ================================================================================================ */
+/* BUTTON STYLES */
+/* ================================================================================================ */
+
+.fi-btn.fi-btn-color-primary {
+    background: linear-gradient(135deg, #0e664a 0%, #003432 100%);
+    @apply shadow-lg shadow-emerald-500/25;
+    @apply hover:shadow-xl hover:shadow-emerald-500/30;
+    @apply transition-all duration-200;
+    @apply border-0;
+}
+
+.fi-btn.fi-btn-color-primary:hover {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+    transform: translateY(-1px);
+}
+
+/* ================================================================================================ */
+/* FORM STYLES IN TABLE CONTEXT */
+/* ================================================================================================ */
+
+.fi-ta .fi-input-wrp {
+    @apply bg-gray-100 border-gray-300;
+    @apply dark:bg-white/5 dark:border-white/10;
+    @apply rounded-lg;
+}
+
+.fi-ta .fi-input-wrp:focus-within {
+    @apply border-emerald-400;
+    @apply dark:border-emerald-400/50;
+    @apply ring-2 ring-emerald-400/20;
+}
+
+.fi-ta .fi-input {
+    @apply text-gray-800;
+    @apply dark:text-white;
+    @apply bg-transparent;
+}
+
+/* ================================================================================================ */
+/* CHECKBOX & SELECTION STYLES */
+/* ================================================================================================ */
+
+.fi-ta-selection-cell {
+    @apply w-4;
+}
+
+.fi-ta-checkbox {
+    @apply rounded;
+    @apply border-gray-300;
+    @apply dark:border-white/30;
+    @apply bg-white;
+    @apply dark:bg-white/5;
+    @apply text-emerald-500;
+    @apply focus:ring-emerald-400/30;
+}
+
+.fi-ta-checkbox:checked {
+    @apply bg-emerald-500;
+    @apply border-emerald-500;
+}
+
+/* Bulk Actions */
+.fi-ta-header-ctn-actions {
+    @apply gap-2;
+}
+
+.fi-ta-bulk-action {
+    @apply bg-gray-100;
+    @apply dark:bg-white/5;
+    @apply hover:bg-gray-200;
+    @apply dark:hover:bg-white/10;
+    @apply rounded-lg;
+    @apply px-3 py-1.5;
+    @apply text-gray-700;
+    @apply dark:text-white/80;
+    @apply text-sm;
+    @apply transition-all duration-200;
+}
+
+/* ================================================================================================ */
+/* MODAL STYLES */
+/* ================================================================================================ */
+
+[x-cloak] {
+    display: none !important;
+}
+
+.fi-modal {
+    z-index: 50;
+}
+
+.fi-modal-window {
+    background-color: #fefef1;
+    @apply rounded-2xl;
+    @apply shadow-2xl;
+}
+
+.dark .fi-modal-window {
+    background-color: #003432;
+}
+
+.fi-modal-header {
+    background-color: #fefef1;
+    @apply border-b border-gray-200;
+    @apply dark:border-emerald-800;
+}
+
+.dark .fi-modal-header {
+    background-color: #003432;
+}
+
+.fi-modal-heading {
+    @apply text-gray-900;
+    @apply dark:text-white;
+    @apply font-semibold;
+    @apply text-lg;
+}
+
+.fi-modal-content {
+    background-color: #fefef1;
+}
+
+.dark .fi-modal-content {
+    background-color: #003432;
+}
+
+.fi-modal-footer {
+    background-color: #fefef1;
+    @apply border-t border-gray-200;
+    @apply dark:border-emerald-800;
+    padding-top: 30px;
+}
+
+.dark .fi-modal-footer {
+    background-color: #003432;
+}
+
+/* ================================================================================================ */
+/* CARD & WIDGET STYLES */
+/* ================================================================================================ */
+
+.fi-wi-stats-overview-stat {
+    @apply bg-white border border-gray-200;
+    @apply dark:bg-white/5 dark:border-white/10;
+    @apply rounded-xl;
+}
+
+.fi-section {
+    @apply bg-white border border-gray-200;
+    @apply dark:bg-white/5 dark:border-white/10;
+    @apply rounded-xl;
+}
+
+/* ================================================================================================ */
+/* FORM COMPONENTS */
+/* ================================================================================================ */
+
+.fi-fo-field-wrp-label span {
+    @apply text-gray-700;
+    @apply dark:text-gray-300;
+}
+
+.fi-input-wrp {
+    @apply bg-white border-gray-300;
+    @apply dark:bg-white/5 dark:border-white/20;
+}
+
+.fi-input-wrp:focus-within {
+    @apply border-emerald-500 ring-2 ring-emerald-500/20;
+}
+
+.fi-input {
+    @apply text-gray-800;
+    @apply dark:text-white;
 }

@@ -2,9 +2,9 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Farm;
 use Filament\Pages\Page;
 use App\Models\PestAndDisease;
+use App\Models\PestAndDiseaseCategory;
 
 class CafarmMap extends Page
 {
@@ -22,7 +22,48 @@ class CafarmMap extends Page
 
     public function getPestAndDiseaseCases()
     {
-        return PestAndDisease::select('latitude', 'longitude', 'pest', 'type')->get();
+        // Build a name → type lookup from categories
+        $categoryTypes = PestAndDiseaseCategory::pluck('type', 'name');
+
+        return PestAndDisease::select(
+            'case_id',
+            'latitude',
+            'longitude',
+            'pest',
+            'confidence',
+            'severity',
+            'date_detected',
+            'area',
+            'image_path',
+            'validation_status'
+        )
+        ->whereNotNull('latitude')
+        ->whereNotNull('longitude')
+        ->get()
+        ->map(function ($item) use ($categoryTypes) {
+            if ($item->image_path) {
+                $item->image_url = asset('storage/' . $item->image_path);
+            } else {
+                $item->image_url = null;
+            }
+
+            // Determine type from categories lookup
+            $item->type = $categoryTypes[$item->pest] ?? 'pest';
+
+            return $item;
+        });
+    }
+
+    // Get unique pest/disease types for filtering
+    public function getPestTypes()
+    {
+        return PestAndDisease::whereNotNull('pest')
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->distinct()
+            ->pluck('pest')
+            ->sort()
+            ->values();
     }
 
     // Get the first location for the map's initial view
@@ -33,12 +74,5 @@ class CafarmMap extends Page
             ->whereNotNull('longitude')
             ->first();
     }
-
-    // Fetch all registered farms
-    public function getFarms()
-    {
-        return Farm::select('latitude', 'longitude', 'name')->get();
-    }
-
 
 }

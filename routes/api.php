@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Storage;
 
 use App\Http\Controllers\PestAndDiseaseController;
 use App\Http\Controllers\MobileController;
-use App\Http\Controllers\BulletinController;
+// use App\Http\Controllers\BulletinController;
+use App\Http\Controllers\Api\Mobile\BulletinController;
 use App\Http\Controllers\SoilAnalysisController;
 use App\Models\Barangay;
 use App\Models\Farmer;
@@ -16,6 +17,9 @@ use App\Models\MobileUser;
 use App\Models\Bulletin;
 use App\Models\SoilAnalysis;
 use App\Models\SoilInformation;
+
+
+
 /*
 |--------------------------------------------------------------------------
 | API Routes for CAFARM System
@@ -30,6 +34,9 @@ use App\Models\SoilInformation;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// Route::get('/mobile/announcements', [BulletinController::class, 'index']);
+Route::get('/mobile/announcements', [BulletinController::class, 'index']);
 
 Route::get('/mobile/login-test', function () {
     $user = \App\Models\MobileUser::where('username', 'gomez4')->first();
@@ -52,9 +59,12 @@ Route::get('/mobile/login-test', function () {
     ]);
 });
 
-// 🐛 1. Pest & Disease Detection (Image Uploads)
+// 🐛 1. Pest & Disease Detection (Image Uploads & Validation)
 Route::post('/detections', [PestAndDiseaseController::class, 'store']);
 Route::get('/detections', [PestAndDiseaseController::class, 'index']);
+Route::get('/detections/{id}', [PestAndDiseaseController::class, 'show']);
+Route::post('/detections/check-status', [PestAndDiseaseController::class, 'checkValidationStatus']);
+Route::post('/detections/by-app-no', [PestAndDiseaseController::class, 'getByAppNo']);
 
 
 // 🧪 2. Test Upload Endpoint (For mobile image testing)
@@ -83,7 +93,7 @@ Route::post('/test-upload', function (Request $request) {
     }
 });
 
-Route::get('/api/mobile/announcements', [BulletinController::class, 'index']);
+
 
 
 Route::get('/mobile/announcements', function () {
@@ -105,7 +115,7 @@ Route::post('/mobile/check-app-no', function (Request $request) {
 
     $farmer = Farmer::where('app_no', $request->app_no)->first();
     $farm_name = Farm::where('farmer_id',  $farmer->id)->first();
-    
+
      $farm_barangay = Barangay::where('code', $farmer->barangay)->first();
 
 
@@ -146,6 +156,46 @@ Route::post('/mobile/check-app-no', function (Request $request) {
             ],
         ]);
 
+});
+
+
+// Step 1B️⃣: Verify Username (alternative login method)
+Route::post('/mobile/check-username', function (Request $request) {
+    $request->validate(['username' => 'required']);
+
+    // Find mobile user by username
+    $mobileUser = MobileUser::where('username', $request->username)->first();
+
+    if (!$mobileUser) {
+        return response()->json(['message' => '❌ Username not found'], 404);
+    }
+
+    // Get farmer details
+    $farmer = Farmer::where('id', $mobileUser->farmer_id)->first();
+
+    if (!$farmer) {
+        return response()->json(['message' => '❌ Farmer record not found'], 404);
+    }
+
+    $farm_name = Farm::where('farmer_id', $farmer->id)->first();
+    $farm_barangay = Barangay::where('code', $farmer->barangay)->first();
+
+    return response()->json([
+        'message' => '✅ Username verified successfully',
+        'user' => [
+            'username' => $mobileUser->username,
+            'type' => $mobileUser->type ?? 'Farmer',
+        ],
+        'farmer' => [
+            'id' => $farmer->id,
+            'app_no' => $farmer->app_no ?? '',
+            'name' => trim("{$farmer->lastname}, {$farmer->firstname} {$farmer->middlename}"),
+            'barangay' => $farm_barangay->barangay ?? '',
+            'farm' => [
+                'name' => $farm_name->name ?? 'Unknown Farm',
+            ],
+        ],
+    ]);
 });
 
 
@@ -259,3 +309,30 @@ Route::post('/mobile/soil/analysis', [SoilAnalysisController::class, 'store']);
 // 🌱 CAFARM Mobile Sync API
 Route::post('/mobile/soil/analysis', [SoilAnalysisController::class, 'store']);
 Route::get('/mobile/soil/analysis', [SoilAnalysisController::class, 'index']); 
+
+
+// Add this route with your other mobile routes
+Route::post('/mobile/change-password', [MobileController::class, 'changePassword']);
+
+// FCM Token Update - for push notifications
+Route::post('/mobile/update-fcm-token', function (Request $request) {
+    $request->validate([
+        'app_no' => 'required|string',
+        'fcm_token' => 'required|string',
+    ]);
+
+    $updated = MobileUser::where('app_no', $request->app_no)
+        ->update(['fcm_token' => $request->fcm_token]);
+
+    if ($updated) {
+        return response()->json([
+            'success' => true,
+            'message' => 'FCM token updated successfully',
+        ]);
+    }
+
+    return response()->json([
+        'success' => false,
+        'message' => 'User not found',
+    ], 404);
+});
