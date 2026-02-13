@@ -15433,3 +15433,88 @@ Did you mean this?
 [2026-02-13 03:31:23] local.INFO: FCM sent to topic 'app_COF_2026_02_00002': disapproved for detection #2  
 [2026-02-13 03:31:38] local.INFO: FCM trigger called for detection #2, status: approved, app_no: COF-2026-02-00002  
 [2026-02-13 03:31:39] local.INFO: FCM sent to topic 'app_COF_2026_02_00002': approved for detection #2  
+[2026-02-13 07:15:04] local.INFO: Broadcasting [Illuminate\Notifications\Events\BroadcastNotificationCreated] on channels [private-App.Models.User.1] with payload:
+{
+    "id": "8fcdbad9-c19f-4d4b-85fe-3e258ec9134d",
+    "actions": [
+        {
+            "name": "view",
+            "color": null,
+            "event": null,
+            "eventData": [],
+            "dispatchDirection": false,
+            "dispatchToComponent": null,
+            "extraAttributes": [],
+            "icon": null,
+            "iconPosition": "before",
+            "iconSize": null,
+            "isOutlined": false,
+            "isDisabled": false,
+            "label": "View Now",
+            "shouldClose": false,
+            "shouldMarkAsRead": true,
+            "shouldMarkAsUnread": false,
+            "shouldOpenUrlInNewTab": false,
+            "size": "sm",
+            "tooltip": null,
+            "url": "http:\/\/192.168.2.3:8000\/admin\/pest-and-diseases",
+            "view": "filament-actions::button-action"
+        }
+    ],
+    "body": "**Miner** (High severity)",
+    "color": null,
+    "duration": 6000,
+    "icon": "heroicon-o-bug-ant",
+    "iconColor": "warning",
+    "status": null,
+    "title": "\ud83d\udc1b New Pest\/Disease Detection",
+    "view": "filament-notifications::notification",
+    "viewData": [],
+    "format": "filament",
+    "type": "Filament\\Notifications\\BroadcastNotification",
+    "socket": null
+}  
+[2026-02-13 07:15:04] local.INFO: Broadcasting [Illuminate\Notifications\Events\BroadcastNotificationCreated] on channels [private-App.Models.User.3] with payload:
+{
+    "id": "c3f78056-a6d2-4f68-a88c-69975f512d96",
+    "actions": [
+        {
+            "name": "view",
+            "color": null,
+            "event": null,
+            "eventData": [],
+            "dispatchDirection": false,
+            "dispatchToComponent": null,
+            "extraAttributes": [],
+            "icon": null,
+            "iconPosition": "before",
+            "iconSize": null,
+            "isOutlined": false,
+            "isDisabled": false,
+            "label": "View Now",
+            "shouldClose": false,
+            "shouldMarkAsRead": true,
+            "shouldMarkAsUnread": false,
+            "shouldOpenUrlInNewTab": false,
+            "size": "sm",
+            "tooltip": null,
+            "url": "http:\/\/192.168.2.3:8000\/admin\/pest-and-diseases",
+            "view": "filament-actions::button-action"
+        }
+    ],
+    "body": "**Miner** (High severity)",
+    "color": null,
+    "duration": 6000,
+    "icon": "heroicon-o-bug-ant",
+    "iconColor": "warning",
+    "status": null,
+    "title": "\ud83d\udc1b New Pest\/Disease Detection",
+    "view": "filament-notifications::notification",
+    "viewData": [],
+    "format": "filament",
+    "type": "Filament\\Notifications\\BroadcastNotification",
+    "socket": null
+}  
+[2026-02-13 07:15:04] local.INFO: Detection stored successfully {"case_id":3,"has_image":true} 
+[2026-02-13 07:16:18] local.INFO: FCM trigger called for detection #3, status: disapproved, app_no: COF-2026-02-00001  
+[2026-02-13 07:16:19] local.INFO: FCM sent to topic 'app_COF_2026_02_00001': disapproved for detection #3  
