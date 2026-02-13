@@ -78,6 +78,7 @@ Route::post('/test-upload', function (Request $request) {
             return response()->json([
                 'message' => '✅ Image uploaded successfully',
                 'stored_path' => '/storage/' . $path,
+                
             ], 201);
         }
 
