@@ -12,6 +12,8 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Spatie\Permission\Models\Role;
+use STS\FilamentImpersonate\Tables\Actions\Impersonate;
+
 
 class UserResource extends Resource
 {
@@ -20,7 +22,7 @@ class UserResource extends Resource
     protected static ?string $navigationGroup = 'User Management';
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
     protected static ?string $navigationLabel = 'Web App Users';
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 6;
 
     // -------------------------- FORM --------------------------
     public static function form(Form $form): Form
@@ -98,6 +100,15 @@ class UserResource extends Resource
                     Tables\Actions\ViewAction::make(),
 
                     Tables\Actions\EditAction::make(),
+
+                    Tables\Actions\Action::make('impersonate')
+                        ->label('Impersonate')
+                        ->icon('heroicon-o-finger-print')
+                        ->color('warning')
+                        ->action(function (User $record) {
+                            auth()->user()->impersonate($record);
+                            return redirect()->route('filament.admin.pages.dashboard');
+                        }),
 
                     Tables\Actions\Action::make('manage_roles')
                         ->label('Manage Roles')

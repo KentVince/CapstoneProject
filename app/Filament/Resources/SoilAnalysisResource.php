@@ -20,7 +20,7 @@ class SoilAnalysisResource extends Resource
 {
     protected static ?string $model = SoilAnalysis::class;
 
-    protected static ?string $navigationIcon  = 'heroicon-o-globe-asia-australia';
+    protected static ?string $navigationIcon  = 'heroicon-o-beaker';
     protected static ?string $navigationLabel = 'Soil Analysis';
     protected static ?string $pluralLabel     = 'Soil Analyses';
     protected static ?string $navigationGroup = 'Soil Fertility';

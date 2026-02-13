@@ -325,11 +325,17 @@
                 <div class="login-image">
                     <img src="{{ asset('images/cafarm_wg.png') }}" alt="CAFARM Logo">
                 <h1 style="color:#ffffff;">CAFARM</h1>
-                    <p style="color:#ffffff;">COFFEE ANALYTICS AND FARM MANAGEMENT SYSTEM FOR PEST AND DISEASE CONTROL IN COMPOSTELA, DAVAO DE ORO</p>
+                    <p style="color:#ffffff;">COFFEE ANALYTICS AND FARM MANAGEMENT SYSTEM FOR PEST AND DISEASE CONTROL IN DAVAO DE ORO</p>
                 </div>
                 <div class="login-form-section">
                     <h2>Welcome Back</h2>
                     <p class="subtitle">Sign in to your account to continue</p>
+
+                    @if (session('status'))
+                        <div style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; border-left: 4px solid #22c55e; font-size: 0.9rem;">
+                            {{ session('status') }}
+                        </div>
+                    @endif
 
                     @if ($errors->any())
                         <div class="login-error-message">

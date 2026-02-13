@@ -11,6 +11,7 @@ class MobileUser extends Authenticatable
 
     protected $fillable = [
         'farmer_id',
+        'professional_id',
         'type',
         'app_no',
         'username',
@@ -29,5 +30,10 @@ class MobileUser extends Authenticatable
     public function farmer()
     {
         return $this->belongsTo(Farmer::class, 'farmer_id');
+    }
+
+    public function professional()
+    {
+        return $this->belongsTo(AgriculturalProfessional::class, 'professional_id');
     }
 }

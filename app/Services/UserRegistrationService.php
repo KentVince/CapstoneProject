@@ -5,10 +5,11 @@ namespace App\Services;
 use App\Models\Farm;
 use App\Models\User;
 use App\Models\Farmer;
-use Faker\Provider\ar_EG\Person;
+use App\Models\AgriculturalProfessional;
 use Illuminate\Support\Facades\DB;
-use App\Models\Pds\PersonnelAddress;
+use Illuminate\Support\Facades\Storage;
 use Filament\Notifications\Notification;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class UserRegistrationService
 {
@@ -21,12 +22,14 @@ class UserRegistrationService
         DB::beginTransaction();
         try {
 
-            // dd($data);
             $user = $this->createUser($data);
-            $farmer = $this->createFarmer($data, $user);
 
             $userType = $data['user_type'] ?? 'farmer';
-            if ($userType !== 'agricultural_professional') {
+            if ($userType === 'agricultural_professional') {
+                $professional = $this->createAgriculturalProfessional($data, $user);
+                $this->generateProfessionalQrCode($professional);
+            } else {
+                $farmer = $this->createFarmer($data, $user);
                 $this->createFarm($data, $user);
             }
            // $this->createFarmerNames($data, $farmer);
@@ -134,6 +137,51 @@ class UserRegistrationService
         ]);
     }
 
+
+    protected function createAgriculturalProfessional(array $data, User $user): AgriculturalProfessional
+    {
+        return AgriculturalProfessional::create([
+            'user_id'    => $user->id,
+            'app_no'     => $data['app_no'] ?? '',
+            'agency'     => $data['agency'] ?? '',
+            'lastname'   => $data['lastname'] ?? '',
+            'firstname'  => $data['firstname'] ?? '',
+            'middlename' => $data['middlename'] ?? '',
+            'sex'        => $data['sex'] ?? '',
+            'birthdate'  => $data['birthdate'] ?? null,
+            'age'        => $data['age'] ?? null,
+            'municipality' => $data['municipality'] ?? '',
+            'barangay'   => $data['barangay'] ?? '',
+            'phone_no'   => $data['phone_no'] ?? '',
+            'email_add'  => $data['email'] ?? '',
+        ]);
+    }
+
+    protected function generateProfessionalQrCode(AgriculturalProfessional $professional): void
+    {
+        try {
+            $qrFolder = 'public/professionals_qr';
+            if (!Storage::exists($qrFolder)) {
+                Storage::makeDirectory($qrFolder);
+            }
+
+            $filename = "{$professional->app_no}.png";
+            $fullPath = Storage::path("{$qrFolder}/{$filename}");
+
+            QrCode::format('png')
+                ->size(300)
+                ->margin(1)
+                ->errorCorrection('H')
+                ->generate(
+                    "CAFARM Professional: {$professional->app_no}\nName: {$professional->firstname} {$professional->lastname}",
+                    $fullPath
+                );
+
+            $professional->update(['qr_code' => "professionals_qr/{$filename}"]);
+        } catch (\Throwable $th) {
+            // QR generation failure should not block registration
+        }
+    }
 
     protected function createFarm(array $data, User $user): Farm
     {

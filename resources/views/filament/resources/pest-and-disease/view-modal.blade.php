@@ -1,4 +1,4 @@
-<div class="space-y-4 p-4" x-data="{ showLightbox: false }">
+<div class="space-y-4 p-4 dark:bg-custom-color-darkmode" x-data="{ showLightbox: false }">
     {{-- Main Content: Image Left, Details Right --}}
     <div class="flex flex-col md:flex-row gap-6 pt-2">
         {{-- Left: Image --}}
@@ -52,8 +52,19 @@
             </div>
 
             <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Confidence</h4>
-                <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{{ $record->confidence }}%</p>
+                <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Type</h4>
+                <p class="mt-1">
+                    @php
+                        $typeColors = [
+                            'pest' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                            'disease' => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+                        ];
+                        $typeColor = $typeColors[$record->type] ?? 'bg-gray-100 text-gray-800';
+                    @endphp
+                    <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium {{ $typeColor }}">
+                        {{ ucfirst($record->type ?? 'N/A') }}
+                    </span>
+                </p>
             </div>
 
             <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
@@ -151,7 +162,7 @@
 
             {{-- Image Info --}}
             <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded-lg text-sm">
-                {{ $record->pest }} - {{ $record->confidence }}% confidence
+                {{ $record->pest }} - {{ ucfirst($record->type ?? 'N/A') }}
             </div>
         </div>
     @endif

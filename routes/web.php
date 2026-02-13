@@ -21,6 +21,15 @@ Route::get('/', function () {
     return redirect('/admin/login');
 });
 
+// Impersonate routes
+Route::impersonate();
+
+// Override the Filament Impersonate leave route with a working implementation
+Route::get('/filament-impersonate/leave', function () {
+    auth()->user()->leaveImpersonation();
+    return redirect('/admin/users');
+})->name('filament-impersonate.leave')->middleware('web');
+
 Route::get('/test-qr', function () {
     $data = json_encode([
         'Case ID' => 1,

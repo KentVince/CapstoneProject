@@ -1,7 +1,7 @@
 
 <x-filament::page>
 @if ($record && $record->qr_code)
-    <div class="flex justify-center">
+    <div class="flex justify-center ">
         <img src="{{ Storage::disk('public')->url($record->qr_code) }}" alt="QR Code" class="h-40 w-40">
     </div>
 @else

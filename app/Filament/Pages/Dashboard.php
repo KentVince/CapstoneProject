@@ -244,6 +244,31 @@ class Dashboard extends \Filament\Pages\Dashboard
         });
     }
 
+    // Get statistics for cards
+    public function getTotalPests()
+    {
+        return PestAndDisease::where('validation_status', 'approved')
+            ->where('type', 'pest')
+            ->count();
+    }
+
+    public function getTotalDiseases()
+    {
+        return PestAndDisease::where('validation_status', 'approved')
+            ->where('type', 'disease')
+            ->count();
+    }
+
+    public function getTotalFarmers()
+    {
+        return Farmer::count();
+    }
+
+    public function getTotalSoilTested()
+    {
+        return SoilAnalysis::count();
+    }
+
     public function getWidgets(): array
     {
         return [

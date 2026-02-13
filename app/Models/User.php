@@ -10,10 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Lab404\Impersonate\Models\Impersonate;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable,HasRoles,HasPanelShield;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, HasPanelShield, Impersonate;
 
     /**
      * The attributes that are mass assignable.
@@ -52,9 +53,12 @@ class User extends Authenticatable
     // }
 
     public function farmer()
-{
-    return $this->belongsTo(Farmer::class, 'farmer_id');
-}
+    {
+        return $this->belongsTo(Farmer::class, 'farmer_id');
+    }
 
-
+    public function agriculturalProfessional()
+    {
+        return $this->hasOne(AgriculturalProfessional::class);
+    }
 }

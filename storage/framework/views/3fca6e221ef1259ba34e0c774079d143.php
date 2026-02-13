@@ -9,27 +9,71 @@
 <?php endif; ?>
 <?php $component->withAttributes([]); ?>
     <div>
-        <!-- Dashboard Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-            <!-- Pest and Disease Cases Over Time -->
-            <div class="p-6 shadow-lg rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 lg:col-span-2">
-                <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Pest and Disease Cases Over Time</h2>
-                <div style="max-width: 100%; height: 300px;">
-                    <canvas id="pestCasesOverTimeChart"></canvas>
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <!-- Total Pests Card -->
+            <div class="relative overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6">
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium text-white/80 uppercase tracking-wide">Total Pests</h3>
+                        <svg class="w-8 h-8 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold text-white"><?php echo e($this->getTotalPests()); ?></div>
+                    <p class="text-xs text-white/70 mt-2">Reported pest cases</p>
                 </div>
+                <div class="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-white/10 rounded-full"></div>
             </div>
 
-            <!-- Cases by Severity -->
-            <div class="p-6 shadow-lg rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Cases by Severity</h2>
-                <div style="max-width: 100%; height: 300px;">
-                    <canvas id="casesBySeverityChart"></canvas>
+            <!-- Total Diseases Card -->
+            <div class="relative overflow-hidden bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-6">
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium text-white/80 uppercase tracking-wide">Total Diseases</h3>
+                        <svg class="w-8 h-8 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold text-white"><?php echo e($this->getTotalDiseases()); ?></div>
+                    <p class="text-xs text-white/70 mt-2">Reported disease cases</p>
                 </div>
+                <div class="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-white/10 rounded-full"></div>
+            </div>
+
+            <!-- Total Farmers Card -->
+            <div class="relative overflow-hidden bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6">
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium text-white/80 uppercase tracking-wide">Total Farmers</h3>
+                        <svg class="w-8 h-8 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold text-white"><?php echo e($this->getTotalFarmers()); ?></div>
+                    <p class="text-xs text-white/70 mt-2">Registered farmers</p>
+                </div>
+                <div class="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-white/10 rounded-full"></div>
+            </div>
+
+            <!-- Total Soil Tested Card -->
+            <div class="relative overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6">
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium text-white/80 uppercase tracking-wide">Soil Tests</h3>
+                        <svg class="w-8 h-8 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold text-white"><?php echo e($this->getTotalSoilTested()); ?></div>
+                    <p class="text-xs text-white/70 mt-2">Completed soil tests</p>
+                </div>
+                <div class="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-white/10 rounded-full"></div>
             </div>
         </div>
 
-        <!-- Second Row -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        <!-- Dashboard Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <!-- Pest vs Disease Distribution -->
             <div class="p-6 shadow-lg rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
                 <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Pest vs Disease Distribution</h2>
@@ -38,37 +82,10 @@
                 </div>
             </div>
 
-            <!-- Top 5 Most Common Issues -->
-            <div class="p-6 shadow-lg rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Top 5 Most Common Issues</h2>
-                <div style="max-width: 100%; height: 300px;">
-                    <canvas id="topPestsChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Soil pH Distribution -->
-            <div class="p-6 shadow-lg rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Soil pH Distribution</h2>
-                <div style="max-width: 100%; height: 300px;">
-                    <canvas id="soilPhChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Third Row -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Farms by Municipality -->
-            <div class="p-6 shadow-lg rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Farms by Municipality</h2>
-                <div style="max-width: 100%; height: 350px;">
-                    <canvas id="farmsByMunicipalityChart"></canvas>
-                </div>
-            </div>
-
             <!-- Farms Registered by Month -->
             <div class="p-6 shadow-lg rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
                 <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Farms Registered by Month</h2>
-                <div style="max-width: 100%; height: 350px;">
+                <div style="max-width: 100%; height: 300px;">
                     <canvas id="farmsChart"></canvas>
                 </div>
             </div>
@@ -164,12 +181,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         // Get data from backend
         var farmsData = <?php echo json_encode($farmData, 15, 512) ?> || {};
-        var pestAndDiseaseData = <?php echo json_encode($pestAndDiseaseData, 15, 512) ?> || [];
-        var casesBySeverity = <?php echo json_encode($casesBySeverity, 15, 512) ?> || {};
         var pestVsDisease = <?php echo json_encode($pestVsDisease, 15, 512) ?> || {};
-        var topPests = <?php echo json_encode($topPests, 15, 512) ?> || {};
-        var farmsByMunicipality = <?php echo json_encode($farmsByMunicipality, 15, 512) ?> || {};
-        var soilPhDistribution = <?php echo json_encode($soilPhDistribution, 15, 512) ?> || {};
 
         // Check if dark mode
         const isDark = document.documentElement.classList.contains('dark');
@@ -186,78 +198,7 @@
             purple: 'rgba(168, 85, 247, 0.8)',
         };
 
-        // 1. Pest and Disease Cases Over Time Chart
-        var casesLabels = pestAndDiseaseData.map(data => data.month) || ['No Data'];
-        var casesCounts = pestAndDiseaseData.map(data => data.total_cases) || [0];
-
-        new Chart(document.getElementById('pestCasesOverTimeChart'), {
-            type: 'line',
-            data: {
-                labels: casesLabels,
-                datasets: [{
-                    label: 'Total Cases',
-                    data: casesCounts,
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    borderColor: colors.danger,
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        labels: { color: textColor }
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: { color: textColor },
-                        grid: { color: gridColor }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        ticks: { color: textColor },
-                        grid: { color: gridColor }
-                    }
-                }
-            }
-        });
-
-        // 2. Cases by Severity Chart
-        var severityLabels = Object.keys(casesBySeverity).map(s => s.charAt(0).toUpperCase() + s.slice(1)) || ['No Data'];
-        var severityCounts = Object.values(casesBySeverity) || [0];
-
-        new Chart(document.getElementById('casesBySeverityChart'), {
-            type: 'doughnut',
-            data: {
-                labels: severityLabels,
-                datasets: [{
-                    data: severityCounts,
-                    backgroundColor: [
-                        colors.danger,
-                        colors.warning,
-                        colors.success
-                    ],
-                    borderWidth: 2,
-                    borderColor: isDark ? '#1f2937' : '#ffffff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { color: textColor, padding: 15 }
-                    }
-                }
-            }
-        });
-
-        // 3. Pest vs Disease Distribution Chart
+        // 1. Pest vs Disease Distribution Chart
         var pestVsDiseaseLabels = Object.keys(pestVsDisease) || ['No Data'];
         var pestVsDiseaseCounts = Object.values(pestVsDisease) || [0];
 
@@ -287,127 +228,7 @@
             }
         });
 
-        // 4. Top 5 Most Common Issues Chart
-        var topPestsLabels = Object.keys(topPests) || ['No Data'];
-        var topPestsCounts = Object.values(topPests) || [0];
-
-        new Chart(document.getElementById('topPestsChart'), {
-            type: 'bar',
-            data: {
-                labels: topPestsLabels,
-                datasets: [{
-                    label: 'Cases',
-                    data: topPestsCounts,
-                    backgroundColor: colors.danger,
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        ticks: { color: textColor },
-                        grid: { color: gridColor }
-                    },
-                    y: {
-                        ticks: { color: textColor },
-                        grid: { display: false }
-                    }
-                }
-            }
-        });
-
-        // 5. Soil pH Distribution Chart
-        var soilPhLabels = Object.keys(soilPhDistribution) || ['No Data'];
-        var soilPhCounts = Object.values(soilPhDistribution) || [0];
-
-        new Chart(document.getElementById('soilPhChart'), {
-            type: 'bar',
-            data: {
-                labels: soilPhLabels,
-                datasets: [{
-                    label: 'Tests',
-                    data: soilPhCounts,
-                    backgroundColor: [
-                        colors.danger,
-                        colors.warning,
-                        colors.info,
-                        colors.success,
-                        colors.purple
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    x: {
-                        ticks: {
-                            color: textColor,
-                            maxRotation: 45,
-                            minRotation: 45
-                        },
-                        grid: { display: false }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        ticks: { color: textColor },
-                        grid: { color: gridColor }
-                    }
-                }
-            }
-        });
-
-        // 6. Farms by Municipality Chart
-        var municipalityLabels = Object.keys(farmsByMunicipality) || ['No Data'];
-        var municipalityCounts = Object.values(farmsByMunicipality) || [0];
-
-        new Chart(document.getElementById('farmsByMunicipalityChart'), {
-            type: 'bar',
-            data: {
-                labels: municipalityLabels,
-                datasets: [{
-                    label: 'Farms',
-                    data: municipalityCounts,
-                    backgroundColor: colors.primary,
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    x: {
-                        ticks: {
-                            color: textColor,
-                            maxRotation: 45,
-                            minRotation: 45
-                        },
-                        grid: { display: false }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        ticks: { color: textColor },
-                        grid: { color: gridColor }
-                    }
-                }
-            }
-        });
-
-        // 7. Farms Registered by Month Chart
+        // 2. Farms Registered by Month Chart
         var farmLabels = Object.keys(farmsData).map(month => {
             const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             return monthNames[month - 1] || `Month ${month}`;
@@ -447,6 +268,13 @@
     });
 
     // ==================== TABLE DATA FUNCTIONALITY ====================
+
+    // Helper function to format dates in long format
+    function formatLongDate(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
 
     // Fetch all data needed for the table
     let allTableData = {
@@ -587,7 +415,7 @@
                     'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                 }">${item.severity || 'N/A'}</span>`,
                 item.confidence ? `${(item.confidence * 100).toFixed(1)}%` : 'N/A',
-                item.date_detected ? new Date(item.date_detected).toLocaleDateString() : 'N/A',
+                formatLongDate(item.date_detected),
                 item.area || 'N/A'
             ]);
         } else if (dataType === 'farms') {
@@ -597,7 +425,7 @@
                 item.farmer_name || 'N/A',
                 item.barangay_name || item.barangay || 'N/A',
                 item.lot_hectare || 'N/A',
-                item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A'
+                formatLongDate(item.created_at)
             ]);
         } else if (dataType === 'farmers') {
             headers = ['App No', 'Full Name', 'Barangay', 'Sex', 'Age', 'Phone', 'Crop', 'Application Date'];
@@ -609,13 +437,13 @@
                 item.age || 'N/A',
                 item.phone_no || 'N/A',
                 item.crop || 'N/A',
-                item.date_of_application ? new Date(item.date_of_application).toLocaleDateString() : (item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A')
+                item.date_of_application ? formatLongDate(item.date_of_application) : formatLongDate(item.created_at)
             ]);
         } else if (dataType === 'soil') {
             headers = ['Farm Name', 'Date Collected', 'pH Level', 'Nitrogen (%)', 'Phosphorus (ppm)', 'Potassium (ppm)'];
             rows = paginatedData.map(item => [
                 item.farm_name || 'N/A',
-                item.date_collected ? new Date(item.date_collected).toLocaleDateString() : 'N/A',
+                formatLongDate(item.date_collected),
                 `<span class="px-2 py-1 text-xs font-semibold rounded-full ${
                     item.ph_level < 5.5 ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
                     item.ph_level >= 6.0 && item.ph_level < 7.0 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
@@ -634,7 +462,7 @@
                         '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">Pest/Disease</span>',
                         item.pest || 'N/A',
                         `Severity: ${item.severity || 'N/A'}`,
-                        item.date_detected ? new Date(item.date_detected).toLocaleDateString() : 'N/A',
+                        formatLongDate(item.date_detected),
                         `<span class="px-2 py-1 text-xs rounded-full ${item.validation_status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${item.validation_status || 'N/A'}</span>`
                     ];
                 } else if (item.dataType === 'farms') {
@@ -642,7 +470,7 @@
                         '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">Farm</span>',
                         item.name || 'N/A',
                         item.barangay_name || item.barangay || 'N/A',
-                        item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A',
+                        formatLongDate(item.created_at),
                         `<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">${item.lot_hectare || 'N/A'} ha</span>`
                     ];
                 } else if (item.dataType === 'farmers') {
@@ -650,7 +478,7 @@
                         '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">Farmer</span>',
                         item.full_name || 'N/A',
                         item.barangay_name || item.barangay || 'N/A',
-                        item.date_of_application ? new Date(item.date_of_application).toLocaleDateString() : (item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A'),
+                        item.date_of_application ? formatLongDate(item.date_of_application) : formatLongDate(item.created_at),
                         `<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">${item.crop || 'N/A'}</span>`
                     ];
                 } else {
@@ -658,7 +486,7 @@
                         '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">Soil</span>',
                         item.farm_name || 'N/A',
                         `pH: ${item.ph_level ? item.ph_level.toFixed(2) : 'N/A'}`,
-                        item.date_collected ? new Date(item.date_collected).toLocaleDateString() : 'N/A',
+                        formatLongDate(item.date_collected),
                         `<span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Analysis</span>`
                     ];
                 }

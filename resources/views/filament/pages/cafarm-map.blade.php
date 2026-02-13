@@ -116,7 +116,7 @@
                 <label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border cursor-pointer transition-all
                               border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/40">
                     <input type="checkbox" id="toggleMunicipal" onchange="toggleBoundaryLayer('municipal')"
-                           class="rounded border-gray-300 text-orange-600 focus:ring-orange-500 w-3.5 h-3.5">
+                           class="rounded border-gray-300 text-orange-600 focus:ring-orange-500 w-3.5 h-3.5" checked>
                     <span class="w-2.5 h-2.5 rounded-sm" style="background: #f97316; border: 1.5px solid #ea580c;"></span>
                     <span class="text-xs font-medium text-orange-700 dark:text-orange-300">Municipal</span>
                 </label>
@@ -124,7 +124,7 @@
                 <label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border cursor-pointer transition-all
                               border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40">
                     <input type="checkbox" id="toggleBarangay" onchange="toggleBoundaryLayer('barangay')"
-                           class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 w-3.5 h-3.5">
+                           class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 w-3.5 h-3.5" checked>
                     <span class="w-2.5 h-2.5 rounded-sm" style="background: #10b981; border: 1.5px solid #059669;"></span>
                     <span class="text-xs font-medium text-emerald-700 dark:text-emerald-300">Barangay</span>
                 </label>
@@ -291,8 +291,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const allFarms = @json($this->getAllFarms());
 
 
-    const map = L.map('map')
-        .setView([7.738017313026259, 126.14915197088574], 11);
+    // Davao de Oro province bounds (with padding for comfortable viewing)
+    const provinceBounds = L.latLngBounds(
+        [7.05, 125.65],  // Southwest corner
+        [8.05, 126.55]   // Northeast corner
+    );
+
+    const map = L.map('map', {
+        maxBounds: provinceBounds,
+        maxBoundsViscosity: 1.0,
+        minZoom: 10,
+    }).setView([7.56, 126.10], 11);
 
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -686,11 +695,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="popup-title">${farm.name}</div>
                         <div class="popup-detail">
                             <span class="popup-label">Barangay</span>
-                            <span class="popup-value">${farm.barangay ?? 'N/A'}</span>
+                            <span class="popup-value">${farm.barangay_name ?? farm.barangay ?? 'N/A'}</span>
                         </div>
                         <div class="popup-detail">
                             <span class="popup-label">Municipality</span>
-                            <span class="popup-value">${farm.municipality ?? 'N/A'}</span>
+                            <span class="popup-value">${farm.municipality_name ?? farm.municipality ?? 'N/A'}</span>
                         </div>
                         <div class="popup-detail">
                             <span class="popup-label">Coordinates</span>
@@ -719,11 +728,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="popup-title">${selectedFarm.name}</div>
                         <div class="popup-detail">
                             <span class="popup-label">Barangay</span>
-                            <span class="popup-value">${selectedFarm.barangay ?? 'N/A'}</span>
+                            <span class="popup-value">${selectedFarm.barangay_name ?? selectedFarm.barangay ?? 'N/A'}</span>
                         </div>
                         <div class="popup-detail">
                             <span class="popup-label">Municipality</span>
-                            <span class="popup-value">${selectedFarm.municipality ?? 'N/A'}</span>
+                            <span class="popup-value">${selectedFarm.municipality_name ?? selectedFarm.municipality ?? 'N/A'}</span>
                         </div>
                         <div class="popup-detail">
                             <span class="popup-label">Coordinates</span>
@@ -946,7 +955,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             // Zoom to selected farm
             const selectedFarm = allFarms.find(f => f.id == farmVal);
-            if (selectedFarm) {
+            if (selectedFarm && selectedFarm.latitude && selectedFarm.longitude) {
                 setHighlight(null);
                 map.setView([parseFloat(selectedFarm.latitude), parseFloat(selectedFarm.longitude)], 15);
             }
@@ -1279,12 +1288,60 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
 
+    // ================= PROVINCE MASK =================
+
+    function addProvinceMask(geojsonData) {
+        // World outer ring (covers the entire map)
+        const worldOuter = [
+            [-90, -180], [-90, 180], [90, 180], [90, -180], [-90, -180]
+        ];
+
+        // Extract province polygon coordinates as holes
+        const holes = [];
+        geojsonData.features.forEach(feature => {
+            const geom = feature.geometry;
+            if (geom.type === 'Polygon') {
+                // GeoJSON is [lng, lat], Leaflet needs [lat, lng]
+                holes.push(geom.coordinates[0].map(c => [c[1], c[0]]));
+            } else if (geom.type === 'MultiPolygon') {
+                geom.coordinates.forEach(poly => {
+                    holes.push(poly[0].map(c => [c[1], c[0]]));
+                });
+            }
+        });
+
+        // Create polygon: world as outer, province as hole(s)
+        const maskCoords = [worldOuter, ...holes];
+        L.polygon(maskCoords, {
+            color: 'none',
+            fillColor: '#ffffff',
+            fillOpacity: 0.85,
+            interactive: false,
+        }).addTo(map);
+    }
+
+
     // ================= INIT =================
 
-    // Load provincial boundary and fit map
-    loadBoundaryLayer('provincial').then(layer => {
-        map.addLayer(layer);
-        map.fitBounds(layer.getBounds(), { padding: [20, 20] });
+    // Load all boundary layers and fit map to Davao de Oro
+    const provDataPromise = fetch('/maps/ProvincialBoundary.json').then(r => r.json());
+
+    Promise.all([
+        provDataPromise,
+        loadBoundaryLayer('provincial'),
+        loadBoundaryLayer('municipal'),
+        loadBoundaryLayer('barangay'),
+    ]).then(([provGeoJson, provLayer, munLayer, brgyLayer]) => {
+        // Add mask first (below boundaries)
+        addProvinceMask(provGeoJson);
+
+        map.addLayer(provLayer);
+        map.addLayer(munLayer);
+        map.addLayer(brgyLayer);
+
+        const bounds = provLayer.getBounds().pad(0.10);
+        map.setMaxBounds(bounds);
+        map.fitBounds(provLayer.getBounds(), { padding: [20, 20] });
     });
 
     // Load geo data for municipality/barangay dropdowns

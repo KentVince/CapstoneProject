@@ -29,7 +29,6 @@ use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use App\Services\FcmNotificationService;
 use Filament\Forms\Components\Textarea;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ImageEntry;
@@ -44,11 +43,27 @@ class PestAndDiseaseResource extends Resource
 {
     protected static ?string $model = PestAndDisease::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-globe-americas';
+    protected static ?string $navigationIcon = 'heroicon-o-bug-ant';
     protected static ?string $navigationLabel = 'Records';
     protected static ?string $pluralLabel = 'Records';
     protected static ?string $navigationGroup = 'Pest and Disease';
     protected static ?int $navigationSort = 1;
+
+    /**
+     * Get the navigation badge showing count of pending detections
+     */
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::where('validation_status', 'pending')->count();
+    }
+
+    /**
+     * Set the badge color to warning (orange) for pending items
+     */
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
 
     public static function form(Form $form): Form
 {
@@ -184,15 +199,6 @@ class PestAndDiseaseResource extends Resource
                                         'validated_at' => now(),
                                     ]);
 
-                                    // Send FCM notification to farmer
-                                    if ($record->app_no) {
-                                        FcmNotificationService::sendValidationNotification(
-                                            $record->app_no,
-                                            'approved',
-                                            $record->pest,
-                                            $record->id
-                                        );
-                                    }
 
                                     Notification::make()
                                         ->title('Detection Approved')
@@ -223,16 +229,6 @@ class PestAndDiseaseResource extends Resource
                                         'validated_at' => now(),
                                     ]);
 
-                                    // Send FCM notification to farmer
-                                    if ($record->app_no) {
-                                        FcmNotificationService::sendValidationNotification(
-                                            $record->app_no,
-                                            'disapproved',
-                                            $record->pest,
-                                            $record->id,
-                                            $data['expert_comments']
-                                        );
-                                    }
 
                                     Notification::make()
                                         ->title('Detection Disapproved')
@@ -249,9 +245,14 @@ class PestAndDiseaseResource extends Resource
             Tables\Columns\TextColumn::make('date_detected')->date(),
             Tables\Columns\TextColumn::make('pest'),
             Tables\Columns\TextColumn::make('severity')->badge(),
-            Tables\Columns\TextColumn::make('confidence')
-                ->label('Confidence')
-                ->suffix('%'),
+            Tables\Columns\TextColumn::make('type')
+                ->label('Type')
+                ->badge()
+                ->color(fn (string $state): string => match ($state) {
+                    'pest' => 'danger',
+                    'disease' => 'warning',
+                    default => 'gray',
+                }),
             Tables\Columns\TextColumn::make('validation_status')
                 ->label('Status')
                 ->badge()
@@ -301,15 +302,6 @@ class PestAndDiseaseResource extends Resource
                                     'validated_at' => now(),
                                 ]);
 
-                                // Send FCM notification to farmer
-                                if ($record->app_no) {
-                                    FcmNotificationService::sendValidationNotification(
-                                        $record->app_no,
-                                        'approved',
-                                        $record->pest,
-                                        $record->id
-                                    );
-                                }
 
                                 Notification::make()
                                     ->title('Detection Approved')
@@ -340,16 +332,6 @@ class PestAndDiseaseResource extends Resource
                                     'validated_at' => now(),
                                 ]);
 
-                                // Send FCM notification to farmer
-                                if ($record->app_no) {
-                                    FcmNotificationService::sendValidationNotification(
-                                        $record->app_no,
-                                        'disapproved',
-                                        $record->pest,
-                                        $record->id,
-                                        $data['expert_comments']
-                                    );
-                                }
 
                                 Notification::make()
                                     ->title('Detection Disapproved')

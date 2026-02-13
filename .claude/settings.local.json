@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(wsl -e bash -c:*)"
+      "Bash(wsl -e bash -c:*)",
+      "Bash(wsl php artisan optimize:clear:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(wsl bash -c \"cd /var/www/html/CapstoneProject && php artisan tinker --execute=\"\"\n\\\\$puroks = \\\\App\\\\Models\\\\Purok::select\\(''id'',''purok_sitio'',''purok_filter''\\)->whereIn\\(''purok_filter'', [''09-0001'',''09-0004'',''01-0001'',''01-0002'',''07-0001'',''05-0001'',''08-0001'',''10-0001'',''06-0001'',''11-0001'',''04-0001'',''03-0001'']\\)->get\\(\\)->groupBy\\(''purok_filter''\\)->toArray\\(\\);\necho json_encode\\(\\\\$puroks\\);\n\"\"\")"
     ]
   }
 }

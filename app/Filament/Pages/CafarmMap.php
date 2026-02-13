@@ -7,6 +7,8 @@ use App\Models\PestAndDisease;
 use App\Models\PestAndDiseaseCategory;
 use App\Models\SoilAnalysis;
 use App\Models\Farm;
+use App\Models\Municipality;
+use App\Models\Barangay;
 
 class CafarmMap extends Page
 {
@@ -110,11 +112,17 @@ class CafarmMap extends Page
     // Get all registered farms
     public function getAllFarms()
     {
+        $municipalities = Municipality::pluck('municipality', 'code');
+        $barangays = Barangay::pluck('barangay', 'code');
+
         return Farm::select('id', 'name', 'latitude', 'longitude', 'barangay', 'municipality')
-            ->whereNotNull('latitude')
-            ->whereNotNull('longitude')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(function ($farm) use ($municipalities, $barangays) {
+                $farm->municipality_name = $municipalities[$farm->municipality] ?? $farm->municipality;
+                $farm->barangay_name = $barangays[$farm->barangay] ?? $farm->barangay;
+                return $farm;
+            });
     }
 
     // Get the first location for the map's initial view

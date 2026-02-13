@@ -14,11 +14,14 @@ class PestAndDiseaseController extends Controller
      */
 public function store(Request $request)
 {
+  
     try {
         // Validate required fields only (image handled separately)
         $validated = $request->validate([
             'app_no'        => 'nullable|string',
+            'expert_id'     => 'nullable|integer|exists:agricultural_professionals,id',
             'pest'          => 'required|string',
+            'type'          => 'nullable|string|in:pest,disease',
             'confidence'    => 'required|numeric',
             'latitude'      => 'required|numeric',
             'longitude'     => 'required|numeric',
@@ -73,7 +76,7 @@ public function store(Request $request)
         $detection = PestAndDisease::create($validated);
 
         Log::info('Detection stored successfully', [
-            'id' => $detection->id,
+            'case_id' => $detection->case_id,
             'has_image' => isset($validated['image_path']),
         ]);
 
@@ -134,17 +137,30 @@ public function store(Request $request)
     }
 
     /**
-     * 📱 Get detections by app_no (for Flutter sync)
+     * 📱 Get detections by app_no OR farmer_id/farm_id (for Flutter sync)
      */
     public function getByAppNo(Request $request)
     {
-        $request->validate([
-            'app_no' => 'required|string',
-        ]);
+        $appNo = $request->input('app_no');
+        $farmerId = $request->input('farmer_id');
+        $farmId = $request->input('farm_id');
 
-        $detections = PestAndDisease::with('validator:id,name')
-            ->where('app_no', $request->app_no)
-            ->latest()
+        $query = PestAndDisease::with('validator:id,name');
+
+        if (!empty($appNo)) {
+            $query->where('app_no', $appNo);
+        } elseif (!empty($farmerId)) {
+            $query->where('farmer_id', $farmerId);
+            if (!empty($farmId)) {
+                $query->where('farm_id', $farmId);
+            }
+        } else {
+            return response()->json([
+                'error' => 'app_no or farmer_id is required',
+            ], 400);
+        }
+
+        $detections = $query->orderBy('date_detected', 'desc')
             ->get()
             ->map(function ($detection) {
                 return $this->formatDetection($detection);
@@ -211,10 +227,14 @@ public function store(Request $request)
      */
     private function formatDetection($detection)
     {
+
+   
         return [
             'case_id' => $detection->case_id,
             'app_no' => $detection->app_no,
+            'expert_id' => $detection->expert_id,
             'pest' => $detection->pest,
+            'type' => $detection->type,
             'confidence' => $detection->confidence,
             'severity' => $detection->severity,
             'latitude' => $detection->latitude,

@@ -1,0 +1,1 @@
+@livewire('change-password-modal')

@@ -21,7 +21,7 @@ class FarmerResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Farmer::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-user-circle';
+    protected static ?string $navigationIcon = 'heroicon-o-identification';
     protected static ?string $navigationLabel = 'Farmer Information';
     protected static ?string $pluralLabel = 'Farmers';
 

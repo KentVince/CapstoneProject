@@ -8,12 +8,26 @@
 /* SIDEBAR STYLES */
 /* ================================================================================================ */
 
-.fi-sidebar,
+.fi-sidebar
+{
+
+@apply bg-custom-color-sidebar;
+@apply dark:bg-custom-color-sidebar;
+}
 .fi-sidebar-header {
     
-    @apply bg-custom-color-sidebar;
-    @apply dark:bg-custom-color-sidebar;
+@apply bg-custom-color-darkmode;
+@apply dark:bg-custom-color-darkmode;
 }
+
+/* .dark\:bg-gray-900:is(.dark *) {
+    --tw-bg-opacity: 1;
+    background-color: #003432;
+} */
+/* .dark\:ring-white\/10:is(.dark *) {
+    --tw-ring-color: rgb(224 0 0 / 10%);
+    background-color: #003432;
+} */
 
 .fi-body {
     @apply bg-gray-100;
@@ -82,14 +96,14 @@
 }
 
 .fi-header-heading {
-    @apply text-emerald-800;
+    @apply text-white;
     @apply dark:text-white;
     @apply uppercase;
 }
 
 /* Main Layout Background */
 .fi-layout {
-    @apply bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50;
+ @apply bg-[#14532c];
     @apply dark:bg-gradient-to-br dark:from-green-900/90 dark:from-30% dark:via-green-800/80 dark:to-green-900/100 dark:to-60%;
 }
 
@@ -551,8 +565,6 @@
 
 .fi-btn.fi-btn-color-primary {
     background: linear-gradient(135deg, #0e664a 0%, #003432 100%);
-    @apply shadow-lg shadow-emerald-500/25;
-    @apply hover:shadow-xl hover:shadow-emerald-500/30;
     @apply transition-all duration-200;
     @apply border-0;
 }
@@ -637,50 +649,74 @@
     z-index: 50;
 }
 
-.fi-modal-window {
-    background-color: #fefef1;
-    @apply rounded-2xl;
-    @apply shadow-2xl;
+/* Light mode */
+.fi-modal-content {
+    background-color: #e6f4f1 !important;
+    color: #003432 !important;
 }
 
-.dark .fi-modal-window {
-    background-color: #003432;
-}
-
-.fi-modal-header {
-    background-color: #fefef1;
-    @apply border-b border-gray-200;
-    @apply dark:border-emerald-800;
+/* Dark mode - All modal elements */
+.dark .fi-modal-content {
+    background-color: #003432 !important;
+    color: white !important;
 }
 
 .dark .fi-modal-header {
-    background-color: #003432;
+    background-color: #003432 !important;
 }
 
-.fi-modal-heading {
-    @apply text-gray-900;
-    @apply dark:text-white;
-    @apply font-semibold;
-    @apply text-lg;
+.dark .fi-modal-heading {
+    color: white !important;
 }
 
-.fi-modal-content {
-    background-color: #fefef1;
-}
-
-.dark .fi-modal-content {
-    background-color: #003432;
-}
-
-.fi-modal-footer {
-    background-color: #fefef1;
-    @apply border-t border-gray-200;
-    @apply dark:border-emerald-800;
-    padding-top: 30px;
+.dark .fi-modal-description {
+    color: rgba(255, 255, 255, 0.7) !important;
 }
 
 .dark .fi-modal-footer {
-    background-color: #003432;
+    background-color: #003432 !important;
+}
+
+.dark .fi-modal-close-btn {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.dark .fi-modal-close-btn:hover {
+    color: white !important;
+}
+
+/* Dark mode - Sections inside modals */
+.dark .fi-modal .fi-section {
+    background-color: #003432 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .fi-modal .fi-section-content {
+    background-color: #003432 !important;
+}
+
+/* Dark mode - Form inputs inside modals */
+.dark .fi-modal .fi-input-wrp {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.dark .fi-modal .fi-input {
+    color: white !important;
+}
+
+.dark .fi-modal .fi-fo-field-wrp-label span {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Dark mode - Action modals (confirm delete, etc.) */
+.dark .fi-modal-content .fi-ac {
+    background-color: #003432 !important;
+}
+
+/* Dark mode - Notification modal */
+.dark .fi-modal .fi-no-notification {
+    background-color: #004540 !important;
 }
 
 /* ================================================================================================ */

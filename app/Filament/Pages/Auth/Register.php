@@ -5,6 +5,7 @@ namespace App\Filament\Pages\Auth;
 use App\Models\User;
 use App\Models\Farmer;
 use App\Models\Farm;
+use App\Models\AgriculturalProfessional;
 use Filament\Forms\Get;
 use Filament\Pages\Page;
 use BaconQrCode\Common\Mode;
@@ -81,25 +82,28 @@ class Register extends BaseRegister
 
         $user = $regService->registerUser($data);
 
+        $userType = $data[array_key_first($data)]['user_type'] ?? 'farmer';
 
-
-        if (!isset($user->farmer_id)) {
-
-            /**
-             *  in case registerUser($data) did not set the
-             *  farmer_id then lets assign personnel here
-             */
-            $farmer = Farmer::where('user_id', $user->id)->first();
-
-            if ($farmer) {
-                $user->farmer_id = $farmer->id;
-                $user->save();
-
-                Farm::where('farmer_id', null)->update(['farmer_id' => $farmer->id]);
+        if ($userType === 'agricultural_professional') {
+            // Link user to agricultural professional record
+            $professional = AgriculturalProfessional::where('user_id', $user->id)->first();
+            if ($professional) {
+                // Store professional id for redirect reference
+                $user->_professional_id = $professional->id;
             }
+        } else {
+            if (!isset($user->farmer_id)) {
+                $farmer = Farmer::where('user_id', $user->id)->first();
 
+                if ($farmer) {
+                    $user->farmer_id = $farmer->id;
+                    $user->save();
 
+                    Farm::where('farmer_id', null)->update(['farmer_id' => $farmer->id]);
+                }
+            }
         }
+
         return $user;
     }
 
@@ -153,11 +157,13 @@ class Register extends BaseRegister
         /**
          * redirect to edit page
          */
-        if (isset($user->farmer_id)) {
+        $professional = AgriculturalProfessional::where('user_id', $user->id)->first();
+        if ($professional) {
+            return new CustomRegistrationResponse(route('filament.admin.resources.agricultural-professionals.edit', $professional->id));
+        } elseif (isset($user->farmer_id)) {
             return new CustomRegistrationResponse(route('filament.admin.resources.farmers.edit', $user->farmer_id));
         } else {
-            // Handle missing farmer_id, maybe log an error or notify admin
-            throw new \Exception('Personnel ID missing for user registration');
+            throw new \Exception('Registration record missing for user');
         }
     }
 

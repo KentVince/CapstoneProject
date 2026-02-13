@@ -1,7 +1,8 @@
 @php($farmer = $getState())
 
 @if ($farmer && $farmer->qr_code)
-    <div class="flex items-center justify-center" x-data="{ open: false }">
+
+    <div class=" flex items-center justify-center" x-data="{ open: false }">
         {{-- Clickable QR Thumbnail --}}
         <img
             src="{{ asset('storage/' . $farmer->qr_code) }}"
@@ -12,7 +13,7 @@
         >
 
         {{-- QR Modal Preview with Teleport --}}
-        <template x-teleport="body">
+        <template x-teleport="body" >
             <div
                 x-show="open"
                 x-transition:enter="transition ease-out duration-200"
@@ -31,7 +32,7 @@
                 ></div>
 
                 {{-- Modal Content --}}
-                <div class="fixed inset-0 flex items-center justify-center p-4">
+                <div class="fixed inset-0 flex items-center justify-center p-4 ">
                     <div
                         x-show="open"
                         x-transition:enter="transition ease-out duration-200"
@@ -40,11 +41,11 @@
                         x-transition:leave="transition ease-in duration-150"
                         x-transition:leave-start="opacity-100 scale-100"
                         x-transition:leave-end="opacity-0 scale-95"
-                        class="relative bg-white dark:bg-[#003432] rounded-2xl shadow-2xl max-w-md w-full mx-auto overflow-hidden"
+                        class="relative bg-white qr-modal-wrapper rounded-2xl shadow-2xl max-w-md w-full mx-auto overflow-hidden"
                         x-on:click.stop
                     >
                         {{-- Modal Header --}}
-                        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-emerald-800">
+                        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white qr-modal-header">
                             <div class="flex items-center gap-2">
                                 <svg class="w-5 h-5 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
@@ -63,8 +64,8 @@
                         </div>
 
                         {{-- Modal Body --}}
-                        <div class="flex flex-col items-center gap-6 p-6">
-                            <div class="p-4 bg-white rounded-xl shadow-lg border border-gray-200">
+                        <div class="flex flex-col items-center gap-6 p-6 bg-white qr-modal-body">
+                            <div class="p-4 bg-emerald rounded-xl shadow-lg border border-gray-200">
                                 <img
                                     src="{{ asset('storage/' . $farmer->qr_code) }}"
                                     alt="QR Code"
@@ -91,6 +92,23 @@
                 </div>
             </div>
         </template>
+
+        <style>
+        .bg-coil {
+            background: linear-gradient(135deg, #0d3320 0%, #1e5631 25%, #2d7a4a 50%, #0d3320 100%);
+        }
+        .dark .qr-modal-wrapper {
+            background-color: #003432 !important;
+        }
+        .dark .qr-modal-header {
+            background-color: #003432 !important;
+            border-color: #065f46 !important;
+        }
+        .dark .qr-modal-body {
+            background-color: #003432 !important;
+        }
+        </style>
+
     </div>
 @else
     <span class="text-gray-400 text-xs italic">No QR</span>

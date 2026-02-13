@@ -46,7 +46,9 @@ class PestAndDisease extends Model
 
     protected $fillable = [
         'app_no',
+        'expert_id',
         'pest',
+        'type',
         'confidence',
         'latitude',
         'longitude',
@@ -87,6 +89,14 @@ class PestAndDisease extends Model
     public function category()
     {
         return $this->belongsTo(PestAndDiseaseCategory::class, 'category_id');
+    }
+
+    /**
+     * Relationship: PestAndDisease belongs to an Agricultural Professional (Expert)
+     */
+    public function expert()
+    {
+        return $this->belongsTo(AgriculturalProfessional::class, 'expert_id', 'id');
     }
 
     /**

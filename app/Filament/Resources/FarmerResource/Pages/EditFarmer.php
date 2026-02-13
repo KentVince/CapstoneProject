@@ -34,9 +34,11 @@ class EditFarmer extends EditRecord
         $this->form->fill($recordData->toArray());
     }
 
-    /**
-     * ✅ After saving changes, generate QR if missing.
-     */
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index2');
+    }
+
     protected function afterSave(): void
     {
         $farmer = $this->record;

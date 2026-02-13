@@ -10,10 +10,12 @@ use App\Http\Controllers\MobileController;
 // use App\Http\Controllers\BulletinController;
 use App\Http\Controllers\Api\Mobile\BulletinController;
 use App\Http\Controllers\SoilAnalysisController;
+use App\Models\AgriculturalProfessional;
 use App\Models\Barangay;
 use App\Models\Farmer;
 use App\Models\Farm;
 use App\Models\MobileUser;
+use App\Models\Municipality;
 use App\Models\Bulletin;
 use App\Models\SoilAnalysis;
 use App\Models\SoilInformation;
@@ -109,82 +111,84 @@ Route::get('/mobile/announcements', function () {
 // CAFARM MOBILE APP ROUTES
 // ========================
 
-// Step 1️⃣: Verify App Number (farmer registration check)
+// Step 1: Verify App Number (farmer or expert)
 Route::post('/mobile/check-app-no', function (Request $request) {
     $request->validate(['app_no' => 'required']);
 
-    $farmer = Farmer::where('app_no', $request->app_no)->first();
-    $farm_name = Farm::where('farmer_id',  $farmer->id)->first();
+    // Check if it's an expert (AP-prefix) or farmer
+    $professional = AgriculturalProfessional::where('app_no', $request->app_no)->first();
 
-     $farm_barangay = Barangay::where('code', $farmer->barangay)->first();
+    if ($professional) {
+        // Expert flow
+        $mobileUser = MobileUser::where('professional_id', $professional->id)->first();
 
+        if (!$mobileUser) {
+            $mobileUser = MobileUser::create([
+                'professional_id' => $professional->id,
+                'username' => strtolower(str_replace(' ', '', $professional->lastname)) . $professional->id,
+                'password' => Hash::make('cafarm123'),
+                'app_no' => $professional->app_no,
+                'type' => 'agricultural_professional',
+                'barangay' => $professional->barangay,
+                'contact_no' => $professional->phone_no,
+                'email' => $professional->email_add,
+            ]);
+        }
 
-    if (!$farmer) {
-        return response()->json(['message' => '❌ Application number not found'], 404);
+        $barangayName = Barangay::where('code', $professional->barangay)->value('barangay') ?? $professional->barangay;
+        $municipalityName = Municipality::where('code', $professional->municipality)->value('municipality') ?? $professional->municipality;
+
+        return response()->json([
+            'message' => 'App number verified successfully',
+            'user_type' => 'expert',
+            'user' => [
+                'username' => $mobileUser->username,
+                'type' => 'agricultural_professional',
+            ],
+            'expert' => [
+                'id' => $professional->id,
+                'app_no' => $professional->app_no,
+                'name' => trim("{$professional->lastname}, {$professional->firstname} {$professional->middlename}"),
+                'agency' => $professional->agency,
+                'municipality' => $municipalityName,
+                'municipality_code' => $professional->municipality,
+                'barangay' => $barangayName,
+                'phone_no' => $professional->phone_no,
+                'email' => $professional->email_add,
+            ],
+        ]);
     }
 
-    // 🔍 Try to find a linked mobile user
+    // Farmer flow
+    $farmer = Farmer::where('app_no', $request->app_no)->first();
+
+    if (!$farmer) {
+        return response()->json(['message' => 'Application number not found'], 404);
+    }
+
+    $farm = Farm::where('farmer_id', $farmer->id)->first();
+    $farm_barangay = Barangay::where('code', $farmer->barangay)->first();
+
     $mobileUser = MobileUser::where('farmer_id', $farmer->id)->first();
 
-    // 🪄 If no mobile user yet, create one automatically
     if (!$mobileUser) {
         $mobileUser = MobileUser::create([
             'farmer_id' => $farmer->id,
-            'username' => strtolower(str_replace(' ', '', $farmer->lastname)) . $farmer->id, // e.g. santos2
-            'password' => Hash::make('cafarm123'), // default password
+            'username' => strtolower(str_replace(' ', '', $farmer->lastname)) . $farmer->id,
+            'password' => Hash::make('cafarm123'),
             'app_no' => $farmer->app_no,
-            'farm_name' => $farm_name->name,
-            'type' => 'Farmer',
-             'barangay' => $farm_barangay->barangay,
+            'farm_name' => $farm->name ?? 'Unknown Farm',
+            'type' => 'farmer',
+            'barangay' => $farm_barangay->barangay ?? '',
         ]);
     }
-
-        return response()->json([
-            'message' => '✅ App number verified successfully',
-            'user' => [
-                'username' => $mobileUser->username ?? 'Unknown',
-                'type' => $mobileUser->type ?? 'Farmer',
-            ],
-            'farmer' => [
-                'id' => $farmer->id,
-                'app_no' => $farmer->app_no ?? '',
-                'name' => trim("{$farmer->lastname}, {$farmer->firstname} {$farmer->middlename}"),
-                'barangay' => $farm_barangay->barangay ?? '',
-                'farm' => [ // ✅ nested farm info inside farmer
-                    'name' => $farm_name->name ?? 'Unknown Farm',
-                ],
-            ],
-        ]);
-
-});
-
-
-// Step 1B️⃣: Verify Username (alternative login method)
-Route::post('/mobile/check-username', function (Request $request) {
-    $request->validate(['username' => 'required']);
-
-    // Find mobile user by username
-    $mobileUser = MobileUser::where('username', $request->username)->first();
-
-    if (!$mobileUser) {
-        return response()->json(['message' => '❌ Username not found'], 404);
-    }
-
-    // Get farmer details
-    $farmer = Farmer::where('id', $mobileUser->farmer_id)->first();
-
-    if (!$farmer) {
-        return response()->json(['message' => '❌ Farmer record not found'], 404);
-    }
-
-    $farm_name = Farm::where('farmer_id', $farmer->id)->first();
-    $farm_barangay = Barangay::where('code', $farmer->barangay)->first();
 
     return response()->json([
-        'message' => '✅ Username verified successfully',
+        'message' => 'App number verified successfully',
+        'user_type' => 'farmer',
         'user' => [
-            'username' => $mobileUser->username,
-            'type' => $mobileUser->type ?? 'Farmer',
+            'username' => $mobileUser->username ?? 'Unknown',
+            'type' => $mobileUser->type ?? 'farmer',
         ],
         'farmer' => [
             'id' => $farmer->id,
@@ -192,14 +196,86 @@ Route::post('/mobile/check-username', function (Request $request) {
             'name' => trim("{$farmer->lastname}, {$farmer->firstname} {$farmer->middlename}"),
             'barangay' => $farm_barangay->barangay ?? '',
             'farm' => [
-                'name' => $farm_name->name ?? 'Unknown Farm',
+                'name' => $farm->name ?? 'Unknown Farm',
             ],
         ],
     ]);
 });
 
 
-// Step 2️⃣: Login Authentication
+// Step 1B: Verify Username (alternative login method - farmer or expert)
+Route::post('/mobile/check-username', function (Request $request) {
+    $request->validate(['username' => 'required']);
+
+    $mobileUser = MobileUser::where('username', $request->username)->first();
+
+    if (!$mobileUser) {
+        return response()->json(['message' => 'Username not found'], 404);
+    }
+
+    // Expert flow
+    if ($mobileUser->professional_id) {
+        $professional = AgriculturalProfessional::find($mobileUser->professional_id);
+
+        if (!$professional) {
+            return response()->json(['message' => 'Professional record not found'], 404);
+        }
+
+        $barangayName = Barangay::where('code', $professional->barangay)->value('barangay') ?? $professional->barangay;
+        $municipalityName = Municipality::where('code', $professional->municipality)->value('municipality') ?? $professional->municipality;
+
+        return response()->json([
+            'message' => 'Username verified successfully',
+            'user_type' => 'expert',
+            'user' => [
+                'username' => $mobileUser->username,
+                'type' => 'agricultural_professional',
+            ],
+            'expert' => [
+                'id' => $professional->id,
+                'app_no' => $professional->app_no,
+                'name' => trim("{$professional->lastname}, {$professional->firstname} {$professional->middlename}"),
+                'agency' => $professional->agency,
+                'municipality' => $municipalityName,
+                'municipality_code' => $professional->municipality,
+                'barangay' => $barangayName,
+                'phone_no' => $professional->phone_no,
+                'email' => $professional->email_add,
+            ],
+        ]);
+    }
+
+    // Farmer flow
+    $farmer = Farmer::where('id', $mobileUser->farmer_id)->first();
+
+    if (!$farmer) {
+        return response()->json(['message' => 'Farmer record not found'], 404);
+    }
+
+    $farm = Farm::where('farmer_id', $farmer->id)->first();
+    $farm_barangay = Barangay::where('code', $farmer->barangay)->first();
+
+    return response()->json([
+        'message' => 'Username verified successfully',
+        'user_type' => 'farmer',
+        'user' => [
+            'username' => $mobileUser->username,
+            'type' => $mobileUser->type ?? 'farmer',
+        ],
+        'farmer' => [
+            'id' => $farmer->id,
+            'app_no' => $farmer->app_no ?? '',
+            'name' => trim("{$farmer->lastname}, {$farmer->firstname} {$farmer->middlename}"),
+            'barangay' => $farm_barangay->barangay ?? '',
+            'farm' => [
+                'name' => $farm->name ?? 'Unknown Farm',
+            ],
+        ],
+    ]);
+});
+
+
+// Step 2: Login Authentication (farmer or expert)
 Route::post('/mobile/login', function (Request $request) {
     $request->validate([
         'username' => 'required',
@@ -208,17 +284,49 @@ Route::post('/mobile/login', function (Request $request) {
 
     $user = MobileUser::where('username', $request->username)->first();
     if (!$user) {
-        return response()->json(['message' => '❌ Username not found'], 404);
+        return response()->json(['message' => 'Username not found'], 404);
     }
 
     if (!Hash::check($request->password, $user->password)) {
-        return response()->json(['message' => '⚠️ Incorrect password'], 401);
+        return response()->json(['message' => 'Incorrect password'], 401);
     }
 
+    // Expert login
+    if ($user->professional_id) {
+        $professional = AgriculturalProfessional::find($user->professional_id);
+
+        $barangayName = Barangay::where('code', $professional->barangay)->value('barangay') ?? $professional->barangay;
+        $municipalityName = Municipality::where('code', $professional->municipality)->value('municipality') ?? $professional->municipality;
+
+        return response()->json([
+            'message' => 'Login successful',
+            'user_type' => 'expert',
+            'user' => [
+                'id' => $user->id,
+                'username' => $user->username,
+                'type' => 'agricultural_professional',
+                'app_no' => $user->app_no,
+            ],
+            'expert' => [
+                'id' => $professional->id,
+                'app_no' => $professional->app_no,
+                'name' => trim("{$professional->lastname}, {$professional->firstname} {$professional->middlename}"),
+                'agency' => $professional->agency,
+                'municipality' => $municipalityName,
+                'municipality_code' => $professional->municipality,
+                'barangay' => $barangayName,
+                'phone_no' => $professional->phone_no,
+                'email' => $professional->email_add,
+            ],
+        ]);
+    }
+
+    // Farmer login
     $farmer = Farmer::with('farm')->find($user->farmer_id);
 
     return response()->json([
-        'message' => '✅ Login successful',
+        'message' => 'Login successful',
+        'user_type' => 'farmer',
         'user' => [
             'id' => $user->id,
             'username' => $user->username,
@@ -238,6 +346,60 @@ Route::post('/mobile/login', function (Request $request) {
     ]);
 });
 
+
+// Expert: Get farms list filtered by agency scope
+Route::post('/mobile/expert/farms', function (Request $request) {
+    $request->validate([
+        'expert_id' => 'required|integer',
+    ]);
+
+    $professional = AgriculturalProfessional::find($request->expert_id);
+
+    if (!$professional) {
+        return response()->json(['message' => 'Expert not found'], 404);
+    }
+
+    $agency = strtoupper(trim($professional->agency ?? ''));
+
+    // MAGRO = Municipal Agriculture Office → only farms in the expert's municipality
+    // PAGRO / DDOSC / others = Provincial level → all farms
+    if (str_contains($agency, 'MAGRO')) {
+        $farms = Farm::where('municipality', $professional->municipality)
+            ->with('farmer:id,app_no,firstname,lastname,middlename')
+            ->get();
+    } else {
+        $farms = Farm::with('farmer:id,app_no,firstname,lastname,middlename')->get();
+    }
+
+    $result = $farms->map(function ($farm) {
+        $farmer = $farm->farmer;
+        $barangayName = Barangay::where('code', $farm->barangay)->value('barangay') ?? $farm->barangay;
+        $municipalityName = Municipality::where('code', $farm->municipality)->value('municipality') ?? $farm->municipality;
+
+        return [
+            'farm_id' => $farm->id,
+            'farm_name' => $farm->name,
+            'farmer_id' => $farmer->id ?? null,
+            'app_no' => $farmer->app_no ?? '',
+            'farmer_name' => $farmer
+                ? trim("{$farmer->lastname}, {$farmer->firstname} {$farmer->middlename}")
+                : 'Unknown',
+            'barangay' => $barangayName,
+            'municipality' => $municipalityName,
+            'lot_hectare' => $farm->lot_hectare,
+            'latitude' => $farm->latitude,
+            'longitude' => $farm->longitude,
+        ];
+    });
+
+    return response()->json([
+        'message' => 'Farms retrieved successfully',
+        'agency' => $professional->agency,
+        'scope' => str_contains($agency, 'MAGRO') ? 'municipal' : 'provincial',
+        'count' => $result->count(),
+        'data' => $result,
+    ]);
+});
 
 Route::post('/mobile/soil-sync', function (Request $request) {
     // 1️⃣ Create or find soil information record

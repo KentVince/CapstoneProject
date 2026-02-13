@@ -20,7 +20,7 @@ class MobileUserResource extends Resource
     protected static ?string $navigationGroup = 'User Management';
     protected static ?string $navigationLabel = 'Mobile App Users';
     protected static ?string $pluralLabel = 'Mobile Users';
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 6;
     public static function form(Forms\Form $form): Forms\Form
     {
         return $form->schema([

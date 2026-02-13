@@ -15,6 +15,7 @@ export default {
                     'sidebar': '#1e5631',
                     'topnav': '#15803d',
                     'banner': '#f2911b',
+                    'darkmode': '#003432',
                     1: '#ffff',
                     2: '#ffff',
                     3: '#ffff',
