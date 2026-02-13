@@ -21,6 +21,13 @@ Route::get('/', function () {
     return redirect('/admin/login');
 });
 
+// Lightweight endpoint for sidebar badge polling
+Route::get('/admin/api/pending-detections-count', function () {
+    return response()->json([
+        'count' => PestAndDisease::where('validation_status', 'pending')->count(),
+    ]);
+})->middleware(['web', 'auth'])->name('admin.pending-count');
+
 // Impersonate routes
 Route::impersonate();
 

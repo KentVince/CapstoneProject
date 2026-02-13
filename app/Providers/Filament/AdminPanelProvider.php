@@ -129,6 +129,88 @@ class AdminPanelProvider extends PanelProvider
                 fn (): string => Blade::render('@livewire(\'change-password-modal\')')
             );
 
+            // Poll pending detections count and update sidebar badge in real-time
+            FilamentView::registerRenderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => <<<'HTML'
+                    <script>
+                        (function() {
+                            let lastCount = null;
+
+                            function findRecordsBadge() {
+                                const items = document.querySelectorAll('.fi-sidebar-item');
+                                for (const item of items) {
+                                    const label = item.querySelector('.fi-sidebar-item-label');
+                                    if (label && label.textContent.trim() === 'Records') {
+                                        return {
+                                            item: item,
+                                            badgeWrapper: item.querySelector('.fi-sidebar-item-button > span:last-child:not(.fi-sidebar-item-label):not(.fi-sidebar-item-icon)'),
+                                            badge: item.querySelector('.fi-badge')
+                                        };
+                                    }
+                                }
+                                return null;
+                            }
+
+                            function updateBadge() {
+                                fetch('/admin/api/pending-detections-count', {
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'X-Requested-With': 'XMLHttpRequest'
+                                    }
+                                })
+                                .then(function(r) { return r.json(); })
+                                .then(function(data) {
+                                    var count = data.count;
+                                    if (lastCount === count) return;
+                                    lastCount = count;
+
+                                    var result = findRecordsBadge();
+                                    if (!result) return;
+
+                                    if (count > 0) {
+                                        if (result.badge) {
+                                            // Badge exists in DOM, update its text
+                                            var textEl = result.badge.querySelector('.truncate') || result.badge.querySelector('span span');
+                                            if (textEl) textEl.textContent = count;
+                                            // Make sure it's visible
+                                            if (result.badge.parentElement) {
+                                                result.badge.parentElement.style.display = '';
+                                            }
+                                        } else {
+                                            // Badge doesn't exist yet, do a soft SPA refresh to render it
+                                            if (window.Livewire && window.Livewire.navigate) {
+                                                window.Livewire.navigate(window.location.href);
+                                            }
+                                        }
+                                    } else {
+                                        // Count is 0, hide the badge
+                                        if (result.badge && result.badge.parentElement) {
+                                            result.badge.parentElement.style.display = 'none';
+                                        }
+                                    }
+                                })
+                                .catch(function() {});
+                            }
+
+                            // Poll every 10 seconds
+                            setInterval(updateBadge, 10000);
+
+                            // Re-check after Livewire SPA navigations
+                            document.addEventListener('livewire:navigated', function() {
+                                lastCount = null;
+                                setTimeout(updateBadge, 1000);
+                            });
+
+                            // Initial check after page load
+                            document.addEventListener('DOMContentLoaded', function() {
+                                setTimeout(updateBadge, 2000);
+                            });
+                        })();
+                    </script>
+                    HTML
+            );
+
             // Add JavaScript to handle modal opening
             FilamentView::registerRenderHook(
                 PanelsRenderHook::BODY_END,

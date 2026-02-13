@@ -54,7 +54,9 @@ class PestAndDiseaseResource extends Resource
      */
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::where('validation_status', 'pending')->count();
+        $count = static::getModel()::where('validation_status', 'pending')->count();
+
+        return $count > 0 ? (string) $count : null;
     }
 
     /**
