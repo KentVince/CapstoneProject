@@ -19,4 +19,6 @@ yarn-error.log
 config/cafarm-d907a-1101360aa35c.json
 # Firebase / Google Credentials
 storage/app/firebase/*.json
+storage/app/firebase/old json/*.json
 config/*.json
+.env
