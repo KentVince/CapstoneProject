@@ -13,7 +13,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('pest_and_disease', function (Blueprint $table) {
-            $table->string('type')->nullable()->after('pest');
+            if (!Schema::hasColumn('pest_and_disease', 'type')) {
+        $table->string('type')->nullable()->after('pest');
+        }
+        // $table->string('type')->nullable()->after('pest');
         });
 
         // Populate type column based on PestAndDiseaseCategory
