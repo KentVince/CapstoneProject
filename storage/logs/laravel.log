@@ -29148,3 +29148,100 @@ REFERENCES / SOURCES
     "socket": null
 }  
 [2026-02-23 07:25:28] local.INFO: Detection stored successfully {"case_id":2,"has_image":true} 
+[2026-02-24 01:58:42] local.ERROR: Interface "App\Models\FilamentUser" not found {"exception":"[object] (Error(code: 0): Interface \"App\\Models\\FilamentUser\" not found at /var/www/html/CapstoneProject/app/Models/User.php:15)
+[stacktrace]
+#0 /var/www/html/CapstoneProject/vendor/composer/ClassLoader.php(576): include()
+#1 /var/www/html/CapstoneProject/vendor/composer/ClassLoader.php(427): Composer\\Autoload\\{closure}()
+#2 [internal function]: Composer\\Autoload\\ClassLoader->loadClass()
+#3 /var/www/html/CapstoneProject/vendor/bezhansalleh/filament-shield/src/Concerns/HasAboutCommand.php(33): class_exists()
+#4 /var/www/html/CapstoneProject/vendor/bezhansalleh/filament-shield/src/Concerns/HasAboutCommand.php(17): BezhanSalleh\\FilamentShield\\FilamentShieldServiceProvider::authProviderConfigured()
+#5 /var/www/html/CapstoneProject/vendor/bezhansalleh/filament-shield/src/FilamentShieldServiceProvider.php(37): BezhanSalleh\\FilamentShield\\FilamentShieldServiceProvider->initAboutCommand()
+#6 /var/www/html/CapstoneProject/vendor/spatie/laravel-package-tools/src/PackageServiceProvider.php(91): BezhanSalleh\\FilamentShield\\FilamentShieldServiceProvider->packageBooted()
+#7 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Spatie\\LaravelPackageTools\\PackageServiceProvider->boot()
+#8 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#9 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\\Container\\Util::unwrapIfClosure()
+#10 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod()
+#11 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\\Container\\BoundMethod::call()
+#12 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1059): Illuminate\\Container\\Container->call()
+#13 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1040): Illuminate\\Foundation\\Application->bootProvider()
+#14 [internal function]: Illuminate\\Foundation\\Application->Illuminate\\Foundation\\{closure}()
+#15 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1039): array_walk()
+#16 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/BootProviders.php(17): Illuminate\\Foundation\\Application->boot()
+#17 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(286): Illuminate\\Foundation\\Bootstrap\\BootProviders->bootstrap()
+#18 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(186): Illuminate\\Foundation\\Application->bootstrapWith()
+#19 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(170): Illuminate\\Foundation\\Http\\Kernel->bootstrap()
+#20 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter()
+#21 /var/www/html/CapstoneProject/public/index.php(51): Illuminate\\Foundation\\Http\\Kernel->handle()
+#22 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('...')
+#23 {main}
+"} 
+[2026-02-24 01:58:42] local.ERROR: Interface "App\Models\FilamentUser" not found {"exception":"[object] (Error(code: 0): Interface \"App\\Models\\FilamentUser\" not found at /var/www/html/CapstoneProject/app/Models/User.php:15)
+[stacktrace]
+#0 /var/www/html/CapstoneProject/vendor/composer/ClassLoader.php(576): include()
+#1 /var/www/html/CapstoneProject/vendor/composer/ClassLoader.php(427): Composer\\Autoload\\{closure}()
+#2 [internal function]: Composer\\Autoload\\ClassLoader->loadClass()
+#3 /var/www/html/CapstoneProject/vendor/bezhansalleh/filament-shield/src/Concerns/HasAboutCommand.php(33): class_exists()
+#4 /var/www/html/CapstoneProject/vendor/bezhansalleh/filament-shield/src/Concerns/HasAboutCommand.php(17): BezhanSalleh\\FilamentShield\\FilamentShieldServiceProvider::authProviderConfigured()
+#5 /var/www/html/CapstoneProject/vendor/bezhansalleh/filament-shield/src/FilamentShieldServiceProvider.php(37): BezhanSalleh\\FilamentShield\\FilamentShieldServiceProvider->initAboutCommand()
+#6 /var/www/html/CapstoneProject/vendor/spatie/laravel-package-tools/src/PackageServiceProvider.php(91): BezhanSalleh\\FilamentShield\\FilamentShieldServiceProvider->packageBooted()
+#7 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Spatie\\LaravelPackageTools\\PackageServiceProvider->boot()
+#8 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#9 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\\Container\\Util::unwrapIfClosure()
+#10 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod()
+#11 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\\Container\\BoundMethod::call()
+#12 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1059): Illuminate\\Container\\Container->call()
+#13 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1040): Illuminate\\Foundation\\Application->bootProvider()
+#14 [internal function]: Illuminate\\Foundation\\Application->Illuminate\\Foundation\\{closure}()
+#15 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1039): array_walk()
+#16 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/BootProviders.php(17): Illuminate\\Foundation\\Application->boot()
+#17 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(286): Illuminate\\Foundation\\Bootstrap\\BootProviders->bootstrap()
+#18 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(186): Illuminate\\Foundation\\Application->bootstrapWith()
+#19 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(170): Illuminate\\Foundation\\Http\\Kernel->bootstrap()
+#20 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter()
+#21 /var/www/html/CapstoneProject/public/index.php(51): Illuminate\\Foundation\\Http\\Kernel->handle()
+#22 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('...')
+#23 {main}
+"} 
+[2026-02-24 01:59:30] local.ERROR: Interface "App\Models\FilamentUser" not found {"exception":"[object] (Error(code: 0): Interface \"App\\Models\\FilamentUser\" not found at /var/www/html/CapstoneProject/app/Models/User.php:15)
+[stacktrace]
+#0 /var/www/html/CapstoneProject/vendor/composer/ClassLoader.php(576): include()
+#1 /var/www/html/CapstoneProject/vendor/composer/ClassLoader.php(427): Composer\\Autoload\\{closure}()
+#2 [internal function]: Composer\\Autoload\\ClassLoader->loadClass()
+#3 /var/www/html/CapstoneProject/vendor/bezhansalleh/filament-shield/src/Concerns/HasAboutCommand.php(33): class_exists()
+#4 /var/www/html/CapstoneProject/vendor/bezhansalleh/filament-shield/src/Concerns/HasAboutCommand.php(17): BezhanSalleh\\FilamentShield\\FilamentShieldServiceProvider::authProviderConfigured()
+#5 /var/www/html/CapstoneProject/vendor/bezhansalleh/filament-shield/src/FilamentShieldServiceProvider.php(37): BezhanSalleh\\FilamentShield\\FilamentShieldServiceProvider->initAboutCommand()
+#6 /var/www/html/CapstoneProject/vendor/spatie/laravel-package-tools/src/PackageServiceProvider.php(91): BezhanSalleh\\FilamentShield\\FilamentShieldServiceProvider->packageBooted()
+#7 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Spatie\\LaravelPackageTools\\PackageServiceProvider->boot()
+#8 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Container/Util.php(41): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#9 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(93): Illuminate\\Container\\Util::unwrapIfClosure()
+#10 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod()
+#11 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Container/Container.php(662): Illuminate\\Container\\BoundMethod::call()
+#12 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1059): Illuminate\\Container\\Container->call()
+#13 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1040): Illuminate\\Foundation\\Application->bootProvider()
+#14 [internal function]: Illuminate\\Foundation\\Application->Illuminate\\Foundation\\{closure}()
+#15 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1039): array_walk()
+#16 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/BootProviders.php(17): Illuminate\\Foundation\\Application->boot()
+#17 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(286): Illuminate\\Foundation\\Bootstrap\\BootProviders->bootstrap()
+#18 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(186): Illuminate\\Foundation\\Application->bootstrapWith()
+#19 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(170): Illuminate\\Foundation\\Http\\Kernel->bootstrap()
+#20 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter()
+#21 /var/www/html/CapstoneProject/public/index.php(51): Illuminate\\Foundation\\Http\\Kernel->handle()
+#22 /var/www/html/CapstoneProject/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('...')
+#23 {main}
+"} 
+[2026-02-24 01:59:37] local.ERROR: Could not check compatibility between App\Models\User::canAccessPanel(App\Models\Panel $panel): bool and Filament\Models\Contracts\FilamentUser::canAccessPanel(Filament\Panel $panel): bool, because class App\Models\Panel is not available {"exception":"[object] (Symfony\\Component\\ErrorHandler\\Error\\FatalError(code: 0): Could not check compatibility between App\\Models\\User::canAccessPanel(App\\Models\\Panel $panel): bool and Filament\\Models\\Contracts\\FilamentUser::canAccessPanel(Filament\\Panel $panel): bool, because class App\\Models\\Panel is not available at /var/www/html/CapstoneProject/app/Models/User.php:57)
+[stacktrace]
+#0 {main}
+"} 
+[2026-02-24 01:59:38] local.ERROR: Could not check compatibility between App\Models\User::canAccessPanel(App\Models\Panel $panel): bool and Filament\Models\Contracts\FilamentUser::canAccessPanel(Filament\Panel $panel): bool, because class App\Models\Panel is not available {"exception":"[object] (Symfony\\Component\\ErrorHandler\\Error\\FatalError(code: 0): Could not check compatibility between App\\Models\\User::canAccessPanel(App\\Models\\Panel $panel): bool and Filament\\Models\\Contracts\\FilamentUser::canAccessPanel(Filament\\Panel $panel): bool, because class App\\Models\\Panel is not available at /var/www/html/CapstoneProject/app/Models/User.php:57)
+[stacktrace]
+#0 {main}
+"} 
+[2026-02-24 02:00:02] local.ERROR: Could not check compatibility between App\Models\User::canAccessPanel(App\Models\Panel $panel): bool and Filament\Models\Contracts\FilamentUser::canAccessPanel(Filament\Panel $panel): bool, because class App\Models\Panel is not available {"exception":"[object] (Symfony\\Component\\ErrorHandler\\Error\\FatalError(code: 0): Could not check compatibility between App\\Models\\User::canAccessPanel(App\\Models\\Panel $panel): bool and Filament\\Models\\Contracts\\FilamentUser::canAccessPanel(Filament\\Panel $panel): bool, because class App\\Models\\Panel is not available at /var/www/html/CapstoneProject/app/Models/User.php:57)
+[stacktrace]
+#0 {main}
+"} 
+[2026-02-24 02:00:30] local.ERROR: Could not check compatibility between App\Models\User::canAccessPanel(App\Models\Panel $panel): bool and Filament\Models\Contracts\FilamentUser::canAccessPanel(Filament\Panel $panel): bool, because class App\Models\Panel is not available {"exception":"[object] (Symfony\\Component\\ErrorHandler\\Error\\FatalError(code: 0): Could not check compatibility between App\\Models\\User::canAccessPanel(App\\Models\\Panel $panel): bool and Filament\\Models\\Contracts\\FilamentUser::canAccessPanel(Filament\\Panel $panel): bool, because class App\\Models\\Panel is not available at /var/www/html/CapstoneProject/app/Models/User.php:57)
+[stacktrace]
+#0 {main}
+"} 
