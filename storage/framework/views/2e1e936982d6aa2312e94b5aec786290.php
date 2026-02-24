@@ -77,7 +77,7 @@
                                 Application No: <strong class="text-emerald-600"><?php echo e($farmer->app_no); ?></strong>
                             </p>
 
-                            <a 
+                            <a
                                 href="<?php echo e(asset('storage/' . $farmer->qr_code)); ?>"
                                 download="QR-<?php echo e($farmer->app_no); ?>.png"
                                 class="inline-flex items-center px-5 py-2.5 bg-gray-600 text-gray-500 text-sm font-medium rounded-xl shadow-lg hover:bg-emerald-700 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all hover:shadow-xl"

@@ -24,6 +24,20 @@ class CafarmMap extends Page
     protected static ?string $navigationIcon = 'heroicon-o-map';
     protected static string $view = 'filament.pages.cafarm-map';
 
+    /**
+     * Hide CafarmMap from panel_user (default users)
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return false;
+        }
+        
+        // Hide from panel users
+        return !$user->hasRole('panel_user');
+    }
+
     public function getPestAndDiseaseCases()
     {
         // Build a name → type lookup from categories

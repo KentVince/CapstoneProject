@@ -22,7 +22,22 @@ class PestAndDiseaseCategoryResource extends Resource
     protected static ?string $navigationGroup = 'Pest and Disease';
     protected static ?string $navigationLabel = 'Categories';
     protected static ?string $pluralLabel = 'Categories';
-    protected static ?int $navigationSort = 1; // Optional: Set order within the group
+    protected static ?int $navigationSort = 1;
+
+    /**
+     * Hide from panel_user (default users)
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return false;
+        }
+        
+        // Hide from panel users
+        return !$user->hasRole('panel_user');
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -112,7 +127,7 @@ class PestAndDiseaseCategoryResource extends Resource
         return [
             'index' => Pages\ListPestAndDiseaseCategories::route('/'),
           //  'create' => Pages\CreatePestAndDiseaseCategory::route('/create'),
-            'edit' => Pages\EditPestAndDiseaseCategory::route('/{record}/edit'),
+           // 'edit' => Pages\EditPestAndDiseaseCategory::route('/{record}/edit'),
         ];
     }
 }

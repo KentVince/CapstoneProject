@@ -44,7 +44,8 @@ class PestAndDiseaseObserver
                     ->actions([
                         Action::make('view')
                             ->label('View Details')
-                            ->url(route('filament.admin.resources.pest-and-diseases.index'))
+                            ->dispatch('openApprovalModal', ['recordId' => $pestAndDisease->case_id])
+                            ->markAsRead()
                             ->button(),
                     ])
                     ->sendToDatabase($user);
@@ -59,9 +60,9 @@ class PestAndDiseaseObserver
                 ->actions([
                     Action::make('view')
                         ->label('View Now')
-                        ->url(route('filament.admin.resources.pest-and-diseases.index'))
-                        ->button()
-                        ->markAsRead(),
+                        ->dispatch('openApprovalModal', ['recordId' => $pestAndDisease->case_id])
+                        ->markAsRead()
+                        ->button(),
                 ])
                 ->broadcast($adminUsers);
         } catch (\Exception $e) {

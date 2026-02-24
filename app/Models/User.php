@@ -61,4 +61,20 @@ class User extends Authenticatable
     {
         return $this->hasOne(AgriculturalProfessional::class);
     }
+
+    /**
+     * Check if user is an agricultural professional
+     */
+    public function isAgriculturalProfessional(): bool
+    {
+        return $this->agriculturalProfessional !== null;
+    }
+
+    /**
+     * Check if user is a farmer
+     */
+    public function isFarmer(): bool
+    {
+        return $this->farmer_id !== null;
+    }
 }

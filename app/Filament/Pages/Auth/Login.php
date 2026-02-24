@@ -5,7 +5,10 @@ use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Pages\Auth\Login as AuthLogin;
+use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Illuminate\Validation\ValidationException;
+use App\Services\AgriculturalProfessionalAuthService;
+use Illuminate\Support\Facades\Auth;
 
 class Login extends AuthLogin
 {
@@ -31,6 +34,41 @@ class Login extends AuthLogin
             $login_type => $data['login'],
             'password'  => $data['password'],
         ];
+    }
+
+    public function authenticate(): ?LoginResponse
+    {
+        $data = $this->form->getState();
+        
+        // Check if login is an email
+        if (filter_var($data['login'], FILTER_VALIDATE_EMAIL)) {
+            $authService = new AgriculturalProfessionalAuthService();
+            
+            // Check if this is an agricultural professional email
+            if ($authService->isProfessionalEmail($data['login'])) {
+                // Try to authenticate as agricultural professional
+                $user = $authService->authenticate($data['login'], $data['password']);
+                
+                if ($user) {
+                    Auth::login($user, $data['remember'] ?? false);
+                    return $this->getLoginResponse($user);
+                }
+                
+                // Authentication failed
+                $this->throwFailureValidationException();
+            }
+        }
+
+        // Fall back to default authentication (admin users)
+        return parent::authenticate();
+    }
+
+    /**
+     * Get the appropriate LoginResponse
+     */
+    protected function getLoginResponse($user): ?LoginResponse
+    {
+        return app(LoginResponse::class);
     }
 
     protected function throwFailureValidationException(): never

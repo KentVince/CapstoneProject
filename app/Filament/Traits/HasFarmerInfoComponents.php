@@ -308,9 +308,7 @@ trait HasFarmerInfoComponents
                                             TextInput::make('email_add')
                                                 ->default($this->formData['email_add'] ?? null)
                                                 ->email()
-                                                //->required()
-                                                ->hidden($is_signup)
-                                                ->label('Email Add:'),
+                                                ->label('Email Address'),
     
                                             TextInput::make('bir_tin')
                                                 ->hidden($is_signup)

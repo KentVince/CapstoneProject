@@ -14,7 +14,13 @@ class CreateSoilAnalysis extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['farmer_id'] =   $data['farmer_id'] ;
+        // Ensure farmer_id and sample_id are preserved
+        if (!isset($data['farmer_id']) || empty($data['farmer_id'])) {
+            throw new \Exception('Farmer ID is required');
+        }
+        if (!isset($data['sample_id']) || empty($data['sample_id'])) {
+            throw new \Exception('Sample ID was not generated. Please select a farm again.');
+        }
         return $data;
     }
 

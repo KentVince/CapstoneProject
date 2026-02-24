@@ -19,6 +19,8 @@ use App\Models\Municipality;
 use App\Models\Bulletin;
 use App\Models\SoilAnalysis;
 use App\Models\SoilInformation;
+use App\Models\User;
+use Filament\Notifications\Notification;
 
 
 
@@ -55,6 +57,8 @@ Route::get('/mobile/login-test', function () {
             'app_no' => $farmer->app_no,
             'farm' => [
                 'name' => optional($farmer->farm)->name,
+                'latitude' => optional($farmer->farm)->latitude ?? null,
+                'longitude' => optional($farmer->farm)->longitude ?? null,
             ],
         ],
         
@@ -67,6 +71,7 @@ Route::get('/detections', [PestAndDiseaseController::class, 'index']);
 Route::get('/detections/{id}', [PestAndDiseaseController::class, 'show']);
 Route::post('/detections/check-status', [PestAndDiseaseController::class, 'checkValidationStatus']);
 Route::post('/detections/by-app-no', [PestAndDiseaseController::class, 'getByAppNo']);
+Route::post('/detections/farmer-action', [PestAndDiseaseController::class, 'saveFarmerAction']);
 
 
 // 🧪 2. Test Upload Endpoint (For mobile image testing)
@@ -181,6 +186,7 @@ Route::post('/mobile/check-app-no', function (Request $request) {
             'farm_name' => $farm->name ?? 'Unknown Farm',
             'type' => 'farmer',
             'barangay' => $farm_barangay->barangay ?? '',
+            
         ]);
     }
 
@@ -198,6 +204,8 @@ Route::post('/mobile/check-app-no', function (Request $request) {
             'barangay' => $farm_barangay->barangay ?? '',
             'farm' => [
                 'name' => $farm->name ?? 'Unknown Farm',
+                'latitude' => $farm->latitude ?? null,
+                'longitude' => $farm->longitude ?? null,
             ],
         ],
     ]);
@@ -270,6 +278,8 @@ Route::post('/mobile/check-username', function (Request $request) {
             'barangay' => $farm_barangay->barangay ?? '',
             'farm' => [
                 'name' => $farm->name ?? 'Unknown Farm',
+                'latitude' => $farm->latitude ?? null,
+                'longitude' => $farm->longitude ?? null,
             ],
         ],
     ]);
@@ -316,6 +326,7 @@ Route::post('/mobile/login', function (Request $request) {
                 'municipality' => $municipalityName,
                 'municipality_code' => $professional->municipality,
                 'barangay' => $barangayName,
+                
                 'phone_no' => $professional->phone_no,
                 'email' => $professional->email_add,
             ],
@@ -342,6 +353,8 @@ Route::post('/mobile/login', function (Request $request) {
             'farm' => [
                 'id' => optional($farmer->farm)->id ?? '',
                 'name' => optional($farmer->farm)->name ?? 'N/A',
+                'latitude' => optional($farmer->farm)->latitude ?? null,
+                'longitude' => optional($farmer->farm)->longitude ?? null,
             ],
         ],
     ]);
@@ -410,6 +423,7 @@ Route::post('/mobile/soil-sync', function (Request $request) {
         'farm_name'     => $request->farm_name ?? 'Unknown',
         'crop_variety'  => $request->crop_variety ?? 'Coffee',
         'soil_type'     => $request->soil_type ?? null,
+        'analysis_type' => $request->analysis_type ?? null,
         'date_collected'=> $request->date_collected ?? now(),
         'location'      => $request->location ?? 'Unknown',
          'ref_no'         => $request->ref_no,
@@ -424,12 +438,18 @@ Route::post('/mobile/soil-sync', function (Request $request) {
         'potassium'      => $request->potassium,
         'organic_matter' => $request->organic_matter,
         'recommendation' => $request->recommendation,
+         'validation_status' => $request->validation_status,
+          'expert_comments' => $request->expert_comments,
+           'validated_by' => $request->validated_by,
+           'validated_at' => $request->validated_at,
+
+
     ]);
 
-
+    // Notification is handled by SoilAnalysisObserver::created()
 
     return response()->json([
-        'message' => '✅ Soil information and analysis synced successfully!',
+        'message' => 'Soil information and analysis synced successfully!',
     ]);
 });
 
@@ -471,8 +491,17 @@ Route::post('/mobile/soil/analysis', [SoilAnalysisController::class, 'store']);
 
 // 🌱 CAFARM Mobile Sync API
 Route::post('/mobile/soil/analysis', [SoilAnalysisController::class, 'store']);
-Route::get('/mobile/soil/analysis', [SoilAnalysisController::class, 'index']); 
+Route::get('/mobile/soil/analysis', [SoilAnalysisController::class, 'index']);
 
+// Soil Analysis - Get by app_no (for mobile app refresh with expert recommendations)
+Route::post('/soil-analysis/by-app-no', [SoilAnalysisController::class, 'getByAppNo']);
+
+// Soil Analysis - Farmer reply to expert recommendation
+Route::post('/soil-analysis/farmer-reply', [SoilAnalysisController::class, 'farmerReply']);
+
+// Soil Analysis Conversations
+Route::get('/soil-analysis/{id}/conversations', [SoilAnalysisController::class, 'getConversations']);
+Route::post('/soil-analysis/{id}/conversations', [SoilAnalysisController::class, 'storeConversation']);
 
 // Add this route with your other mobile routes
 Route::post('/mobile/change-password', [MobileController::class, 'changePassword']);

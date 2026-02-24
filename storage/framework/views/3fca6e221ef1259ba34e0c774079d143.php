@@ -8,6 +8,31 @@
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
 <?php $component->withAttributes([]); ?>
+    <style>
+        /* Custom dark theme card colors for Dashboard sections (#003432) */
+        .dark .cafarm-dark-card {
+            background-color: #003432 !important;
+            border-color: #005250 !important;
+        }
+        /* Table sub-headers & footers — slightly darker for contrast */
+        .dark .cafarm-dark-table-header {
+            background-color: #002624 !important;
+            border-color: #004442 !important;
+        }
+        /* thead row */
+        .dark .cafarm-dark-table-head {
+            background-color: #001e1c !important;
+        }
+        /* Table row hover */
+        .dark .cafarm-dark-row:hover {
+            background-color: #004442 !important;
+        }
+        /* Pagination buttons & page indicator */
+        .dark .cafarm-dark-pagination {
+            background-color: #003432 !important;
+            border-color: #005250 !important;
+        }
+    </style>
     <div>
         <!-- Statistics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -75,7 +100,7 @@
         <!-- Dashboard Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <!-- Pest vs Disease Distribution -->
-            <div class="p-6 shadow-lg rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <div class="p-6 shadow-lg rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cafarm-dark-card">
                 <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Pest vs Disease Distribution</h2>
                 <div style="max-width: 100%; height: 300px;">
                     <canvas id="pestVsDiseaseChart"></canvas>
@@ -83,7 +108,7 @@
             </div>
 
             <!-- Farms Registered by Month -->
-            <div class="p-6 shadow-lg rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <div class="p-6 shadow-lg rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cafarm-dark-card">
                 <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Farms Registered by Month</h2>
                 <div style="max-width: 100%; height: 300px;">
                     <canvas id="farmsChart"></canvas>
@@ -93,9 +118,9 @@
 
         <!-- Data Table Section -->
         <div class="mt-6">
-            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden cafarm-dark-card">
                 <!-- Table Header -->
-                <div class="px-6 py-5 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                <div class="px-6 py-5 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 cafarm-dark-table-header">
                     <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                         <div>
                             <h3 class="text-xl font-bold text-gray-900 dark:text-white">📋 Data Records</h3>
@@ -134,7 +159,7 @@
                 <!-- Table Content -->
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
-                        <thead id="dashboardTableHead" class="bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 uppercase text-xs">
+                        <thead id="dashboardTableHead" class="bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 uppercase text-xs cafarm-dark-table-head">
                             <!-- Dynamic headers -->
                         </thead>
                         <tbody id="dashboardTableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -144,7 +169,7 @@
                 </div>
 
                 <!-- Pagination Info -->
-                <div class="px-6 py-4 border-t-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                <div class="px-6 py-4 border-t-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 cafarm-dark-pagination cafarm-dark-table-header">
                     <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
                         <div class="flex items-center gap-4">
                             <p class="text-sm text-gray-700 dark:text-gray-300">
@@ -157,15 +182,15 @@
                         <div class="flex gap-2">
                             <button onclick="changeTablePage(-1)"
                                     id="prevPageBtn"
-                                    class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                                    class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition cafarm-dark-pagination">
                                 ← Previous
                             </button>
-                            <span class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg">
+                            <span class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg cafarm-dark-pagination">
                                 Page <span id="currentPage" class="font-bold">1</span> of <span id="totalPages" class="font-bold">1</span>
                             </span>
                             <button onclick="changeTablePage(1)"
                                     id="nextPageBtn"
-                                    class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                                    class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition cafarm-dark-pagination">
                                 Next →
                             </button>
                         </div>
@@ -503,7 +528,7 @@
         // Render table rows
         if (rows.length > 0) {
             tableBody.innerHTML = rows.map(row => `
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition cafarm-dark-row">
                     ${row.map(cell => `<td class="px-4 py-3 text-gray-700 dark:text-gray-300">${cell}</td>`).join('')}
                 </tr>
             `).join('');

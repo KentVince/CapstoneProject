@@ -29,9 +29,6 @@
                     onchange="filterByFarm()"
                     class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white text-sm py-2 px-3 min-w-[180px] focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition">
                 <option value="all">All Farms</option>
-                @foreach($this->getAllFarms() as $farm)
-                    <option value="{{ $farm->id }}">{{ $farm->name }}</option>
-                @endforeach
             </select>
 
             <select id="categoryFilter"
@@ -388,6 +385,40 @@ document.addEventListener('DOMContentLoaded', function () {
         popupAnchor: [0, -17],
     });
 
+    function createFarmPopupContent(farm) {
+        return `
+        <div class="popup-container">
+            <div class="no-image-placeholder" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);">
+                <span style="color: white; font-weight: bold;">Farm Location</span>
+            </div>
+            <div class="popup-content">
+                <div class="popup-title">${farm.name}</div>
+                <div class="popup-detail">
+                    <span class="popup-label">Barangay</span>
+                    <span class="popup-value">${farm.barangay_name ?? farm.barangay ?? 'N/A'}</span>
+                </div>
+                <div class="popup-detail">
+                    <span class="popup-label">Municipality</span>
+                    <span class="popup-value">${farm.municipality_name ?? farm.municipality ?? 'N/A'}</span>
+                </div>
+                <div class="popup-detail">
+                    <span class="popup-label">Coordinates</span>
+                    <span class="popup-value">${parseFloat(farm.latitude).toFixed(6)}, ${parseFloat(farm.longitude).toFixed(6)}</span>
+                </div>
+                <div style="margin-top:10px; display:flex; gap:6px; flex-direction:column;">
+                    <a href="/admin/pest-and-diseases?farm_id=${farm.id}"
+                       style="display:block; text-align:center; padding:6px 12px; background:#dc2626; color:white; border-radius:6px; font-size:12px; font-weight:600; text-decoration:none;">
+                        View Pest &amp; Disease
+                    </a>
+                    <a href="/admin/soil-analyses?farm_id=${farm.id}"
+                       style="display:block; text-align:center; padding:6px 12px; background:#16a34a; color:white; border-radius:6px; font-size:12px; font-weight:600; text-decoration:none;">
+                        View Soil Analysis
+                    </a>
+                </div>
+            </div>
+        </div>`;
+    }
+
     function getTypeIcon(type) {
         if (!type) return pestIcon;
         if (type.toLowerCase() === 'disease') return diseaseIcon;
@@ -686,29 +717,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     icon: farmIcon
                 });
 
-                const farmPopupContent = `
-                <div class="popup-container">
-                    <div class="no-image-placeholder" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);">
-                        <span style="color: white; font-weight: bold;">Farm Location</span>
-                    </div>
-                    <div class="popup-content">
-                        <div class="popup-title">${farm.name}</div>
-                        <div class="popup-detail">
-                            <span class="popup-label">Barangay</span>
-                            <span class="popup-value">${farm.barangay_name ?? farm.barangay ?? 'N/A'}</span>
-                        </div>
-                        <div class="popup-detail">
-                            <span class="popup-label">Municipality</span>
-                            <span class="popup-value">${farm.municipality_name ?? farm.municipality ?? 'N/A'}</span>
-                        </div>
-                        <div class="popup-detail">
-                            <span class="popup-label">Coordinates</span>
-                            <span class="popup-value">${parseFloat(farm.latitude).toFixed(6)}, ${parseFloat(farm.longitude).toFixed(6)}</span>
-                        </div>
-                    </div>
-                </div>`;
-
-                farmMarker.bindPopup(farmPopupContent);
+                farmMarker.bindPopup(createFarmPopupContent(farm));
                 farmMarker.addTo(pestMarkers);
             });
         } else if (farmVal !== 'all') {
@@ -719,29 +728,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     icon: farmIcon
                 });
 
-                const farmPopupContent = `
-                <div class="popup-container">
-                    <div class="no-image-placeholder" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);">
-                        <span style="color: white; font-weight: bold;">Farm Location</span>
-                    </div>
-                    <div class="popup-content">
-                        <div class="popup-title">${selectedFarm.name}</div>
-                        <div class="popup-detail">
-                            <span class="popup-label">Barangay</span>
-                            <span class="popup-value">${selectedFarm.barangay_name ?? selectedFarm.barangay ?? 'N/A'}</span>
-                        </div>
-                        <div class="popup-detail">
-                            <span class="popup-label">Municipality</span>
-                            <span class="popup-value">${selectedFarm.municipality_name ?? selectedFarm.municipality ?? 'N/A'}</span>
-                        </div>
-                        <div class="popup-detail">
-                            <span class="popup-label">Coordinates</span>
-                            <span class="popup-value">${parseFloat(selectedFarm.latitude).toFixed(6)}, ${parseFloat(selectedFarm.longitude).toFixed(6)}</span>
-                        </div>
-                    </div>
-                </div>`;
-
-                farmMarker.bindPopup(farmPopupContent);
+                farmMarker.bindPopup(createFarmPopupContent(selectedFarm));
                 farmMarker.addTo(pestMarkers);
             }
         }
@@ -888,13 +875,50 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function populateFarmDropdown() {
+        const farmSelect = document.getElementById('farmFilter');
+        farmSelect.innerHTML = '<option value="all">All Farms</option>';
+
+        const munVal = document.getElementById('municipalityFilter').value;
+        const brgyVal = document.getElementById('barangayFilter').value;
+
+        let farmsToShow = allFarms;
+
+        if (brgyVal !== 'all' && barangayGeoData) {
+            // Filter farms by barangay polygon
+            const feature = barangayGeoData.features.find(f => f.properties.Brgy === brgyVal);
+            if (feature) {
+                farmsToShow = farmsToShow.filter(farm =>
+                    farm.latitude && farm.longitude &&
+                    pointInFeature(parseFloat(farm.latitude), parseFloat(farm.longitude), feature)
+                );
+            }
+        } else if (munVal !== 'all' && municipalGeoData) {
+            // Filter farms by municipality polygon
+            const feature = municipalGeoData.features.find(f => f.properties.MUN === munVal);
+            if (feature) {
+                farmsToShow = farmsToShow.filter(farm =>
+                    farm.latitude && farm.longitude &&
+                    pointInFeature(parseFloat(farm.latitude), parseFloat(farm.longitude), feature)
+                );
+            }
+        }
+
+        farmsToShow.forEach(farm => {
+            const opt = document.createElement('option');
+            opt.value = farm.id;
+            opt.textContent = farm.name;
+            farmSelect.appendChild(opt);
+        });
+    }
+
 
     window.filterByMunicipality = function () {
         const munVal = document.getElementById('municipalityFilter').value;
 
-        // Reset barangay and farm
+        // Reset barangay and farm dropdowns based on selected municipality
         populateBarangayDropdown(munVal);
-        document.getElementById('farmFilter').value = 'all';
+        populateFarmDropdown();
 
         if (munVal === 'all') {
             setHighlight(null);
@@ -914,8 +938,8 @@ document.addEventListener('DOMContentLoaded', function () {
     window.filterByBarangay = function () {
         const brgyVal = document.getElementById('barangayFilter').value;
 
-        // Reset farm filter
-        document.getElementById('farmFilter').value = 'all';
+        // Update farm dropdown based on selected barangay
+        populateFarmDropdown();
 
         if (brgyVal === 'all') {
             // Zoom back to selected municipality
@@ -1344,8 +1368,11 @@ document.addEventListener('DOMContentLoaded', function () {
         map.fitBounds(provLayer.getBounds(), { padding: [20, 20] });
     });
 
-    // Load geo data for municipality/barangay dropdowns
-    loadGeoData();
+    // Load geo data for municipality/barangay/farm dropdowns
+    loadGeoData().then(function() {
+        // Populate farm dropdown after GeoJSON data is loaded
+        populateFarmDropdown();
+    });
 
     // Initial render with markers (heatmap off by default)
     rebuildAll();

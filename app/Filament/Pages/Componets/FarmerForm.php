@@ -111,41 +111,27 @@ class FarmerForm
 
 
 
-    public function getAccountSchema(): array
+    public function getAccountSchema(bool $showSubmitAction = true): array
     {
-        return [
-            Wizard::make([
-
+        $wizard = Wizard::make([
 
             $this->Step_FarmerInfo($this->farmer, true)
-                ->afterValidation(fn(Component $livewire) => $this->saveStepData($livewire))
-                ,
+                ->afterValidation(fn(Component $livewire) => $this->saveStepData($livewire)),
 
             $this->Step_FarmInfo()
-                ->afterValidation(fn(Component $livewire) => $this->saveStepData($livewire))
-                ,
-            ])
-                // ->startOnStep(5)  // start on Statutory
-                ->columns(1)
-                ->columnSpanFull()
-                // ->skippable()
+                ->afterValidation(fn(Component $livewire) => $this->saveStepData($livewire)),
 
-                // don't set statePath() if you want to save using default saving
-                // method but if you insist then
-                // modify $this->data in CreatePersonnel->finalSave() accordingly
-                //
-                // ->statePath('data')
-            ->submitAction(new HtmlString(Blade::render(<<<BLADE
-                <x-filament::button
-                    type="submit"
-                    size="sm"
-                >
-                    Save Changes
-                </x-filament::button>
-            BLADE)))
+        ])
+            ->columns(1)
+            ->columnSpanFull();
 
-                ,
-        ];
+        if ($showSubmitAction) {
+            $wizard->submitAction(new HtmlString(Blade::render(<<<BLADE
+                <x-filament::button type="submit" size="sm">Save Changes</x-filament::button>
+            BLADE)));
+        }
+
+        return [$wizard];
     }
 
 

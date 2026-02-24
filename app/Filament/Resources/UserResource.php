@@ -24,6 +24,20 @@ class UserResource extends Resource
     protected static ?string $navigationLabel = 'Web App Users';
     protected static ?int $navigationSort = 6;
 
+    /**
+     * Only show this resource for admin users, not for agricultural professionals, agri_expert, or panel users
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return false;
+        }
+        
+        // Hide from agricultural professionals, agri_expert role, and panel users
+        return !$user->isAgriculturalProfessional() && !$user->hasRole('panel_user') && !$user->hasRole('agri_expert');
+    }
+
     // -------------------------- FORM --------------------------
     public static function form(Form $form): Form
     {

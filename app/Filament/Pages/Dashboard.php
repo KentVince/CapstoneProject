@@ -27,6 +27,20 @@ class Dashboard extends \Filament\Pages\Dashboard
     protected static string $view = 'filament.pages.dashboard';
     // protected static ?string $navigationLabel = 'Dashboard';
 
+    /**
+     * Hide dashboard from panel_user (default users)
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return false;
+        }
+        
+        // Hide from panel users
+        return !$user->hasRole('panel_user');
+    }
+
     public $pestAndDiseaseData = [];
     public $farmData = [];
     public $pestData = [];

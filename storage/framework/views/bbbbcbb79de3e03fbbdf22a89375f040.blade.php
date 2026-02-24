@@ -1,0 +1,1 @@
+@livewire('pest-disease-approval-modal')

@@ -101,9 +101,19 @@ public function barangayData()
     return $this->belongsTo(Barangay::class, 'barangay', 'code');
 }
 
+public function municipalityData()
+{
+    return $this->belongsTo(Municipality::class, 'municipality', 'code');
+}
+
 public function getBarangayNameAttribute(): ?string
 {
     return optional($this->barangayData)->barangay;
+}
+
+public function getMunicipalityNameAttribute(): ?string
+{
+    return optional($this->municipalityData)->municipality;
 }
     /*
     |--------------------------------------------------------------------------

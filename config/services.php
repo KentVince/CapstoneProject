@@ -35,6 +35,9 @@ return [
         'credentials' => env('FIREBASE_CREDENTIALS', storage_path('app/firebase/cafarm-firebase.json')),
     ],
 
-
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY', ''),
+        'model'   => env('GEMINI_MODEL', 'gemini-2.0-flash'),
+    ],
 
 ];

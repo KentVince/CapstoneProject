@@ -30,6 +30,7 @@ use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Textarea;
+use App\Services\GeminiService;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\Grid;
@@ -50,11 +51,37 @@ class PestAndDiseaseResource extends Resource
     protected static ?int $navigationSort = 1;
 
     /**
+     * Hide from panel_user (default users)
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return false;
+        }
+        
+        // Hide from panel users
+        return !$user->hasRole('panel_user');
+    }
+
+    /**
      * Get the navigation badge showing count of pending detections
      */
     public static function getNavigationBadge(): ?string
     {
-        $count = static::getModel()::where('validation_status', 'pending')->count();
+        $query = static::getModel()::where('validation_status', 'pending');
+
+        $user = auth()->user();
+        if ($user && $user->isAgriculturalProfessional()) {
+            $professional = $user->agriculturalProfessional;
+            if ($professional && $professional->agency === 'MAGRO' && $professional->municipality) {
+                $appNos = \App\Models\Farmer::where('municipality', $professional->municipality)
+                    ->pluck('app_no');
+                $query->whereIn('app_no', $appNos);
+            }
+        }
+
+        $count = $query->count();
 
         return $count > 0 ? (string) $count : null;
     }
@@ -184,62 +211,79 @@ class PestAndDiseaseResource extends Resource
                         ->extraModalWindowAttributes(['class' => 'p-2'])
                         ->modalContent(fn (PestAndDisease $record) => view('filament.resources.pest-and-disease.view-modal', ['record' => $record]))
                         ->modalFooterActions(fn (PestAndDisease $record, Action $action) => [
-                            Action::make('approve')
-                                ->label('Approve')
-                                ->icon('heroicon-o-check-circle')
+                            Action::make('generateAiRecommendation')
+                                ->label('Generate AI Recommendation')
+                                ->icon('heroicon-o-sparkles')
                                 ->color('success')
-                                ->size('lg')
-                                ->extraAttributes(['class' => 'px-8 py-3 mx-2'])
-                                ->requiresConfirmation()
-                                ->modalHeading('Approve Detection')
-                                ->modalDescription('Are you sure you want to approve this detection?')
-                                ->action(function () use ($record, $action) {
-                                    $record->update([
-                                        'validation_status' => 'approved',
-                                        'expert_comments' => null,
-                                        'validated_by' => Auth::id(),
-                                        'validated_at' => now(),
+                                ->tooltip('Uses Google Gemini AI to generate a management recommendation for this pest/disease detection.')
+                                ->action(function () use ($record) {
+                                    if (!config('services.gemini.api_key')) {
+                                        Notification::make()
+                                            ->title('API Key Not Configured')
+                                            ->body('Please set GEMINI_API_KEY in your .env file.')
+                                            ->danger()
+                                            ->send();
+                                        return;
+                                    }
+
+                                    $recommendation = app(GeminiService::class)->generatePestRecommendation([
+                                        'pest'     => $record->pest,
+                                        'type'     => $record->type,
+                                        'severity' => $record->severity,
+                                        'area'     => $record->area,
+                                        'date'     => $record->date_detected
+                                            ? \Carbon\Carbon::parse($record->date_detected)->format('Y-m-d')
+                                            : now()->format('Y-m-d'),
                                     ]);
 
+                                    $record->update(['ai_recommendation' => $recommendation]);
 
                                     Notification::make()
-                                        ->title('Detection Approved')
+                                        ->title('AI Recommendation Generated')
+                                        ->body('The AI recommendation has been saved and is now visible in the details panel.')
+                                        ->success()
+                                        ->send();
+                                }),
+                            Action::make('recommend')
+                                ->label('Expert Recommendation')
+                                ->icon('heroicon-o-star')
+                                ->color('info')
+                                ->size('lg')
+                                ->extraAttributes(['class' => 'px-8 py-3 mx-2'])
+                                ->form([
+                                    Forms\Components\Select::make('validation_status')
+                                        ->label('Status')
+                                        ->options([
+                                            'approved'    => 'Approve Analysis',
+                                            'disapproved' => 'Request Revision / Disapprove',
+                                        ])
+                                        ->native(false)
+                                        ->required(),
+                                    Textarea::make('expert_comments')
+                                        ->label('Expert Recommendation')
+                                        ->placeholder('Enter your recommendations, suggestions, or reason for revision...')
+                                        ->required()
+                                        ->rows(4),
+                                ])
+                                ->action(function (array $data) use ($record, $action) {
+                                    $record->update([
+                                        'validation_status' => $data['validation_status'],
+                                        'expert_comments'   => $data['expert_comments'],
+                                        'validated_by'      => Auth::id(),
+                                        'validated_at'      => now(),
+                                    ]);
+
+                                    $title = $data['validation_status'] === 'approved'
+                                        ? 'Detection Approved with Recommendations'
+                                        : 'Revision Requested with Expert Recommendations';
+
+                                    Notification::make()
+                                        ->title($title)
                                         ->success()
                                         ->send();
                                     $action->cancel();
                                 })
-                                ->visible(fn () => $record->validation_status !== 'approved'),
-
-                            Action::make('disapprove')
-                                ->label('Disapprove')
-                                ->icon('heroicon-o-x-circle')
-                                ->color('danger')
-                                ->size('lg')
-                                ->extraAttributes(['class' => 'px-8 py-3 mx-2'])
-                                ->form([
-                                    Textarea::make('expert_comments')
-                                        ->label('Comments (Required)')
-                                        ->placeholder('Please provide reason for disapproval...')
-                                        ->required()
-                                        ->rows(3),
-                                ])
-                                ->action(function (array $data) use ($record, $action) {
-                                    $record->update([
-                                        'validation_status' => 'disapproved',
-                                        'expert_comments' => $data['expert_comments'],
-                                        'validated_by' => Auth::id(),
-                                        'validated_at' => now(),
-                                    ]);
-
-
-                                    Notification::make()
-                                        ->title('Detection Disapproved')
-                                        ->body('Comments have been saved.')
-                                        ->warning()
-                                        ->send();
-                                    $action->cancel();
-                                })
-                                ->visible(fn () => $record->validation_status !== 'disapproved'),
+                                ->visible(fn () => $record->validation_status === 'pending'),
                         ])
                         ->modalFooterActionsAlignment(\Filament\Support\Enums\Alignment::Center)
                 ),
@@ -263,11 +307,26 @@ class PestAndDiseaseResource extends Resource
                     'approved' => 'success',
                     'disapproved' => 'danger',
                 }),
+            Tables\Columns\IconColumn::make('farmer_action')
+                ->label('Farmer Replied')
+                ->boolean()
+                ->trueIcon('heroicon-o-check-circle')
+                ->falseIcon('heroicon-o-clock')
+                ->trueColor('success')
+                ->falseColor('gray')
+                ->getStateUsing(fn ($record) => !empty($record->farmer_action)),
             Tables\Columns\TextColumn::make('validator.name')
                 ->label('Validated By')
                 ->placeholder('—'),
         ])
         ->filters([
+            Tables\Filters\SelectFilter::make('type')
+                ->label('Type')
+                ->options([
+                    'pest' => 'Pest',
+                    'disease' => 'Disease',
+                ])
+                ->placeholder('All'),
             Tables\Filters\SelectFilter::make('validation_status')
                 ->label('Status')
                 ->options([
@@ -287,62 +346,79 @@ class PestAndDiseaseResource extends Resource
                     ->extraModalWindowAttributes(['class' => 'p-2'])
                     ->modalContent(fn (PestAndDisease $record) => view('filament.resources.pest-and-disease.view-modal', ['record' => $record]))
                     ->modalFooterActions(fn (PestAndDisease $record, Action $action) => [
-                        Action::make('approve')
-                            ->label('Approve')
-                            ->icon('heroicon-o-check-circle')
+                        Action::make('generateAiRecommendation')
+                            ->label('Generate AI Recommendation')
+                            ->icon('heroicon-o-sparkles')
                             ->color('success')
-                            ->size('lg')
-                            ->extraAttributes(['class' => 'px-8 py-3 mx-2'])
-                            ->requiresConfirmation()
-                            ->modalHeading('Approve Detection')
-                            ->modalDescription('Are you sure you want to approve this detection?')
-                            ->action(function () use ($record, $action) {
-                                $record->update([
-                                    'validation_status' => 'approved',
-                                    'expert_comments' => null,
-                                    'validated_by' => Auth::id(),
-                                    'validated_at' => now(),
+                            ->tooltip('Uses Google Gemini AI to generate a management recommendation for this pest/disease detection.')
+                            ->action(function () use ($record) {
+                                if (!config('services.gemini.api_key')) {
+                                    Notification::make()
+                                        ->title('API Key Not Configured')
+                                        ->body('Please set GEMINI_API_KEY in your .env file.')
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
+
+                                $recommendation = app(GeminiService::class)->generatePestRecommendation([
+                                    'pest'     => $record->pest,
+                                    'type'     => $record->type,
+                                    'severity' => $record->severity,
+                                    'area'     => $record->area,
+                                    'date'     => $record->date_detected
+                                        ? \Carbon\Carbon::parse($record->date_detected)->format('Y-m-d')
+                                        : now()->format('Y-m-d'),
                                 ]);
 
+                                $record->update(['ai_recommendation' => $recommendation]);
 
                                 Notification::make()
-                                    ->title('Detection Approved')
+                                    ->title('AI Recommendation Generated')
+                                    ->body('The AI recommendation has been saved and is now visible in the details panel.')
+                                    ->success()
+                                    ->send();
+                            }),
+                        Action::make('recommend')
+                            ->label('Expert Recommendation')
+                            ->icon('heroicon-o-star')
+                            ->color('info')
+                            ->size('lg')
+                            ->extraAttributes(['class' => 'px-8 py-3 mx-2'])
+                            ->form([
+                                Forms\Components\Select::make('validation_status')
+                                    ->label('Status')
+                                    ->options([
+                                        'approved'    => 'Approve Analysis',
+                                        'disapproved' => 'Request Revision / Disapprove',
+                                    ])
+                                    ->native(false)
+                                    ->required(),
+                                Textarea::make('expert_comments')
+                                    ->label('Expert Recommendation')
+                                    ->placeholder('Enter your recommendations, suggestions, or reason for revision...')
+                                    ->required()
+                                    ->rows(4),
+                            ])
+                            ->action(function (array $data) use ($record, $action) {
+                                $record->update([
+                                    'validation_status' => $data['validation_status'],
+                                    'expert_comments'   => $data['expert_comments'],
+                                    'validated_by'      => Auth::id(),
+                                    'validated_at'      => now(),
+                                ]);
+
+                                $title = $data['validation_status'] === 'approved'
+                                    ? 'Detection Approved with Recommendations'
+                                    : 'Revision Requested with Expert Recommendations';
+
+                                Notification::make()
+                                    ->title($title)
                                     ->success()
                                     ->send();
                                 $action->cancel();
                             })
-                            ->visible(fn () => $record->validation_status !== 'approved'),
-
-                        Action::make('disapprove')
-                            ->label('Disapprove')
-                            ->icon('heroicon-o-x-circle')
-                            ->color('danger')
-                            ->size('lg')
-                            ->extraAttributes(['class' => 'px-8 py-3 mx-2'])
-                            ->form([
-                                Textarea::make('expert_comments')
-                                    ->label('Comments (Required)')
-                                    ->placeholder('Please provide reason for disapproval...')
-                                    ->required()
-                                    ->rows(3),
-                            ])
-                            ->action(function (array $data) use ($record, $action) {
-                                $record->update([
-                                    'validation_status' => 'disapproved',
-                                    'expert_comments' => $data['expert_comments'],
-                                    'validated_by' => Auth::id(),
-                                    'validated_at' => now(),
-                                ]);
-
-
-                                Notification::make()
-                                    ->title('Detection Disapproved')
-                                    ->body('Comments have been saved.')
-                                    ->warning()
-                                    ->send();
-                                $action->cancel();
-                            })
-                            ->visible(fn () => $record->validation_status !== 'disapproved'),
+                            ->visible(fn () => $record->validation_status === 'pending'),
                     ])
                     ->modalFooterActionsAlignment(\Filament\Support\Enums\Alignment::Center),
                 Tables\Actions\DeleteAction::make(),
@@ -403,6 +479,17 @@ class PestAndDiseaseResource extends Resource
         ->bulkActions([
             Tables\Actions\DeleteBulkAction::make(),
         ])
+        ->modifyQueryUsing(function (Builder $query) {
+            $user = auth()->user();
+            if ($user && $user->isAgriculturalProfessional()) {
+                $professional = $user->agriculturalProfessional;
+                if ($professional && $professional->agency === 'MAGRO' && $professional->municipality) {
+                    $appNos = \App\Models\Farmer::where('municipality', $professional->municipality)
+                        ->pluck('app_no');
+                    $query->whereIn('app_no', $appNos);
+                }
+            }
+        })
         ->poll('10s') // Auto-refresh every 10 seconds when Flutter syncs new data
         ->defaultSort('date_detected', 'desc');
     }

@@ -47,6 +47,8 @@ class PestAndDisease extends Model
     protected $fillable = [
         'app_no',
         'expert_id',
+        'farmer_id',
+        'farm_id',
         'pest',
         'type',
         'confidence',
@@ -58,13 +60,17 @@ class PestAndDisease extends Model
         'image_path',
         'validation_status',
         'expert_comments',
+        'ai_recommendation',
         'validated_by',
         'validated_at',
+        'farmer_action',
+        'farmer_action_date',
     ];
 
     protected $casts = [
         'options' => 'array',
         'validated_at' => 'datetime',
+        'farmer_action_date' => 'datetime',
     ];
 
     /**

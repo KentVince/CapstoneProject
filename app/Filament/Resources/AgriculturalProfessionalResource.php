@@ -28,6 +28,20 @@ class AgriculturalProfessionalResource extends Resource
     protected static ?string $navigationGroup = null;
     protected static ?int $navigationSort = 2;
 
+    /**
+     * Only show this resource for admin users, not for agricultural professionals, agri_expert, or panel users
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return false;
+        }
+        
+        // Hide from agricultural professionals, agri_expert role, and panel users
+        return !$user->isAgriculturalProfessional() && !$user->hasRole('panel_user') && !$user->hasRole('agri_expert');
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -39,10 +53,15 @@ class AgriculturalProfessionalResource extends Resource
                         ->dehydrated()
                         ->visible(fn ($record) => $record !== null),
 
-                    TextInput::make('agency')
+                    Select::make('agency')
                         ->label('Agency')
+                        ->options([
+                            'MAGRO' => 'MAGRO',
+                            'PAGRO' => 'PAGRO',
+                            'DDOSC' => 'DDOSC',
+                        ])
                         ->required()
-                        ->maxLength(255),
+                        ->searchable(),
 
                     TextInput::make('lastname')
                         ->label('Last Name')
@@ -169,6 +188,24 @@ class AgriculturalProfessionalResource extends Resource
             ->recordUrl(null)
             ->actions([
                 Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('print_card')
+                        ->label('Print Card')
+                        ->icon('heroicon-o-printer')
+                        ->color('success')
+                        ->modalHeading('Professional QR Card')
+                        ->modalSubmitAction(false)
+                        ->modalCancelActionLabel('Close')
+                        ->modalContent(function (AgriculturalProfessional $record) {
+                            $middleInitial = $record->middlename ? strtoupper(substr($record->middlename, 0, 1)) . '.' : '';
+                            $fullName = "{$record->lastname}, {$record->firstname} {$middleInitial}";
+                            $qrUrl = $record->qr_code ? asset('storage/' . $record->qr_code) : null;
+
+                            return view('components.farmer-print-card', [
+                                'fullName' => $fullName,
+                                'appNo' => $record->app_no,
+                                'qrUrl' => $qrUrl,
+                            ]);
+                        }),
                     Tables\Actions\EditAction::make(),
                     Tables\Actions\DeleteAction::make(),
                 ])
@@ -193,7 +230,7 @@ class AgriculturalProfessionalResource extends Resource
     {
         return [
             'index' => Pages\ListAgriculturalProfessionals::route('/'),
-            'create' => Pages\CreateAgriculturalProfessional::route('/create'),
+           // 'create' => Pages\CreateAgriculturalProfessional::route('/create'),
             'edit' => Pages\EditAgriculturalProfessional::route('/{record}/edit'),
         ];
     }

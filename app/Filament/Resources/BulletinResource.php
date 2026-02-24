@@ -28,6 +28,20 @@ class BulletinResource extends Resource
     protected static ?string $navigationGroup = 'Information Center';
     protected static ?int $navigationSort = 5;
 
+    /**
+     * Hide from panel_user (default users)
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return false;
+        }
+        
+        // Hide from panel users
+        return !$user->hasRole('panel_user');
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -128,8 +142,8 @@ class BulletinResource extends Resource
     {
         return [
             'index' => Pages\ListBulletins::route('/'),
-            'create' => Pages\CreateBulletin::route('/create'),
-            'edit' => Pages\EditBulletin::route('/{record}/edit'),
+          //  'create' => Pages\CreateBulletin::route('/create'),
+          //  'edit' => Pages\EditBulletin::route('/{record}/edit'),
         ];
     }
 

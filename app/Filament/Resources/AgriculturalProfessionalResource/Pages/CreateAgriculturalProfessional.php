@@ -5,6 +5,8 @@ namespace App\Filament\Resources\AgriculturalProfessionalResource\Pages;
 use App\Models\AgriculturalProfessional;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ProfessionalRegistered;
 use Filament\Notifications\Notification;
 use App\Filament\Resources\AgriculturalProfessionalResource;
 use Filament\Resources\Pages\CreateRecord;
@@ -30,11 +32,32 @@ class CreateAgriculturalProfessional extends CreateRecord
 
             DB::commit();
 
-            Notification::make()
-                ->title('Professional Registered')
-                ->body("Agricultural Professional <b>{$professional->firstname} {$professional->lastname}</b> saved successfully with QR code.")
-                ->success()
-                ->send();
+            // Send registration email if professional has an email address
+            if (!empty($professional->email_add)) {
+                try {
+                    Mail::to($professional->email_add)->send(new ProfessionalRegistered($professional));
+
+                    Notification::make()
+                        ->title('Professional Registered')
+                        ->body("Agricultural Professional <b>{$professional->firstname} {$professional->lastname}</b> saved successfully. Registration email sent to <b>{$professional->email_add}</b>.")
+                        ->success()
+                        ->send();
+                } catch (\Throwable $mailError) {
+                    Log::warning("Email sending failed for Professional {$professional->app_no}: " . $mailError->getMessage());
+
+                    Notification::make()
+                        ->title('Professional Registered')
+                        ->body("Agricultural Professional <b>{$professional->firstname} {$professional->lastname}</b> saved successfully, but the email could not be sent.")
+                        ->warning()
+                        ->send();
+                }
+            } else {
+                Notification::make()
+                    ->title('Professional Registered')
+                    ->body("Agricultural Professional <b>{$professional->firstname} {$professional->lastname}</b> saved successfully with QR code.")
+                    ->success()
+                    ->send();
+            }
 
             return $professional;
 

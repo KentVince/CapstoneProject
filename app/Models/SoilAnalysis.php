@@ -12,11 +12,13 @@ class SoilAnalysis extends Model
     protected $table = 'soil_analysis'; // ✅ matches your migration
 
     protected $fillable = [
+        'sample_id',
         'farmer_id',
-        'farm_id',
         'farm_name',
+        'farm_id',
         'crop_variety',
         'soil_type',
+        'analysis_type',
         'date_collected',
         'location',
         'ref_no',
@@ -31,17 +33,25 @@ class SoilAnalysis extends Model
         'potassium',
         'organic_matter',
         'recommendation',
+        'validation_status',
+        'expert_comments',
+        'validated_by',
+        'validated_at',
+        'farmer_reply',
+        'farmer_reply_date',
     ];
 
     protected $casts = [
         'date_collected' => 'date',
         'date_submitted' => 'date',
         'date_analyzed' => 'date',
+        'validated_at' => 'datetime',
         'ph_level' => 'float',
         'nitrogen' => 'float',
         'phosphorus' => 'float',
         'potassium' => 'float',
         'organic_matter' => 'float',
+        'farmer_reply_date' => 'datetime',
     ];
 
     // Optional relationships
@@ -54,4 +64,20 @@ class SoilAnalysis extends Model
     {
         return $this->belongsTo(Farm::class);
     }
+
+    /**
+     * Relationship: SoilAnalysis validated by a User (Expert)
+     */
+    public function validator()
+    {
+        return $this->belongsTo(User::class, 'validated_by', 'id');
+    }
+
+    /**
+     * Conversation thread for this soil analysis.
+     */
+    // public function conversations()
+    // {
+    //     return $this->hasMany(SoilAnalysisConversation::class)->orderBy('created_at', 'asc');
+    // }
 }

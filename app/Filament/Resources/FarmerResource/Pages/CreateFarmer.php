@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\FarmerRegistered;
 use Filament\Notifications\Notification;
 use App\Filament\Resources\FarmerResource;
 use Filament\Resources\Pages\CreateRecord;
@@ -59,11 +61,32 @@ class CreateFarmer extends CreateRecord
 
             DB::commit();
 
-            Notification::make()
-                ->title('✅ Farmer Registered')
-                ->body("Farmer <b>{$farmer->firstname} {$farmer->lastname}</b> saved successfully with QR code.")
-                ->success()
-                ->send();
+            // Send registration email if farmer has an email address
+            if (!empty($farmer->email_add)) {
+                try {
+                    Mail::to($farmer->email_add)->send(new FarmerRegistered($farmer));
+
+                    Notification::make()
+                        ->title('✅ Farmer Registered')
+                        ->body("Farmer <b>{$farmer->firstname} {$farmer->lastname}</b> saved successfully. Registration email sent to <b>{$farmer->email_add}</b>.")
+                        ->success()
+                        ->send();
+                } catch (\Throwable $mailError) {
+                    Log::warning("Email sending failed for Farmer {$farmer->app_no}: " . $mailError->getMessage());
+
+                    Notification::make()
+                        ->title('✅ Farmer Registered')
+                        ->body("Farmer <b>{$farmer->firstname} {$farmer->lastname}</b> saved successfully, but the email could not be sent.")
+                        ->warning()
+                        ->send();
+                }
+            } else {
+                Notification::make()
+                    ->title('✅ Farmer Registered')
+                    ->body("Farmer <b>{$farmer->firstname} {$farmer->lastname}</b> saved successfully with QR code.")
+                    ->success()
+                    ->send();
+            }
 
             return $farmer;
 

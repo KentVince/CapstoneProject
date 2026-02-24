@@ -39,6 +39,27 @@ class AgriculturalProfessional extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Check if this professional has a user account
+     */
+    public function hasUserAccount(): bool
+    {
+        return $this->user_id !== null;
+    }
+
+    /**
+     * Check if the professional can login with a specific password
+     */
+    public function canLoginWithPassword(string $password): bool
+    {
+        if (!$this->user) {
+            return false;
+        }
+
+        return app(\App\Services\AgriculturalProfessionalAuthService::class)
+            ->verifyPassword($this, $password);
+    }
+
     protected static function booted()
     {
         static::saved(function ($professional) {

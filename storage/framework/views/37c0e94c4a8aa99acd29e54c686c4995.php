@@ -178,8 +178,8 @@
             ])); ?>
 
 >
-    <?php if($iconPosition === IconPosition::Before): ?>
-        <?php if($icon): ?>
+    <!--[if BLOCK]><![endif]--><?php if($iconPosition === IconPosition::Before): ?>
+        <!--[if BLOCK]><![endif]--><?php if($icon): ?>
             <?php if (isset($component)) { $__componentOriginalbfc641e0710ce04e5fe02876ffc6f950 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalbfc641e0710ce04e5fe02876ffc6f950 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament::components.icon','data' => ['attributes' => 
@@ -222,9 +222,9 @@
 <?php $component = $__componentOriginalbfc641e0710ce04e5fe02876ffc6f950; ?>
 <?php unset($__componentOriginalbfc641e0710ce04e5fe02876ffc6f950); ?>
 <?php endif; ?>
-        <?php endif; ?>
+        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
 
-        <?php if($hasLoadingIndicator): ?>
+        <!--[if BLOCK]><![endif]--><?php if($hasLoadingIndicator): ?>
             <?php if (isset($component)) { $__componentOriginalbef7c2371a870b1887ec3741fe311a10 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalbef7c2371a870b1887ec3741fe311a10 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament::components.loading-indicator','data' => ['attributes' => 
@@ -263,8 +263,8 @@
 <?php $component = $__componentOriginalbef7c2371a870b1887ec3741fe311a10; ?>
 <?php unset($__componentOriginalbef7c2371a870b1887ec3741fe311a10); ?>
 <?php endif; ?>
-        <?php endif; ?>
-    <?php endif; ?>
+        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
 
     <span class="grid">
         <span class="truncate">
@@ -273,7 +273,7 @@
         </span>
     </span>
 
-    <?php if($isDeletable): ?>
+    <!--[if BLOCK]><![endif]--><?php if($isDeletable): ?>
         <button
             type="button"
             <?php echo e($deleteButton
@@ -316,15 +316,15 @@
 <?php unset($__componentOriginalbfc641e0710ce04e5fe02876ffc6f950); ?>
 <?php endif; ?>
 
-            <?php if(filled($label = $deleteButton->attributes->get('label'))): ?>
+            <!--[if BLOCK]><![endif]--><?php if(filled($label = $deleteButton->attributes->get('label'))): ?>
                 <span class="sr-only">
                     <?php echo e($label); ?>
 
                 </span>
-            <?php endif; ?>
+            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
         </button>
     <?php elseif($iconPosition === IconPosition::After): ?>
-        <?php if($icon): ?>
+        <!--[if BLOCK]><![endif]--><?php if($icon): ?>
             <?php if (isset($component)) { $__componentOriginalbfc641e0710ce04e5fe02876ffc6f950 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalbfc641e0710ce04e5fe02876ffc6f950 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament::components.icon','data' => ['attributes' => 
@@ -367,9 +367,9 @@
 <?php $component = $__componentOriginalbfc641e0710ce04e5fe02876ffc6f950; ?>
 <?php unset($__componentOriginalbfc641e0710ce04e5fe02876ffc6f950); ?>
 <?php endif; ?>
-        <?php endif; ?>
+        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
 
-        <?php if($hasLoadingIndicator): ?>
+        <!--[if BLOCK]><![endif]--><?php if($hasLoadingIndicator): ?>
             <?php if (isset($component)) { $__componentOriginalbef7c2371a870b1887ec3741fe311a10 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalbef7c2371a870b1887ec3741fe311a10 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament::components.loading-indicator','data' => ['attributes' => 
@@ -408,7 +408,7 @@
 <?php $component = $__componentOriginalbef7c2371a870b1887ec3741fe311a10; ?>
 <?php unset($__componentOriginalbef7c2371a870b1887ec3741fe311a10); ?>
 <?php endif; ?>
-        <?php endif; ?>
-    <?php endif; ?>
+        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
 </<?php echo e($tag); ?>>
 <?php /**PATH /var/www/html/CapstoneProject/vendor/filament/support/resources/views/components/badge.blade.php ENDPATH**/ ?>

@@ -3,9 +3,14 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Farmer;
 use App\Models\PestAndDisease;
+use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Filament\Notifications\Notification;
+use Filament\Notifications\Actions\Action;
 
 class PestAndDiseaseController extends Controller
 {
@@ -20,6 +25,8 @@ public function store(Request $request)
         $validated = $request->validate([
             'app_no'        => 'nullable|string',
             'expert_id'     => 'nullable|integer|exists:agricultural_professionals,id',
+            'farmer_id'     => 'nullable|integer|exists:farmers,id',
+            'farm_id'       => 'nullable|integer|exists:farms,id',
             'pest'          => 'required|string',
             'type'          => 'nullable|string|in:pest,disease',
             'confidence'    => 'required|numeric',
@@ -29,6 +36,21 @@ public function store(Request $request)
             'date_detected' => 'nullable|string',
             'severity'      => 'nullable|string',
         ]);
+
+        // Auto-resolve farmer_id and farm_id from app_no if not explicitly provided
+        if (empty($validated['farmer_id']) && !empty($validated['app_no'])) {
+            $farmer = Farmer::where('app_no', $validated['app_no'])->first();
+            if ($farmer) {
+                $validated['farmer_id'] = $farmer->id;
+
+                if (empty($validated['farm_id'])) {
+                    $farm = $farmer->farm;
+                    if ($farm) {
+                        $validated['farm_id'] = $farm->id;
+                    }
+                }
+            }
+        }
 
         // Handle image upload separately - don't fail if image is missing or invalid
         $imageWarning = null;
@@ -223,12 +245,93 @@ public function store(Request $request)
     }
 
     /**
+     * 🌾 Save farmer's action taken for a detection
+     */
+    public function saveFarmerAction(Request $request)
+    {
+        $validated = $request->validate([
+            'detection_id'       => 'nullable|integer',
+            'app_no'             => 'nullable|string',
+            'farmer_action'      => 'required|string',
+            'farmer_action_date' => 'nullable|string',
+        ]);
+
+        $query = PestAndDisease::query();
+
+        if (!empty($validated['detection_id'])) {
+            $query->where('case_id', $validated['detection_id']);
+        } elseif (!empty($validated['app_no'])) {
+            $query->where('app_no', $validated['app_no'])->latest();
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'detection_id or app_no is required',
+            ], 400);
+        }
+
+        $detection = $query->first();
+
+        if (!$detection) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Detection not found',
+            ], 404);
+        }
+
+        $detection->update([
+            'farmer_action'      => $validated['farmer_action'],
+            'farmer_action_date' => $validated['farmer_action_date'] ?? now(),
+        ]);
+
+        Log::info("Farmer action saved for detection #{$detection->case_id}", [
+            'farmer_action' => $validated['farmer_action'],
+        ]);
+
+        // Notify Filament admin users
+        try {
+            $appNo    = $detection->app_no ?? $validated['app_no'] ?? 'Unknown';
+            $pestName = $detection->pest ?? 'Detection';
+            $preview  = Str::limit($validated['farmer_action'], 80);
+
+            $viewUrl = route('filament.admin.resources.pest-and-diseases.index');
+
+            $adminUsers = collect();
+            try {
+                $adminUsers = User::role(['super_admin', 'panel_user'])->get();
+            } catch (\Exception $e) {
+                $adminUsers = User::all();
+            }
+
+            foreach ($adminUsers as $user) {
+                Notification::make()
+                    ->title('Farmer Action Taken on Detection')
+                    ->body("**{$appNo}** submitted action for **{$pestName}**: \"{$preview}\"")
+                    ->icon('heroicon-o-check-circle')
+                    ->iconColor('success')
+                    ->actions([
+                        Action::make('view')
+                            ->label('View Detections')
+                            ->url($viewUrl)
+                            ->button()
+                            ->markAsRead(),
+                    ])
+                    ->sendToDatabase($user);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error sending farmer action notification: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Farmer action saved successfully',
+        ]);
+    }
+
+    /**
      * Format detection for API response
      */
     private function formatDetection($detection)
     {
-
-   
         return [
             'case_id' => $detection->case_id,
             'app_no' => $detection->app_no,
@@ -248,6 +351,8 @@ public function store(Request $request)
             'expert_comments' => $detection->expert_comments,
             'validated_by' => $detection->validator?->name,
             'validated_at' => $detection->validated_at?->toISOString(),
+            'farmer_action' => $detection->farmer_action,
+            'farmer_action_date' => $detection->farmer_action_date?->toISOString(),
             'created_at' => $detection->created_at?->toISOString(),
             'updated_at' => $detection->updated_at?->toISOString(),
         ];

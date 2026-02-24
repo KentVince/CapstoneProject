@@ -21,6 +21,21 @@ class MobileUserResource extends Resource
     protected static ?string $navigationLabel = 'Mobile App Users';
     protected static ?string $pluralLabel = 'Mobile Users';
     protected static ?int $navigationSort = 6;
+
+    /**
+     * Only show this resource for admin users, not for agricultural professionals, agri_expert, or panel users
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return false;
+        }
+        
+        // Hide from agricultural professionals, agri_expert role, and panel users
+        return !$user->isAgriculturalProfessional() && !$user->hasRole('panel_user') && !$user->hasRole('agri_expert');
+    }
+
     public static function form(Forms\Form $form): Forms\Form
     {
         return $form->schema([

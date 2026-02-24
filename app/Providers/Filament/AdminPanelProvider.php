@@ -31,6 +31,7 @@ use Illuminate\Support\Facades\Blade;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
 use App\Rules\CurrentPassword;
+use App\Http\Middleware\RedirectPanelUserToWelcome;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -78,6 +79,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                RedirectPanelUserToWelcome::class,
             ])
 
 
@@ -127,6 +129,102 @@ class AdminPanelProvider extends PanelProvider
             FilamentView::registerRenderHook(
                 PanelsRenderHook::BODY_END,
                 fn (): string => Blade::render('@livewire(\'change-password-modal\')')
+            );
+
+            // Register the pest disease approval modal
+            FilamentView::registerRenderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => Blade::render('@livewire(\'pest-disease-approval-modal\')')
+            );
+
+            // Intercept notification "View Details" links: replace URL with modal dispatch
+            FilamentView::registerRenderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => <<<'HTML'
+                    <script>
+                        (function() {
+                            // Convert a notification action link into a modal opener
+                            function convertLink(link) {
+                                var href = link.getAttribute('href') || '';
+                                var match = href.match(/[?&]detail-modal=(\d+)/);
+                                if (!match) return;
+
+                                var recordId = parseInt(match[1]);
+                                if (!recordId) return;
+
+                                // Mark as already converted so we don't process twice
+                                if (link.dataset.modalConverted) return;
+                                link.dataset.modalConverted = 'true';
+
+                                // Remove href and wire:navigate so Livewire cannot navigate
+                                link.removeAttribute('href');
+                                link.removeAttribute('wire:navigate');
+                                link.removeAttribute('wire:navigate.hover');
+                                link.style.cursor = 'pointer';
+
+                                // Add click handler to open the approval modal
+                                link.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (window.Livewire) {
+                                        Livewire.dispatch('openApprovalModal', { recordId: recordId });
+                                    }
+                                });
+                            }
+
+                            // Scan all existing and future links via MutationObserver
+                            function scanLinks(root) {
+                                var links = root.querySelectorAll('a[href*="detail-modal"]');
+                                links.forEach(convertLink);
+                            }
+
+                            // Watch the DOM for new notification action links
+                            var observer = new MutationObserver(function(mutations) {
+                                mutations.forEach(function(mutation) {
+                                    mutation.addedNodes.forEach(function(node) {
+                                        if (node.nodeType !== 1) return;
+                                        // Check the node itself
+                                        if (node.matches && node.matches('a[href*="detail-modal"]')) {
+                                            convertLink(node);
+                                        }
+                                        // Check child nodes
+                                        if (node.querySelectorAll) {
+                                            scanLinks(node);
+                                        }
+                                    });
+                                });
+                            });
+
+                            observer.observe(document.body, { childList: true, subtree: true });
+
+                            // Also scan on page load and after Livewire navigations
+                            document.addEventListener('DOMContentLoaded', function() {
+                                scanLinks(document.body);
+                            });
+                            document.addEventListener('livewire:navigated', function() {
+                                setTimeout(function() { scanLinks(document.body); }, 300);
+                            });
+
+                            // Handle if page was loaded with ?detail-modal= in the URL
+                            function handleDetailModalParam() {
+                                var urlParams = new URLSearchParams(window.location.search);
+                                var detailModalId = urlParams.get('detail-modal');
+
+                                if (detailModalId && window.Livewire) {
+                                    Livewire.dispatch('openApprovalModal', { recordId: parseInt(detailModalId) });
+                                    window.history.replaceState({}, document.title, window.location.pathname);
+                                }
+                            }
+
+                            document.addEventListener('DOMContentLoaded', function() {
+                                setTimeout(handleDetailModalParam, 500);
+                            });
+                            document.addEventListener('livewire:navigated', function() {
+                                setTimeout(handleDetailModalParam, 300);
+                            });
+                        })();
+                    </script>
+                HTML
             );
 
             // Poll pending detections count and update sidebar badge in real-time
