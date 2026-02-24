@@ -29245,3 +29245,10 @@ REFERENCES / SOURCES
 [stacktrace]
 #0 {main}
 "} 
+[2026-02-24 04:51:02] local.ERROR: GeminiService [gemini-2.5-flash] HTTP 403: Client error: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyCqp_EqznjKz8ZlRM63fqEWaTpZgZPhmkc` resulted in a `403 Forbidden` response:
+{
+  "error": {
+    "code": 403,
+    "message": "Your API key was reported as leaked. Please use another API key.",
+    " (truncated...)
+  
