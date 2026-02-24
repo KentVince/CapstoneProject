@@ -324,7 +324,7 @@
             <div class="login-container">
                 <div class="login-image">
                     <img src="{{ asset('images/cafarm_wg.png') }}" alt="CAFARM Logo">
-                <h1 style="color:#ffffff;">CofSys asdasdas</h1>
+                <h1 style="color:#ffffff;">CofSys</h1>
                     <p style="color:#ffffff;">COFFEE FARM MANAGEMENT SYSTEM WITH SMART DISEASE DETECTION AND GEOANALYTICS</p>
                 </div>
                 <div class="login-form-section">
