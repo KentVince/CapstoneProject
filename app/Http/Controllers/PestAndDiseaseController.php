@@ -104,7 +104,8 @@ public function store(Request $request)
 
         $response = [
             'message' => 'Detection saved successfully',
-            'data' => $detection,
+            'id'      => $detection->case_id,
+            'data'    => $detection,
         ];
 
         if ($imageWarning) {
@@ -136,7 +137,7 @@ public function store(Request $request)
      */
     public function index(Request $request)
     {
-        $query = PestAndDisease::with('validator:id,name')->latest();
+        $query = PestAndDisease::with('validator.agriculturalProfessional')->latest();
 
         // Optional filter by app_no (for Flutter to get user's detections)
         if ($request->has('app_no')) {
@@ -167,7 +168,7 @@ public function store(Request $request)
         $farmerId = $request->input('farmer_id');
         $farmId = $request->input('farm_id');
 
-        $query = PestAndDisease::with('validator:id,name');
+        $query = PestAndDisease::with('validator.agriculturalProfessional');
 
         if (!empty($appNo)) {
             $query->where('app_no', $appNo);
@@ -199,7 +200,7 @@ public function store(Request $request)
      */
     public function show($id)
     {
-        $detection = PestAndDisease::with('validator:id,name')->find($id);
+        $detection = PestAndDisease::with('validator.agriculturalProfessional')->find($id);
 
         if (!$detection) {
             return response()->json([
@@ -226,7 +227,7 @@ public function store(Request $request)
             ]);
         }
 
-        $detections = PestAndDisease::with('validator:id,name')
+        $detections = PestAndDisease::with('validator.agriculturalProfessional')
             ->whereIn('case_id', $ids)
             ->get()
             ->map(function ($detection) {
@@ -234,7 +235,9 @@ public function store(Request $request)
                     'case_id' => $detection->case_id,
                     'validation_status' => $detection->validation_status,
                     'expert_comments' => $detection->expert_comments,
-                    'validated_by' => $detection->validator?->name,
+                    'validated_by' => $detection->validator?->agriculturalProfessional
+                        ? trim($detection->validator->agriculturalProfessional->firstname . ' ' . $detection->validator->agriculturalProfessional->lastname)
+                        : $detection->validator?->name,
                     'validated_at' => $detection->validated_at?->toISOString(),
                 ];
             });
@@ -293,11 +296,11 @@ public function store(Request $request)
             $pestName = $detection->pest ?? 'Detection';
             $preview  = Str::limit($validated['farmer_action'], 80);
 
-            $viewUrl = route('filament.admin.resources.pest-and-diseases.index');
+            $viewUrl = route('filament.admin.resources.pest-and-diseases.index', [], false) . '?detail-modal=' . $detection->case_id;
 
             $adminUsers = collect();
             try {
-                $adminUsers = User::role(['super_admin', 'panel_user'])->get();
+                $adminUsers = User::role(['super_admin', 'panel_user', 'agri_expert'])->get();
             } catch (\Exception $e) {
                 $adminUsers = User::all();
             }
@@ -310,7 +313,7 @@ public function store(Request $request)
                     ->iconColor('success')
                     ->actions([
                         Action::make('view')
-                            ->label('View Detections')
+                            ->label('View Detection')
                             ->url($viewUrl)
                             ->button()
                             ->markAsRead(),
@@ -328,11 +331,123 @@ public function store(Request $request)
     }
 
     /**
+     * 💬 Expert adds an additional comment to a detection (from Flutter)
+     */
+    public function addExpertComment(Request $request, $id)
+    {
+        $request->validate([
+            'professional_id' => 'required|integer|exists:agricultural_professionals,id',
+            'message'         => 'required|string|max:2000',
+        ]);
+
+        $detection = PestAndDisease::find($id);
+        if (!$detection) {
+            return response()->json(['success' => false, 'message' => 'Detection not found'], 404);
+        }
+
+        if ($detection->validation_status === 'pending') {
+            return response()->json(['success' => false, 'message' => 'Case is still pending approval'], 422);
+        }
+
+        // Resolve the panel User linked to this AgriculturalProfessional
+        $user = User::whereHas('agriculturalProfessional', fn ($q) =>
+            $q->where('id', $request->professional_id)
+        )->first();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Expert user account not found'], 404);
+        }
+
+        $comment = \App\Models\PestDiseaseExpertComment::create([
+            'pest_and_disease_id' => $detection->case_id,
+            'user_id'             => $user->id,
+            'message'             => $request->message,
+        ]);
+
+        $agency = $user->agriculturalProfessional?->agency;
+        $agencyLabel = $agency ? "Expert from {$agency}" : $user->name;
+        // FCM is sent automatically by PestDiseaseExpertCommentObserver::created()
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Comment added successfully',
+            'data' => [
+                'id'           => $comment->id,
+                'sender_type'  => 'expert',
+                'sender_name'  => $user->name,
+                'agency'       => $agency,
+                'agency_label' => $agencyLabel,
+                'message'      => $comment->message,
+                'created_at'   => $comment->created_at->toISOString(),
+                'is_initial'   => false,
+                'is_extra_comment' => true,
+            ],
+        ]);
+    }
+
+    /**
      * Format detection for API response
      */
     private function formatDetection($detection)
     {
+        // Load extra expert comments
+        $extraComments = \App\Models\PestDiseaseExpertComment::with('expert.agriculturalProfessional')
+            ->where('pest_and_disease_id', $detection->case_id)
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->map(function ($c) {
+                $agency = $c->expert?->agriculturalProfessional?->agency;
+                return [
+                    'id'              => $c->id,
+                    'sender_type'     => 'expert',
+                    'sender_name'     => $c->expert?->name ?? 'Expert',
+                    'agency'          => $agency,
+                    'agency_label'    => $agency ? "Expert from {$agency}" : null,
+                    'message'         => $c->message,
+                    'created_at'      => $c->created_at->toISOString(),
+                    'is_initial'      => false,
+                    'is_extra_comment' => true,
+                ];
+            });
+
+        // Build conversation thread (initial approval + extra comments + farmer action)
+        $thread = collect();
+
+        if ($detection->expert_comments) {
+            $agency = $detection->validator?->agriculturalProfessional?->agency;
+            $thread->push([
+                'id'           => 0,
+                'sender_type'  => 'expert',
+                'sender_name'  => $detection->validator?->agriculturalProfessional
+                    ? trim($detection->validator->agriculturalProfessional->firstname . ' ' . $detection->validator->agriculturalProfessional->lastname)
+                    : ($detection->validator?->name ?? 'Expert'),
+                'agency'       => $agency,
+                'agency_label' => $agency ? "Expert from {$agency}" : null,
+                'message'      => $detection->expert_comments,
+                'created_at'   => $detection->validated_at?->toISOString(),
+                'is_initial'   => true,
+            ]);
+        }
+
+        foreach ($extraComments as $c) {
+            $thread->push($c);
+        }
+
+        if ($detection->farmer_action) {
+            $thread->push([
+                'id'           => 0,
+                'sender_type'  => 'farmer',
+                'sender_name'  => null,
+                'agency'       => null,
+                'agency_label' => null,
+                'message'      => $detection->farmer_action,
+                'created_at'   => $detection->farmer_action_date?->toISOString(),
+                'is_initial'   => true,
+            ]);
+        }
+
         return [
+            'id'     => $detection->case_id,
             'case_id' => $detection->case_id,
             'app_no' => $detection->app_no,
             'expert_id' => $detection->expert_id,
@@ -349,10 +464,15 @@ public function store(Request $request)
                 : null,
             'validation_status' => $detection->validation_status,
             'expert_comments' => $detection->expert_comments,
-            'validated_by' => $detection->validator?->name,
+            'validated_by' => $detection->validator?->agriculturalProfessional
+                ? trim($detection->validator->agriculturalProfessional->firstname . ' ' . $detection->validator->agriculturalProfessional->lastname)
+                : $detection->validator?->name,
+            'validated_by_agency' => $detection->validator?->agriculturalProfessional?->agency,
             'validated_at' => $detection->validated_at?->toISOString(),
             'farmer_action' => $detection->farmer_action,
             'farmer_action_date' => $detection->farmer_action_date?->toISOString(),
+            'conversation_thread' => $thread->sortBy('created_at')->values(),
+            'extra_expert_comments_count' => $extraComments->count(),
             'created_at' => $detection->created_at?->toISOString(),
             'updated_at' => $detection->updated_at?->toISOString(),
         ];

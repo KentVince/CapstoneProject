@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\SoilAnalysis;
 use App\Models\SoilAnalysisConversation;
 use App\Models\MobileUser;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -79,10 +80,34 @@ class SoilAnalysisChat extends Component
 
     public function render()
     {
-        $analysis = SoilAnalysis::with(['conversations', 'farmer', 'validator'])->find($this->soilAnalysisId);
+        $analysis = SoilAnalysis::with([
+            'conversations',
+            'farmer',
+            'validator.agriculturalProfessional',
+        ])->find($this->soilAnalysisId);
+
+        // Build agency lookup for expert senders in conversation thread
+        $expertAgencies = [];
+        if ($analysis) {
+            $expertSenderIds = $analysis->conversations
+                ->where('sender_type', 'expert')
+                ->pluck('sender_id')
+                ->unique()
+                ->filter();
+
+            if ($expertSenderIds->isNotEmpty()) {
+                User::with('agriculturalProfessional')
+                    ->whereIn('id', $expertSenderIds)
+                    ->get()
+                    ->each(function ($user) use (&$expertAgencies) {
+                        $expertAgencies[$user->id] = $user->agriculturalProfessional?->agency;
+                    });
+            }
+        }
 
         return view('livewire.soil-analysis-chat', [
             'analysis' => $analysis,
+            'expertAgencies' => $expertAgencies,
         ]);
     }
 }

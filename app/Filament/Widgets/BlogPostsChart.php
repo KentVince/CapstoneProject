@@ -2,79 +2,68 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\PestAndDisease;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class BlogPostsChart extends ApexChartWidget
 {
-    /**
-     * Chart Id
-     *
-     * @var string
-     */
     protected static ?string $chartId = 'blogPostsChart';
 
-    public $data;
+    protected static ?string $heading = 'Monthly Pest & Disease Detections';
 
-    /**
-     * Widget Title
-     *
-     * @var string|null
-     */
-    protected static ?string $heading = 'BlogPostsChart';
+    protected int | string | array $columnSpan = 'full';
 
-    /**
-     * Chart options (series, labels, types, size, animations...)
-     * https://apexcharts.com/docs/options
-     *
-     * @return array
-     */
     protected function getOptions(): array
     {
+        // Build last 12 months labels and data
+        $months = collect(range(11, 0))->map(fn ($i) => now()->subMonths($i));
+
+        $labels = $months->map(fn ($m) => $m->format('M Y'))->toArray();
+
+        $data = $months->map(fn ($m) =>
+            PestAndDisease::whereYear('date_detected', $m->year)
+                ->whereMonth('date_detected', $m->month)
+                ->where('validation_status', 'approved')
+                ->count()
+        )->toArray();
+
         return [
             'chart' => [
-                'type' => 'scatter',
-                'height' => 300,
+                'type'    => 'bar',
+                'height'  => 320,
+                'toolbar' => ['show' => false],
             ],
-            'series' => $this->getData(),
+            'series' => [
+                [
+                    'name' => 'Approved Cases',
+                    'data' => $data,
+                ],
+            ],
             'xaxis' => [
-                'tickAmount' => 7,
-                'labels' => [
-                    'style' => [
-                        'fontFamily' => 'inherit',
-                    ],
+                'categories' => $labels,
+                'labels'     => [
+                    'style' => ['fontFamily' => 'inherit'],
                 ],
             ],
             'yaxis' => [
-                'tickAmount' => 7,
                 'labels' => [
-                    'style' => [
-                        'fontFamily' => 'inherit',
-                    ],
+                    'style' => ['fontFamily' => 'inherit'],
+                ],
+                'min' => 0,
+            ],
+            'colors'      => ['#f59e0b'],
+            'plotOptions' => [
+                'bar' => [
+                    'borderRadius' => 4,
+                    'columnWidth'  => '55%',
                 ],
             ],
-            'legend' => [
-                'labels' => [
-                    'fontFamily' => 'inherit',
-                ],
+            'dataLabels' => ['enabled' => false],
+            'grid' => [
+                'borderColor' => '#e5e7eb',
             ],
-        ];
-    }
-
-
-    protected function getData()
-    {
-        return [
-            [
-                'name' => 'Jan',
-                'data' => [[16.4, 5.4], [21.7, 2], [25.4, 3], [19, 2], [10.9, 1], [13.6, 3.2], [10.9, 7.4], [10.9, 0], [10.9, 8.2], [16.4, 0], [16.4, 1.8], [13.6, 0.3], [13.6, 0], [29.9, 0], [27.1, 2.3], [16.4, 0], [13.6, 3.7], [10.9, 5.2], [16.4, 6.5], [10.9, 0], [24.5, 7.1], [10.9, 0], [8.1, 4.7], [19, 0], [21.7, 1.8], [27.1, 0], [24.5, 0], [27.1, 0], [29.9, 1.5], [27.1, 0.8], [22.1, 2]],
-            ],
-            [
-                'name' => 'Feb',
-                'data' => [[36.4, 13.4], [1.7, 11], [5.4, 8], [9, 17], [1.9, 4], [3.6, 12.2], [1.9, 14.4], [1.9, 9], [1.9, 13.2], [1.4, 7], [6.4, 8.8], [3.6, 4.3], [1.6, 10], [9.9, 2], [7.1, 15], [1.4, 0], [3.6, 13.7], [1.9, 15.2], [6.4, 16.5], [0.9, 10], [4.5, 17.1], [10.9, 10], [0.1, 14.7], [9, 10], [12.7, 11.8], [2.1, 10], [2.5, 10], [27.1, 10], [2.9, 11.5], [7.1, 10.8], [2.1, 12]],
-            ],
-            [
-                'name' => 'Mar',
-                'data' => [[21.7, 3], [23.6, 3.5], [24.6, 3], [29.9, 3], [21.7, 20], [23, 2], [10.9, 3], [28, 4], [27.1, 0.3], [16.4, 4], [13.6, 0], [19, 5], [22.4, 3], [24.5, 3], [32.6, 3], [27.1, 4], [29.6, 6], [31.6, 8], [21.6, 5], [20.9, 4], [22.4, 0], [32.6, 10.3], [29.7, 20.8], [24.5, 0.8], [21.4, 0], [21.7, 6.9], [28.6, 7.7], [15.4, 0], [18.1, 0], [33.4, 0], [16.4, 0]],
+            'tooltip' => [
+                'style' => ['fontFamily' => 'inherit'],
             ],
         ];
     }

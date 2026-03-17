@@ -2,63 +2,59 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\PestAndDisease;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class BlogPostsChart1 extends ApexChartWidget
 {
-    /**
-     * Chart Id
-     *
-     * @var string
-     */
     protected static ?string $chartId = 'blogPostsChart1';
 
-    /**
-     * Widget Title
-     *
-     * @var string|null
-     */
-    protected static ?string $heading = 'BlogPostsChart1';
+    protected static ?string $heading = 'Cases by Severity';
 
-    /**
-     * Chart options (series, labels, types, size, animations...)
-     * https://apexcharts.com/docs/options
-     *
-     * @return array
-     */
     protected function getOptions(): array
     {
+        $severities = PestAndDisease::selectRaw('severity, COUNT(*) as count')
+            ->where('validation_status', 'approved')
+            ->groupBy('severity')
+            ->pluck('count', 'severity');
+
+        $low    = (int) ($severities['low']    ?? 0);
+        $medium = (int) ($severities['medium'] ?? 0);
+        $high   = (int) ($severities['high']   ?? 0);
+
         return [
             'chart' => [
-                'type' => 'heatmap',
-                'height' => 300,
+                'type'   => 'donut',
+                'height' => 320,
             ],
-            'series' => [
-                ['name' => 'Jan', 'data' => [[55, 70], [33, 42], [68, 40], [40, 48], [63, 19], [38, 23]]],
-                ['name' => 'Feb', 'data' => [[44, 38], [37, 47], [16, 52], [30, 27], [46, 55], [37, 13]]],
-                ['name' => 'Mar', 'data' => [[10, 42], [30, 16], [54, 34], [31, 47], [30, 31], [58, 60]]],
-                ['name' => 'Apr', 'data' => [[14, 60], [50, 30], [64, 13], [34, 32], [41, 23], [15, 70]]],
-                ['name' => 'May', 'data' => [[66, 69], [42, 20], [47, 34], [12, 37], [59, 29], [25, 60]]],
-            ],
-            'xaxis' => [
-                'type' => 'category',
-                'labels' => [
-                    'style' => [
-                        'fontFamily' => 'inherit',
-                    ],
-                ],
-            ],
-            'yaxis' => [
-                'labels' => [
-                    'style' => [
-                        'fontFamily' => 'inherit',
-                    ],
-                ],
+            'series' => [$low, $medium, $high],
+            'labels' => ['Low', 'Medium', 'High'],
+            'colors' => ['#22c55e', '#f59e0b', '#ef4444'],
+            'legend' => [
+                'position' => 'bottom',
+                'labels'   => ['fontFamily' => 'inherit'],
             ],
             'dataLabels' => [
-                'enabled' => false,
+                'style' => ['fontFamily' => 'inherit'],
             ],
-            'colors' => ['#f59e0b'],
+            'plotOptions' => [
+                'pie' => [
+                    'donut' => [
+                        'size'   => '65%',
+                        'labels' => [
+                            'show'  => true,
+                            'total' => [
+                                'show'  => true,
+                                'label' => 'Total',
+                                'style' => ['fontFamily' => 'inherit'],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            'tooltip' => [
+                'style' => ['fontFamily' => 'inherit'],
+            ],
         ];
     }
 }

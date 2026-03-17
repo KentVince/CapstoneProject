@@ -513,7 +513,7 @@ $printData = [
         </div>
 
         {{-- Right: Details Grid --}}
-        <div class="flex-1 grid grid-cols-2 gap-3">
+        <div class="flex-1 grid grid-cols-3 gap-3">
             <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
                 <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Pest / Disease</h4>
                 <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{{ $record->pest }}</p>
@@ -576,7 +576,7 @@ $printData = [
             </div>
 
             @if($info)
-                <div class="col-span-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-3 rounded-lg">
+                <div class="col-span-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-3 rounded-lg">
                     <h4 class="text-xs font-medium text-blue-600 dark:text-blue-400">Detection Confidence</h4>
                     <p class="mt-0.5 text-sm text-blue-800 dark:text-blue-200">{{ $info['detection_confidence'] }}</p>
                     <p class="mt-1 text-xs text-blue-600 dark:text-blue-400">
@@ -874,6 +874,18 @@ $printData = [
                             </div>
                         @endif
 
+                        {{-- Farmer Summary --}}
+                        @if(!empty($aiJson['farmer_summary']))
+                            <div style="margin-bottom: 16px;">
+                                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #0369a1; border-bottom: 1px solid #e0f2fe; padding-bottom: 4px; margin-bottom: 8px;">
+                                    💬 What This Means For You
+                                </div>
+                                <div style="font-size: 12px; line-height: 1.7; color: #0c4a6e; background: #f0f9ff; border-left: 3px solid #0ea5e9; padding: 10px 14px; border-radius: 0 6px 6px 0;">
+                                    {{ $aiJson['farmer_summary'] }}
+                                </div>
+                            </div>
+                        @endif
+
                         {{-- Immediate Actions --}}
                         @if(!empty($aiJson['immediate_actions']))
                             <div style="margin-bottom: 16px;">
@@ -903,6 +915,23 @@ $printData = [
                                             {{ $step['step'] ?? '' }}
                                         </span>
                                         <span style="font-size: 12px; color: #374151; line-height: 1.5;">{{ $step['detail'] ?? '' }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        {{-- Organic Alternatives --}}
+                        @if(!empty($aiJson['organic_alternatives']))
+                            <div style="margin-bottom: 16px;">
+                                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #15803d; border-bottom: 1px solid #dcfce7; padding-bottom: 4px; margin-bottom: 8px;">
+                                    🌿 Organic / Natural Alternatives
+                                </div>
+                                @foreach($aiJson['organic_alternatives'] as $idx => $item)
+                                    <div style="display: flex; gap: 10px; align-items: flex-start; margin: 6px 0;">
+                                        <span style="flex-shrink:0; background:#dcfce7; color:#166534; font-size:9px; font-weight:800; padding:2px 7px; border-radius:4px; min-width:50px; text-align:center;">
+                                            Option {{ $idx + 1 }}
+                                        </span>
+                                        <span style="font-size: 12px; color: #374151; line-height: 1.5;">{{ $item }}</span>
                                     </div>
                                 @endforeach
                             </div>
@@ -947,8 +976,43 @@ $printData = [
                                             Rate: {{ $prod['rate'] ?? '—' }}
                                             @if(!empty($prod['notes'])) &bull; {{ $prod['notes'] }} @endif
                                         </div>
+                                        @if(!empty($prod['price_range']) || !empty($prod['where_to_buy']))
+                                            <div style="font-size:11px; color:#4b5563; margin-top:3px;">
+                                                @if(!empty($prod['price_range']))<span style="background:#f3f4f6; padding:1px 6px; border-radius:4px; margin-right:4px;">{{ $prod['price_range'] }}</span>@endif
+                                                @if(!empty($prod['where_to_buy']))<span style="color:#6b7280;">📍 {{ $prod['where_to_buy'] }}</span>@endif
+                                            </div>
+                                        @endif
                                     </div>
                                 @endforeach
+                            </div>
+                        @endif
+
+                        {{-- Safety Precautions --}}
+                        @if(!empty($aiJson['safety_precautions']))
+                            <div style="margin-bottom: 16px;">
+                                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #b45309; border-bottom: 1px solid #fef3c7; padding-bottom: 4px; margin-bottom: 8px;">
+                                    🧤 Safety Precautions
+                                </div>
+                                @foreach($aiJson['safety_precautions'] as $idx => $item)
+                                    <div style="display: flex; gap: 10px; align-items: flex-start; margin: 6px 0;">
+                                        <span style="flex-shrink:0; background:#fef3c7; color:#92400e; font-size:9px; font-weight:800; padding:2px 7px; border-radius:4px; min-width:50px; text-align:center;">
+                                            Note {{ $idx + 1 }}
+                                        </span>
+                                        <span style="font-size: 12px; color: #374151; line-height: 1.5;">{{ $item }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        {{-- When to Call Expert --}}
+                        @if(!empty($aiJson['when_to_call_expert']))
+                            <div style="margin-bottom: 16px;">
+                                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #dc2626; border-bottom: 1px solid #fee2e2; padding-bottom: 4px; margin-bottom: 8px;">
+                                    📞 When to Contact Your Agricultural Officer
+                                </div>
+                                <div style="font-size: 12px; line-height: 1.7; color: #7f1d1d; background: #fff1f2; border-left: 3px solid #ef4444; padding: 10px 14px; border-radius: 0 6px 6px 0;">
+                                    {{ $aiJson['when_to_call_expert'] }}
+                                </div>
                             </div>
                         @endif
 
@@ -1015,83 +1079,108 @@ $printData = [
 
     {{-- ── Conversation Thread (Expert ↔ Farmer) ──────────────────────────── --}}
     @if($record->expert_comments || $record->farmer_action)
-        <div class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
+        @php $isApproved = $record->validation_status === 'approved'; @endphp
+        <div style="border-radius: 14px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.13); border: 1px solid #e2e8f0;">
             {{-- Thread header --}}
-            <div class="flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <div style="display:flex; align-items:center; gap:8px; padding:10px 16px; background:linear-gradient(90deg,#1e293b 0%,#334155 100%); border-bottom:1px solid #475569;">
+                <svg style="width:15px;height:15px;color:#94a3b8;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2H6z" clip-rule="evenodd"/>
                 </svg>
-                <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">Conversation Thread</span>
-                @php $isApproved = $record->validation_status === 'approved'; @endphp
+                <span style="font-size:11px;font-weight:700;color:#f1f5f9;letter-spacing:0.5px;text-transform:uppercase;">Conversation Thread</span>
                 @if($record->validation_status !== 'pending')
-                    <span class="ml-auto inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold
-                        {{ $isApproved
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
-                            : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' }}">
-                        {{ $isApproved ? 'Approved' : 'Disapproved' }}
+                    <span style="margin-left:auto;display:inline-flex;align-items:center;padding:2px 10px;border-radius:999px;font-size:10px;font-weight:700;{{ $isApproved ? 'background:#dcfce7;color:#15803d;' : 'background:#fee2e2;color:#b91c1c;' }}">
+                        {{ $isApproved ? '✓ Approved' : '✕ Disapproved' }}
                     </span>
                 @endif
             </div>
 
             {{-- Scrollable chat area --}}
-            <div class="max-h-64 overflow-y-auto space-y-3 p-3 bg-gray-50 dark:bg-gray-800/50">
+            <div style="max-height:280px;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:12px;background:#f1f5f9;">
 
-                {{-- Expert comment bubble (left, blue) --}}
+                {{-- Expert bubble (left, blue) --}}
                 @if($record->expert_comments)
-                    <div class="flex justify-start">
-                        <div class="max-w-[80%] bg-blue-100 dark:bg-blue-900/40 rounded-lg p-2.5">
-                            <div class="flex items-center gap-1.5 mb-1">
-                                <svg class="w-3 h-3 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                                </svg>
-                                <span class="text-xs font-semibold text-blue-800 dark:text-blue-300">
-                                    {{ $record->validator?->name ?? 'Expert' }}
-                                </span>
-                                <span class="inline-block px-1.5 py-0.5 text-[10px] bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded">
-                                    {{ $isApproved ? 'Recommendation' : 'Comments' }}
-                                </span>
+                    <div style="display:flex;justify-content:flex-start;align-items:flex-end;gap:8px;">
+                        <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <svg style="width:14px;height:14px;color:white;" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div style="max-width:78%;">
+                            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                                <div>
+                                    <span style="font-size:11px;font-weight:700;color:#1e40af;">{{ $record->validator?->name ?? 'Expert' }}</span>
+                                    @if($record->validator?->agriculturalProfessional?->agency)
+                                        <div style="font-size:10px;font-weight:600;color:#3b82f6;">Expert from {{ $record->validator->agriculturalProfessional->agency }}</div>
+                                    @endif
+                                </div>
+                                <span style="font-size:9px;font-weight:600;padding:1px 7px;border-radius:999px;background:#dbeafe;color:#1d4ed8;">{{ $isApproved ? 'Recommendation' : 'Comments' }}</span>
                             </div>
-                            <p class="text-sm text-gray-900 dark:text-gray-100 leading-relaxed">{{ $record->expert_comments }}</p>
-                            @if($record->validated_at)
-                                <span class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 block">
-                                    {{ $record->validated_at->format('M d, Y · h:i A') }}
-                                </span>
-                            @endif
+                            <div style="background:white;border-radius:0 12px 12px 12px;padding:10px 13px;box-shadow:0 1px 4px rgba(0,0,0,0.08);border-left:3px solid #3b82f6;">
+                                <p style="font-size:13px;color:#1e293b;line-height:1.55;margin:0;">{{ $record->expert_comments }}</p>
+                                @if($record->validated_at)
+                                    <span style="font-size:10px;color:#94a3b8;display:block;margin-top:6px;">{{ $record->validated_at->format('M d, Y · h:i A') }}</span>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 @endif
 
-                {{-- Farmer reply bubble (right, amber) --}}
-                @if($record->farmer_action)
-                    <div class="flex justify-end">
-                        <div class="max-w-[80%] bg-amber-100 dark:bg-amber-900/40 rounded-lg p-2.5">
-                            <div class="flex items-center justify-end gap-1.5 mb-1">
-                                <span class="inline-block px-1.5 py-0.5 text-[10px] bg-amber-200 dark:bg-amber-800 text-amber-700 dark:text-amber-300 rounded">
-                                    Action Taken
-                                </span>
-                                <span class="text-xs font-semibold text-amber-800 dark:text-amber-300">
-                                    {{ $record->farmer
-                                        ? trim(($record->farmer->firstname ?? '') . ' ' . ($record->farmer->lastname ?? ''))
-                                        : 'Farmer' }}
-                                </span>
-                                <svg class="w-3 h-3 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                                </svg>
+                {{-- Additional expert comments from multiple experts --}}
+                @foreach($record->expertComments()->with('expert.agriculturalProfessional')->get() as $comment)
+                    <div style="display:flex;justify-content:flex-start;align-items:flex-end;gap:8px;">
+                        <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <svg style="width:14px;height:14px;color:white;" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div style="max-width:78%;">
+                            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                                <div>
+                                    <span style="font-size:11px;font-weight:700;color:#1e40af;">{{ $comment->expert?->name ?? 'Expert' }}</span>
+                                    @if($comment->expert?->agriculturalProfessional?->agency)
+                                        <div style="font-size:10px;font-weight:600;color:#3b82f6;">Expert from {{ $comment->expert->agriculturalProfessional->agency }}</div>
+                                    @endif
+                                </div>
+                                <span style="font-size:9px;font-weight:600;padding:1px 7px;border-radius:999px;background:#dbeafe;color:#1d4ed8;">Recommendation</span>
                             </div>
-                            <p class="text-sm text-gray-900 dark:text-gray-100 leading-relaxed">{{ $record->farmer_action }}</p>
-                            @if($record->farmer_action_date)
-                                <span class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 block text-right">
-                                    {{ $record->farmer_action_date->format('M d, Y · h:i A') }}
-                                    <span class="italic ml-1">via CAFARM App</span>
-                                </span>
-                            @endif
+                            <div style="background:white;border-radius:0 12px 12px 12px;padding:10px 13px;box-shadow:0 1px 4px rgba(0,0,0,0.08);border-left:3px solid #3b82f6;">
+                                <p style="font-size:13px;color:#1e293b;line-height:1.55;margin:0;">{{ $comment->message }}</p>
+                                <span style="font-size:10px;color:#94a3b8;display:block;margin-top:6px;">{{ $comment->created_at->format('M d, Y · h:i A') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+
+                {{-- Farmer bubble (right, amber) --}}
+                @if($record->farmer_action)
+                    <div style="display:flex;justify-content:flex-end;align-items:flex-end;gap:8px;">
+                        <div style="max-width:78%;">
+                            <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:4px;">
+                                <span style="font-size:9px;font-weight:600;padding:1px 7px;border-radius:999px;background:#fef3c7;color:#92400e;">Action Taken</span>
+                                <div style="text-align:right;">
+                                    <span style="font-size:11px;font-weight:700;color:#92400e;">{{ $record->farmer ? trim(($record->farmer->firstname ?? '') . ' ' . ($record->farmer->lastname ?? '')) : 'Farmer' }}</span>
+                                    <div style="font-size:10px;font-weight:600;color:#d97706;">Farmer</div>
+                                </div>
+                            </div>
+                            <div style="background:linear-gradient(135deg,#fef9c3,#fde68a);border-radius:12px 0 12px 12px;padding:10px 13px;box-shadow:0 1px 4px rgba(0,0,0,0.08);border-right:3px solid #f59e0b;">
+                                <p style="font-size:13px;color:#1c1917;line-height:1.55;margin:0;">{{ $record->farmer_action }}</p>
+                                @if($record->farmer_action_date)
+                                    <span style="font-size:10px;color:#78716c;display:block;margin-top:6px;text-align:right;">
+                                        {{ $record->farmer_action_date->format('M d, Y · h:i A') }} <em>via CAFARM App</em>
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                        <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <svg style="width:14px;height:14px;color:white;" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                            </svg>
                         </div>
                     </div>
                 @elseif($record->expert_comments)
-                    {{-- No farmer reply yet --}}
-                    <p class="text-xs text-center text-gray-400 dark:text-gray-500 py-1 italic">
-                        Awaiting farmer's response via mobile app…
-                    </p>
+                    <div style="text-align:center;padding:6px 0;">
+                        <span style="font-size:11px;color:#64748b;font-style:italic;background:#e2e8f0;padding:4px 14px;border-radius:999px;">⏳ Awaiting farmer's response via mobile app…</span>
+                    </div>
                 @endif
 
             </div>

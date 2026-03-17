@@ -22,6 +22,11 @@ class RedirectPanelUserToWelcome
         if (auth()->check()) {
             $user = auth()->user();
 
+            // Skip redirect when an admin is impersonating — let them see the panel freely
+            if (app('impersonate')->isImpersonating()) {
+                return $next($request);
+            }
+
             // If user is a panel_user and not on the welcome page, redirect them
             if ($user->hasRole('panel_user') && !$request->is('admin/welcome')) {
                 return redirect('/admin/welcome');

@@ -22,7 +22,7 @@ class SoilAnalysisObserver
             $adminUsers = collect();
 
             try {
-                $adminUsers = User::role(['super_admin', 'panel_user'])
+                $adminUsers = User::role(['super_admin', 'panel_user', 'agri_expert'])
                     ->get();
             } catch (\Exception $e) {
                 // If role check fails, send to all users
@@ -41,7 +41,7 @@ class SoilAnalysisObserver
 
             $viewUrl = route('filament.admin.resources.soil-analyses.index', [
                 'viewRecord' => $soilAnalysis->id,
-            ]);
+            ], false);
 
             // Send database notification to each admin user
             foreach ($adminUsers as $user) {

@@ -17,10 +17,12 @@ class CafarmMap extends Page
     // protected static string $view = 'filament.pages.cafarm-map';
 
 
-    protected static ?string $navigationLabel = 'CAFARM Map';
+    protected static ?string $title           = 'CofSys Maps';
+    protected static ?string $navigationLabel = 'CofSys Map';
+    protected static ?string $pluralLabel     = 'CofSys Map';
     protected static ?string $navigationGroup = 'Maps';
     protected static ?int $navigationSort = 3;
-    protected static ?string $slug = 'cafarm-map';
+    protected static ?string $slug = 'cofsys-map';
     protected static ?string $navigationIcon = 'heroicon-o-map';
     protected static string $view = 'filament.pages.cafarm-map';
 

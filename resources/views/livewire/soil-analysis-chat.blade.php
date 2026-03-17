@@ -18,9 +18,14 @@
                     <div class="flex justify-start">
                         <div class="max-w-[80%] bg-blue-100 dark:bg-blue-900/40 rounded-lg p-2.5">
                             <div class="flex items-center gap-1 mb-1">
-                                <span class="text-xs font-semibold text-blue-800 dark:text-blue-300">
-                                    {{ $analysis->validator?->name ?? 'Expert' }}
-                                </span>
+                                <div>
+                                    <span class="text-xs font-semibold text-blue-800 dark:text-blue-300">
+                                        {{ $analysis->validator?->name ?? 'Expert' }}
+                                    </span>
+                                    @if($analysis->validator?->agriculturalProfessional?->agency)
+                                        <div class="text-[10px] text-blue-600 dark:text-blue-400">Expert from {{ $analysis->validator->agriculturalProfessional->agency }}</div>
+                                    @endif
+                                </div>
                                 <span class="inline-block px-1.5 py-0.5 text-[10px] bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded">Initial Recommendation</span>
                             </div>
                             <p class="text-sm text-gray-900 dark:text-gray-100">{{ $analysis->expert_comments }}</p>
@@ -36,9 +41,12 @@
                     <div class="flex justify-end">
                         <div class="max-w-[80%] bg-amber-100 dark:bg-amber-900/40 rounded-lg p-2.5">
                             <div class="flex items-center gap-1 mb-1">
-                                <span class="text-xs font-semibold text-amber-800 dark:text-amber-300">
-                                    {{ $analysis->farmer ? trim($analysis->farmer->firstname . ' ' . $analysis->farmer->lastname) : 'Farmer' }}
-                                </span>
+                                <div>
+                                    <span class="text-xs font-semibold text-amber-800 dark:text-amber-300">
+                                        {{ $analysis->farmer ? trim($analysis->farmer->firstname . ' ' . $analysis->farmer->lastname) : 'Farmer' }}
+                                    </span>
+                                    <div class="text-[10px] text-amber-600 dark:text-amber-400">Farmer</div>
+                                </div>
                                 <span class="inline-block px-1.5 py-0.5 text-[10px] bg-amber-200 dark:bg-amber-800 text-amber-700 dark:text-amber-300 rounded">Initial Reply</span>
                             </div>
                             <p class="text-sm text-gray-900 dark:text-gray-100">{{ $analysis->farmer_reply }}</p>
@@ -55,11 +63,15 @@
                         <div class="max-w-[80%] {{ $msg->sender_type === 'expert'
                             ? 'bg-blue-100 dark:bg-blue-900/40'
                             : 'bg-amber-100 dark:bg-amber-900/40' }} rounded-lg p-2.5">
-                            <span class="text-xs font-semibold {{ $msg->sender_type === 'expert'
-                                ? 'text-blue-800 dark:text-blue-300'
-                                : 'text-amber-800 dark:text-amber-300' }}">
-                                {{ $msg->sender_name }}
-                            </span>
+                            @if($msg->sender_type === 'expert')
+                                <span class="text-xs font-semibold text-blue-800 dark:text-blue-300">{{ $msg->sender_name }}</span>
+                                @if(!empty($expertAgencies[$msg->sender_id]))
+                                    <div class="text-[10px] text-blue-600 dark:text-blue-400">Expert from {{ $expertAgencies[$msg->sender_id] }}</div>
+                                @endif
+                            @else
+                                <span class="text-xs font-semibold text-amber-800 dark:text-amber-300">{{ $msg->sender_name }}</span>
+                                <div class="text-[10px] text-amber-600 dark:text-amber-400">Farmer</div>
+                            @endif
                             <p class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">{{ $msg->message }}</p>
                             <span class="text-[10px] text-gray-500 dark:text-gray-400">
                                 {{ $msg->created_at->format('M d, Y H:i') }}

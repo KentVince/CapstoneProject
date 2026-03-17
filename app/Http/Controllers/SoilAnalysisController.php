@@ -112,7 +112,7 @@ class SoilAnalysisController extends Controller
 
             // Query soil analyses for this farmer
             $analyses = SoilAnalysis::where('farmer_id', $farmer->id)
-                ->with(['validator', 'farmer'])
+                ->with(['validator.agriculturalProfessional', 'farmer'])
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($analysis) {
@@ -125,7 +125,9 @@ class SoilAnalysisController extends Controller
                         'analysis_type' => $analysis->analysis_type,
                         // Map our field names to what Flutter expects
                         'expert_recommendation' => $analysis->expert_comments,
-                        'recommended_by' => $analysis->validator?->name,
+                        'recommended_by' => $analysis->validator?->agriculturalProfessional
+                            ? trim($analysis->validator->agriculturalProfessional->firstname . ' ' . $analysis->validator->agriculturalProfessional->lastname)
+                            : $analysis->validator?->name,
                         'recommendation_date' => $analysis->validated_at?->toISOString(),
                         // Additional fields for the Flutter app
                         'farm_name' => $analysis->farm_name,
@@ -140,11 +142,8 @@ class SoilAnalysisController extends Controller
                         'validation_status' => $analysis->validation_status,
                         'farmer_reply' => $analysis->farmer_reply,
                         'farmer_reply_date' => $analysis->farmer_reply_date?->toISOString(),
-                        'conversation_count' => $analysis->conversations()->count(),
-                        'unread_expert_messages' => $analysis->conversations()
-                            ->where('sender_type', 'expert')
-                            ->where('is_read', false)
-                            ->count(),
+                        'conversation_count' => $analysis->expertComments()->count(),
+                        'unread_expert_messages' => 0,
                         'created_at' => $analysis->created_at?->toISOString(),
                         'updated_at' => $analysis->updated_at?->toISOString(),
                     ];
@@ -201,11 +200,11 @@ class SoilAnalysisController extends Controller
 
             $viewUrl = route('filament.admin.resources.soil-analyses.index', [
                 'viewRecord' => $analysis->id,
-            ]);
+            ], false);
 
             $adminUsers = collect();
             try {
-                $adminUsers = User::role(['super_admin', 'panel_user'])->get();
+                $adminUsers = User::role(['super_admin', 'panel_user', 'agri_expert'])->get();
             } catch (\Exception $e) {
                 $adminUsers = User::all();
             }
@@ -240,29 +239,29 @@ class SoilAnalysisController extends Controller
      */
     public function getConversations(Request $request, $id)
     {
-        $analysis = SoilAnalysis::with(['conversations', 'farmer', 'validator'])->find($id);
+        $analysis = SoilAnalysis::with(['farmer', 'validator'])->find($id);
 
         if (!$analysis) {
             return response()->json(['success' => false, 'message' => 'Analysis not found'], 404);
         }
 
-        // Mark expert messages as read when farmer fetches
-        $appNo = $request->input('app_no');
-        if ($appNo) {
-            $analysis->conversations()
-                ->where('sender_type', 'expert')
-                ->where('is_read', false)
-                ->update(['is_read' => true]);
-        }
+        // (conversation table not in use — skip mark-as-read)
 
         // Prepend initial expert_comments and farmer_reply as "virtual" messages
         $initialMessages = collect();
 
         if ($analysis->expert_comments) {
+            $agency = $analysis->validator?->agriculturalProfessional?->agency;
+            $prof = $analysis->validator?->agriculturalProfessional;
+            $validatorName = $prof
+                ? trim("{$prof->firstname} {$prof->lastname}")
+                : ($analysis->validator?->name ?? 'Expert');
             $initialMessages->push([
                 'id' => 0,
                 'sender_type' => 'expert',
-                'sender_name' => $analysis->validator?->name ?? 'Expert',
+                'sender_name' => $validatorName,
+                'agency' => $agency,
+                'agency_label' => $agency ? "Expert from {$agency}" : null,
                 'message' => $analysis->expert_comments,
                 'is_read' => true,
                 'created_at' => $analysis->validated_at?->toISOString() ?? $analysis->updated_at->toISOString(),
@@ -277,6 +276,8 @@ class SoilAnalysisController extends Controller
                 'sender_name' => $analysis->farmer
                     ? trim("{$analysis->farmer->firstname} {$analysis->farmer->lastname}")
                     : 'Farmer',
+                'agency' => null,
+                'agency_label' => null,
                 'message' => $analysis->farmer_reply,
                 'is_read' => true,
                 'created_at' => $analysis->farmer_reply_date?->toISOString() ?? $analysis->updated_at->toISOString(),
@@ -284,19 +285,40 @@ class SoilAnalysisController extends Controller
             ]);
         }
 
-        $messages = $analysis->conversations->map(fn ($msg) => [
-            'id' => $msg->id,
-            'sender_type' => $msg->sender_type,
-            'sender_name' => $msg->sender_name,
-            'message' => $msg->message,
-            'is_read' => $msg->is_read,
-            'created_at' => $msg->created_at->toISOString(),
-            'is_initial' => false,
-        ]);
+        // Additional expert comments from multiple experts
+        $extraComments = \App\Models\SoilAnalysisExpertComment::with('expert.agriculturalProfessional')
+            ->where('soil_analysis_id', $analysis->id)
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->map(function ($comment) {
+                $agency = $comment->expert?->agriculturalProfessional?->agency;
+                return [
+                    'id' => $comment->id,
+                    'sender_type' => 'expert',
+                    'sender_name' => $comment->expert?->name ?? 'Expert',
+                    'agency' => $agency,
+                    'agency_label' => $agency ? "Expert from {$agency}" : null,
+                    'message' => $comment->message,
+                    'is_read' => true,
+                    'created_at' => $comment->created_at->toISOString(),
+                    'is_initial' => false,
+                    'is_extra_comment' => true,
+                ];
+            });
+
+        // SoilAnalysisConversation table not in use — return empty collection
+        $messages = collect();
+
+        // Merge: initial → extra expert comments → conversation messages, sorted by created_at
+        $all = $initialMessages
+            ->concat($extraComments)
+            ->concat($messages)
+            ->sortBy('created_at')
+            ->values();
 
         return response()->json([
             'success' => true,
-            'data' => $initialMessages->concat($messages)->values(),
+            'data' => $all,
         ]);
     }
 
@@ -343,6 +365,61 @@ class SoilAnalysisController extends Controller
     }
 
     /**
+     * 💬 Expert adds an additional comment to a soil analysis (from Flutter)
+     */
+    public function addExpertComment(Request $request, $id)
+    {
+        $request->validate([
+            'professional_id' => 'required|integer|exists:agricultural_professionals,id',
+            'message'         => 'required|string|max:2000',
+        ]);
+
+        $analysis = SoilAnalysis::find($id);
+        if (!$analysis) {
+            return response()->json(['success' => false, 'message' => 'Analysis not found'], 404);
+        }
+
+        if ($analysis->validation_status === 'pending') {
+            return response()->json(['success' => false, 'message' => 'Analysis is still pending approval'], 422);
+        }
+
+        // Resolve the panel User linked to this AgriculturalProfessional
+        $user = User::whereHas('agriculturalProfessional', fn ($q) =>
+            $q->where('id', $request->professional_id)
+        )->first();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Expert user account not found'], 404);
+        }
+
+        $comment = \App\Models\SoilAnalysisExpertComment::create([
+            'soil_analysis_id' => $analysis->id,
+            'user_id'          => $user->id,
+            'message'          => $request->message,
+        ]);
+
+        $agency = $user->agriculturalProfessional?->agency;
+        $agencyLabel = $agency ? "Expert from {$agency}" : $user->name;
+        // FCM is sent automatically by SoilAnalysisExpertCommentObserver::created()
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Comment added successfully',
+            'data' => [
+                'id'           => $comment->id,
+                'sender_type'  => 'expert',
+                'sender_name'  => $user->name,
+                'agency'       => $agency,
+                'agency_label' => $agencyLabel,
+                'message'      => $comment->message,
+                'created_at'   => $comment->created_at->toISOString(),
+                'is_initial'   => false,
+                'is_extra_comment' => true,
+            ],
+        ]);
+    }
+
+    /**
      * Notify all admin/expert users about a new farmer message.
      */
     private function notifyAdminsOfFarmerMessage(SoilAnalysis $analysis, Farmer $farmer, string $message): void
@@ -354,11 +431,11 @@ class SoilAnalysisController extends Controller
 
             $viewUrl = route('filament.admin.resources.soil-analyses.index', [
                 'viewRecord' => $analysis->id,
-            ]);
+            ], false);
 
             $adminUsers = collect();
             try {
-                $adminUsers = User::role(['super_admin', 'panel_user'])->get();
+                $adminUsers = User::role(['super_admin', 'panel_user', 'agri_expert'])->get();
             } catch (\Exception $e) {
                 $adminUsers = User::all();
             }
@@ -412,7 +489,9 @@ class SoilAnalysisController extends Controller
             'recommendation' => $analysis->recommendation,
             'validation_status' => $analysis->validation_status,
             'expert_comments' => $analysis->expert_comments,
-            'validated_by' => $analysis->validator?->name,
+            'validated_by' => $analysis->validator?->agriculturalProfessional
+                ? trim($analysis->validator->agriculturalProfessional->firstname . ' ' . $analysis->validator->agriculturalProfessional->lastname)
+                : $analysis->validator?->name,
             'validated_at' => $analysis->validated_at?->toISOString(),
             'created_at' => $analysis->created_at?->toISOString(),
             'updated_at' => $analysis->updated_at?->toISOString(),

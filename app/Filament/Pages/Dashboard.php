@@ -14,8 +14,12 @@ use Filament\Forms\Components\DatePicker;
 use App\Filament\Widgets\BlogPostsChart;
 use App\Filament\Widgets\BlogPostsChart1;
 use App\Filament\Widgets\BlogPostsChart3;
+use App\Filament\Widgets\FarmsByMunicipalityChart;
+use App\Filament\Widgets\SoilPhDistributionChart;
+use App\Filament\Widgets\ValidationStatusChart;
 use App\Models\Municipality;
 use Filament\Forms\Components\Select;
+use Filament\Actions\Action;
 use Filament\Pages\Dashboard\Actions\FilterAction;
 use Filament\Pages\Dashboard\Concerns\HasFilters;
 
@@ -287,11 +291,12 @@ class Dashboard extends \Filament\Pages\Dashboard
     {
         return [
             StatOverview::class,
-            BlogPostsChart::make([
-                'data' => ['test' => 'raymart']
-            ]),
-            BlogPostsChart1::make(),
-            BlogPostsChart3::class
+            BlogPostsChart::class,
+            BlogPostsChart1::class,
+            ValidationStatusChart::class,
+            BlogPostsChart3::class,
+            FarmsByMunicipalityChart::class,
+            SoilPhDistributionChart::class,
         ];
     }
 
@@ -345,6 +350,17 @@ class Dashboard extends \Filament\Pages\Dashboard
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('printReport')
+                ->label('Print Report')
+                ->icon('heroicon-o-printer')
+                ->color('gray')
+                ->url(fn () => route('dashboard.print-report', array_filter([
+                    'startDate' => $this->filters['startDate'] ?? now()->startOfYear()->format('Y-m-d'),
+                    'endDate'   => $this->filters['endDate']   ?? now()->format('Y-m-d'),
+                    'municipal' => $this->filters['municipal'] ?? null,
+                ])))
+                ->openUrlInNewTab(),
+
             FilterAction::make()
                 ->form([
                     Section::make()
@@ -367,8 +383,7 @@ class Dashboard extends \Filament\Pages\Dashboard
                             ->columnSpanFull()
                     ])
                     ->columns(2),
-                ])
-                ,
+                ]),
         ];
     }
 

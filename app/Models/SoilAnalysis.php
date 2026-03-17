@@ -80,4 +80,12 @@ class SoilAnalysis extends Model
     // {
     //     return $this->hasMany(SoilAnalysisConversation::class)->orderBy('created_at', 'asc');
     // }
+
+    /**
+     * Additional expert comments from multiple experts.
+     */
+    public function expertComments()
+    {
+        return $this->hasMany(SoilAnalysisExpertComment::class)->orderBy('created_at', 'asc');
+    }
 }

@@ -25,8 +25,8 @@ class Bulletin extends Model
         'notification_sent',
     ];
 
-    // Cast notification_sent as a boolean
     protected $casts = [
         'notification_sent' => 'boolean',
+        'date_posted'       => 'date',
     ];
 }

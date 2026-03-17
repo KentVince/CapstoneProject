@@ -72,6 +72,7 @@ Route::get('/detections/{id}', [PestAndDiseaseController::class, 'show']);
 Route::post('/detections/check-status', [PestAndDiseaseController::class, 'checkValidationStatus']);
 Route::post('/detections/by-app-no', [PestAndDiseaseController::class, 'getByAppNo']);
 Route::post('/detections/farmer-action', [PestAndDiseaseController::class, 'saveFarmerAction']);
+Route::post('/detections/{id}/expert-comments', [PestAndDiseaseController::class, 'addExpertComment']);
 
 
 // 🧪 2. Test Upload Endpoint (For mobile image testing)
@@ -502,6 +503,9 @@ Route::post('/soil-analysis/farmer-reply', [SoilAnalysisController::class, 'farm
 // Soil Analysis Conversations
 Route::get('/soil-analysis/{id}/conversations', [SoilAnalysisController::class, 'getConversations']);
 Route::post('/soil-analysis/{id}/conversations', [SoilAnalysisController::class, 'storeConversation']);
+
+// Soil Analysis - Expert adds additional comment (from Flutter)
+Route::post('/soil-analysis/{id}/expert-comments', [SoilAnalysisController::class, 'addExpertComment']);
 
 // Add this route with your other mobile routes
 Route::post('/mobile/change-password', [MobileController::class, 'changePassword']);

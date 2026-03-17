@@ -207,7 +207,7 @@ class PestAndDiseaseResource extends Resource
                 ->action(
                     Action::make('viewFromImage')
                         ->modalHeading(fn (PestAndDisease $record) => "Detection: {$record->pest}")
-                        ->modalWidth('3xl')
+                        ->modalWidth('5xl')
                         ->extraModalWindowAttributes(['class' => 'p-2'])
                         ->modalContent(fn (PestAndDisease $record) => view('filament.resources.pest-and-disease.view-modal', ['record' => $record]))
                         ->modalFooterActions(fn (PestAndDisease $record, Action $action) => [
@@ -227,11 +227,12 @@ class PestAndDiseaseResource extends Resource
                                     }
 
                                     $recommendation = app(GeminiService::class)->generatePestRecommendation([
-                                        'pest'     => $record->pest,
-                                        'type'     => $record->type,
-                                        'severity' => $record->severity,
-                                        'area'     => $record->area,
-                                        'date'     => $record->date_detected
+                                        'pest'       => $record->pest,
+                                        'type'       => $record->type,
+                                        'severity'   => $record->severity,
+                                        'area'       => $record->area,
+                                        'confidence' => $record->confidence ? round($record->confidence * 100) : null,
+                                        'date'       => $record->date_detected
                                             ? \Carbon\Carbon::parse($record->date_detected)->format('Y-m-d')
                                             : now()->format('Y-m-d'),
                                     ]);
@@ -284,6 +285,33 @@ class PestAndDiseaseResource extends Resource
                                     $action->cancel();
                                 })
                                 ->visible(fn () => $record->validation_status === 'pending'),
+                            Action::make('addExpertComment')
+                                ->label('Add Expert Comment')
+                                ->icon('heroicon-o-chat-bubble-left-right')
+                                ->color('warning')
+                                ->size('lg')
+                                ->extraAttributes(['class' => 'px-8 py-3 mx-2'])
+                                ->form([
+                                    Textarea::make('message')
+                                        ->label('Expert Comment / Recommendation')
+                                        ->placeholder('Enter your additional recommendation or comment...')
+                                        ->required()
+                                        ->rows(4),
+                                ])
+                                ->action(function (array $data) use ($record) {
+                                    \App\Models\PestDiseaseExpertComment::create([
+                                        'pest_and_disease_id' => $record->case_id,
+                                        'user_id'             => Auth::id(),
+                                        'message'             => $data['message'],
+                                    ]);
+
+                                    Notification::make()
+                                        ->title('Expert Comment Added')
+                                        ->body('Your comment has been added to the conversation thread.')
+                                        ->success()
+                                        ->send();
+                                })
+                                ->visible(fn () => $record->validation_status !== 'pending'),
                         ])
                         ->modalFooterActionsAlignment(\Filament\Support\Enums\Alignment::Center)
                 ),
@@ -342,7 +370,7 @@ class PestAndDiseaseResource extends Resource
                     ->icon('heroicon-o-eye')
                     ->color('info')
                     ->modalHeading(fn (PestAndDisease $record) => "Detection: {$record->pest}")
-                    ->modalWidth('3xl')
+                    ->modalWidth('5xl')
                     ->extraModalWindowAttributes(['class' => 'p-2'])
                     ->modalContent(fn (PestAndDisease $record) => view('filament.resources.pest-and-disease.view-modal', ['record' => $record]))
                     ->modalFooterActions(fn (PestAndDisease $record, Action $action) => [
@@ -362,11 +390,12 @@ class PestAndDiseaseResource extends Resource
                                 }
 
                                 $recommendation = app(GeminiService::class)->generatePestRecommendation([
-                                    'pest'     => $record->pest,
-                                    'type'     => $record->type,
-                                    'severity' => $record->severity,
-                                    'area'     => $record->area,
-                                    'date'     => $record->date_detected
+                                    'pest'       => $record->pest,
+                                    'type'       => $record->type,
+                                    'severity'   => $record->severity,
+                                    'area'       => $record->area,
+                                    'confidence' => $record->confidence ? round($record->confidence * 100) : null,
+                                    'date'       => $record->date_detected
                                         ? \Carbon\Carbon::parse($record->date_detected)->format('Y-m-d')
                                         : now()->format('Y-m-d'),
                                 ]);
@@ -419,6 +448,33 @@ class PestAndDiseaseResource extends Resource
                                 $action->cancel();
                             })
                             ->visible(fn () => $record->validation_status === 'pending'),
+                        Action::make('addExpertComment')
+                            ->label('Add Expert Comment')
+                            ->icon('heroicon-o-chat-bubble-left-right')
+                            ->color('warning')
+                            ->size('lg')
+                            ->extraAttributes(['class' => 'px-8 py-3 mx-2'])
+                            ->form([
+                                Textarea::make('message')
+                                    ->label('Expert Comment / Recommendation')
+                                    ->placeholder('Enter your additional recommendation or comment...')
+                                    ->required()
+                                    ->rows(4),
+                            ])
+                            ->action(function (array $data) use ($record) {
+                                \App\Models\PestDiseaseExpertComment::create([
+                                    'pest_and_disease_id' => $record->case_id,
+                                    'user_id'             => Auth::id(),
+                                    'message'             => $data['message'],
+                                ]);
+
+                                Notification::make()
+                                    ->title('Expert Comment Added')
+                                    ->body('Your comment has been added to the conversation thread.')
+                                    ->success()
+                                    ->send();
+                            })
+                            ->visible(fn () => $record->validation_status !== 'pending'),
                     ])
                     ->modalFooterActionsAlignment(\Filament\Support\Enums\Alignment::Center),
                 Tables\Actions\DeleteAction::make(),

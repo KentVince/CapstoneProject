@@ -42,10 +42,22 @@ class SoilAnalysisResource extends Resource
         if (!$user) {
             return false;
         }
-        
+
         // Hide from panel users
         return !$user->hasRole('panel_user');
     }
+
+    public static function getNavigationBadge(): ?string
+    {
+        $count = static::getModel()::where('validation_status', 'pending')->count();
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return 'warning';
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -300,6 +312,9 @@ class SoilAnalysisResource extends Resource
                                             'nitrogen'       => $get('nitrogen'),
                                             'phosphorus'     => $get('phosphorus'),
                                             'potassium'      => $get('potassium'),
+                                            'farm_name'      => $get('farm_name'),
+                                            'location'       => $get('location'),
+                                            'analysis_type'  => $get('analysis_type'),
                                         ];
 
                                         $recommendation = app(GeminiService::class)->generateSoilRecommendation($soilData);
@@ -438,6 +453,8 @@ class SoilAnalysisResource extends Resource
                             ->extraModalWindowAttributes(['class' => 'p-2'])
                             ->modalContent(fn (SoilAnalysis $record) => view('filament.resources.soil-analysis.view-modal', ['record' => $record]))
                             ->modalFooterActions(fn (SoilAnalysis $record, Action $action) => [
+
+                                // ── Expert Recommendation (manual entry) ──
                                 Action::make('recommend')
                                     ->label('Expert Recommendation')
                                     ->icon('heroicon-o-star')
@@ -445,83 +462,10 @@ class SoilAnalysisResource extends Resource
                                     ->size('lg')
                                     ->extraAttributes(['class' => 'px-8 py-3 mx-2'])
                                     ->form([
-                                        Forms\Components\Actions::make([
-                                            // ── Static (Guide-Based) draft ──
-                                            Forms\Components\Actions\Action::make('generateStaticDraft')
-                                                ->label('Guide-Based Draft')
-                                                ->icon('heroicon-o-document-text')
-                                                ->color('warning')
-                                                ->tooltip('For WITH LAB: uses BSWM/FAO soil guidelines. For WITHOUT LAB: uses the KAPE non-bearing coffee guide.')
-                                                ->action(function (Forms\Set $set) use ($record) {
-                                                    $soilData = [
-                                                        'soil_type'      => $record->soil_type,
-                                                        'crop_variety'   => $record->crop_variety,
-                                                        'ph_level'       => $record->ph_level,
-                                                        'organic_matter' => $record->organic_matter,
-                                                        'nitrogen'       => $record->nitrogen,
-                                                        'phosphorus'     => $record->phosphorus,
-                                                        'potassium'      => $record->potassium,
-                                                    ];
-
-                                                    $isNoLab = $record->analysis_type === 'without_lab';
-
-                                                    if ($isNoLab) {
-                                                        $draft = app(NoLabRecommendationService::class)->generate($soilData);
-                                                        $body  = 'Based on KAPE / BSWM non-bearing coffee guide (no laboratory).';
-                                                    } else {
-                                                        $draft = app(SoilRecommendationService::class)->generate($soilData);
-                                                        $body  = 'Based on BSWM/FAO guidelines. Review and edit before submitting.';
-                                                    }
-
-                                                    $set('expert_comments', $draft);
-
-                                                    Notification::make()
-                                                        ->title('Guide-Based Draft Generated')
-                                                        ->body($body)
-                                                        ->success()
-                                                        ->send();
-                                                }),
-
-                                            // ── AI draft (Gemini) ──
-                                            Forms\Components\Actions\Action::make('generateAiDraft')
-                                                ->label('Generate AI Draft')
-                                                ->icon('heroicon-o-sparkles')
-                                                ->color('info')
-                                                ->tooltip('Uses Google Gemini AI to draft a recommendation based on the soil analysis data. Review and edit before submitting.')
-                                                ->disabled(fn () => $record->analysis_type === 'without_lab')
-                                                ->action(function (Forms\Set $set) use ($record) {
-                                                    if (!config('services.gemini.api_key')) {
-                                                        Notification::make()
-                                                            ->title('API Key Not Configured')
-                                                            ->body('Please set GEMINI_API_KEY in your .env file.')
-                                                            ->danger()
-                                                            ->send();
-                                                        return;
-                                                    }
-
-                                                    $draft = app(GeminiService::class)->generateSoilRecommendation([
-                                                        'soil_type'      => $record->soil_type,
-                                                        'crop_variety'   => $record->crop_variety,
-                                                        'ph_level'       => $record->ph_level,
-                                                        'organic_matter' => $record->organic_matter,
-                                                        'nitrogen'       => $record->nitrogen,
-                                                        'phosphorus'     => $record->phosphorus,
-                                                        'potassium'      => $record->potassium,
-                                                    ]);
-
-                                                    $set('expert_comments', $draft);
-
-                                                    Notification::make()
-                                                        ->title('AI Draft Generated')
-                                                        ->body('Review and edit the AI draft before submitting your recommendation.')
-                                                        ->success()
-                                                        ->send();
-                                                }),
-                                        ]),
                                         Forms\Components\Select::make('validation_status')
                                             ->label('Status')
                                             ->options([
-                                                'approved' => 'Approve Analysis',
+                                                'approved'    => 'Approve Analysis',
                                                 'disapproved' => 'Request Revision',
                                             ])
                                             ->required(),
@@ -536,9 +480,9 @@ class SoilAnalysisResource extends Resource
                                     ->action(function (array $data) use ($record, $action) {
                                         $record->update([
                                             'validation_status' => $data['validation_status'],
-                                            'expert_comments' => $data['expert_comments'],
-                                            'validated_by' => Auth::id(),
-                                            'validated_at' => now(),
+                                            'expert_comments'   => $data['expert_comments'],
+                                            'validated_by'      => Auth::id(),
+                                            'validated_at'      => now(),
                                         ]);
 
                                         $title = $data['validation_status'] === 'approved'
@@ -552,6 +496,77 @@ class SoilAnalysisResource extends Resource
                                         $action->cancel();
                                     })
                                     ->visible(fn () => $record->validation_status === 'pending'),
+
+                                Action::make('addExpertComment')
+                                    ->label('Add Expert Comment')
+                                    ->icon('heroicon-o-chat-bubble-left-right')
+                                    ->color('warning')
+                                    ->size('lg')
+                                    ->extraAttributes(['class' => 'px-8 py-3 mx-2'])
+                                    ->form([
+                                        Textarea::make('message')
+                                            ->label('Expert Comment / Recommendation')
+                                            ->placeholder('Enter your additional recommendation or comment...')
+                                            ->required()
+                                            ->rows(4),
+                                    ])
+                                    ->action(function (array $data) use ($record) {
+                                        \App\Models\SoilAnalysisExpertComment::create([
+                                            'soil_analysis_id' => $record->id,
+                                            'user_id'          => Auth::id(),
+                                            'message'          => $data['message'],
+                                        ]);
+
+                                        Notification::make()
+                                            ->title('Expert Comment Added')
+                                            ->body('Your comment has been added to the conversation thread.')
+                                            ->success()
+                                            ->send();
+                                    })
+                                    ->visible(fn () => $record->validation_status !== 'pending'),
+
+                                // ── Generate AI Draft (Gemini) — saves directly to PDF viewer ──
+                                Action::make('generateAiDraft')
+                                    ->label('Generate AI Draft')
+                                    ->icon('heroicon-o-sparkles')
+                                    ->color('warning')
+                                    ->size('lg')
+                                    ->extraAttributes(['class' => 'px-8 py-3 mx-2'])
+                                    ->tooltip('Uses Google Gemini AI to generate a recommendation. Result will appear in the AI Recommendation PDF viewer below.')
+                                    ->disabled(fn () => $record->analysis_type === 'without_lab')
+                                    ->action(function () use ($record) {
+                                        if (!config('services.gemini.api_key')) {
+                                            Notification::make()
+                                                ->title('API Key Not Configured')
+                                                ->body('Please set GEMINI_API_KEY in your .env file.')
+                                                ->danger()
+                                                ->send();
+                                            return;
+                                        }
+
+                                        $draft = app(GeminiService::class)->generateSoilRecommendation([
+                                            'soil_type'      => $record->soil_type,
+                                            'crop_variety'   => $record->crop_variety,
+                                            'ph_level'       => $record->ph_level,
+                                            'organic_matter' => $record->organic_matter,
+                                            'nitrogen'       => $record->nitrogen,
+                                            'phosphorus'     => $record->phosphorus,
+                                            'potassium'      => $record->potassium,
+                                            'farm_name'      => $record->farm_name,
+                                            'location'       => $record->location,
+                                            'analysis_type'  => $record->analysis_type,
+                                        ]);
+
+                                        $record->update(['recommendation' => $draft]);
+
+                                        Notification::make()
+                                            ->title('AI Draft Generated')
+                                            ->body('The AI recommendation is now displayed in the Soil Analysis Report PDF viewer.')
+                                            ->success()
+                                            ->send();
+                                    })
+                                    ->visible(fn () => $record->validation_status === 'pending'),
+
                             ])
                             ->modalFooterActionsAlignment(\Filament\Support\Enums\Alignment::Center),
                         Tables\Actions\EditAction::make()

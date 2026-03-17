@@ -2,66 +2,69 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\PestAndDisease;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class BlogPostsChart3 extends ApexChartWidget
 {
-    /**
-     * Chart Id
-     *
-     * @var string
-     */
     protected static ?string $chartId = 'blogPostsChart3';
 
-    /**
-     * Widget Title
-     *
-     * @var string|null
-     */
-    protected static ?string $heading = 'BlogPostsChart3';
+    protected static ?string $heading = 'Top 10 Pests & Diseases Detected';
 
     protected int | string | array $columnSpan = 'full';
 
-    /**
-     * Chart options (series, labels, types, size, animations...)
-     * https://apexcharts.com/docs/options
-     *
-     * @return array
-     */
     protected function getOptions(): array
     {
+        $topItems = PestAndDisease::selectRaw('pest, COUNT(*) as count')
+            ->where('validation_status', 'approved')
+            ->groupBy('pest')
+            ->orderByDesc('count')
+            ->limit(10)
+            ->get();
+
+        $categories = $topItems->pluck('pest')->toArray();
+        $data       = $topItems->pluck('count')->map(fn ($v) => (int) $v)->toArray();
+
         return [
             'chart' => [
-                'type' => 'area',
-                'height' => 300,
+                'type'    => 'bar',
+                'height'  => 380,
+                'toolbar' => ['show' => false],
             ],
             'series' => [
                 [
-                    'name' => 'BlogPostsChart3',
-                    'data' => [7, 4, 6, 10, 14, 7, 5, 9, 10, 15, 13, 18],
+                    'name' => 'Detections',
+                    'data' => $data,
                 ],
             ],
             'xaxis' => [
-                'categories' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                'labels' => [
-                    'style' => [
-                        'fontFamily' => 'inherit',
-                    ],
+                'categories' => $categories,
+                'labels'     => [
+                    'style' => ['fontFamily' => 'inherit'],
                 ],
             ],
             'yaxis' => [
                 'labels' => [
-                    'style' => [
-                        'fontFamily' => 'inherit',
-                    ],
+                    'style' => ['fontFamily' => 'inherit'],
                 ],
             ],
-            'colors' => ['#f59e0b'],
-            'stroke' => [
-                'curve' => 'smooth',
+            'plotOptions' => [
+                'bar' => [
+                    'horizontal'   => true,
+                    'borderRadius' => 4,
+                    'barHeight'    => '60%',
+                ],
             ],
+            'colors'     => ['#3b82f6'],
             'dataLabels' => [
-                'enabled' => false,
+                'enabled' => true,
+                'style'   => ['fontFamily' => 'inherit'],
+            ],
+            'grid' => [
+                'borderColor' => '#e5e7eb',
+            ],
+            'tooltip' => [
+                'style' => ['fontFamily' => 'inherit'],
             ],
         ];
     }

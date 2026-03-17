@@ -112,4 +112,13 @@ class PestAndDisease extends Model
     {
         return $this->belongsTo(User::class, 'validated_by', 'id');
     }
+
+    /**
+     * Relationship: Additional expert comments from multiple experts
+     */
+    public function expertComments()
+    {
+        return $this->hasMany(PestDiseaseExpertComment::class, 'pest_and_disease_id', 'case_id')
+                    ->orderBy('created_at', 'asc');
+    }
 }

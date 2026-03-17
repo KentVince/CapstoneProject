@@ -5,6 +5,7 @@ namespace App\Filament\Resources\BulletinResource\Pages;
 use App\Filament\Resources\BulletinResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Support\Facades\Auth;
 
 class ListBulletins extends ListRecords
 {
@@ -13,7 +14,11 @@ class ListBulletins extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->mutateFormDataUsing(function (array $data): array {
+                    $data['created_by'] = Auth::user()->name ?? 'System';
+                    return $data;
+                }),
         ];
     }
 }

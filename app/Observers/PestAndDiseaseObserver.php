@@ -22,7 +22,7 @@ class PestAndDiseaseObserver
             $adminUsers = collect();
 
             try {
-                $adminUsers = User::role(['super_admin', 'panel_user'])
+                $adminUsers = User::role(['super_admin', 'panel_user', 'agri_expert'])
                     ->get();
             } catch (\Exception $e) {
                 // If role check fails, send to all users
@@ -35,6 +35,8 @@ class PestAndDiseaseObserver
             }
 
             // Send database notification to each admin user
+            $detailUrl = route('filament.admin.resources.pest-and-diseases.index', [], false) . '?detail-modal=' . $pestAndDisease->case_id;
+
             foreach ($adminUsers as $user) {
                 Notification::make()
                     ->title('🐛 New Pest/Disease Detection')
@@ -44,7 +46,7 @@ class PestAndDiseaseObserver
                     ->actions([
                         Action::make('view')
                             ->label('View Details')
-                            ->dispatch('openApprovalModal', ['recordId' => $pestAndDisease->case_id])
+                            ->url($detailUrl)
                             ->markAsRead()
                             ->button(),
                     ])

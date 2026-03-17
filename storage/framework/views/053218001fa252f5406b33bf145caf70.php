@@ -224,10 +224,29 @@
             --tw-ring-color: transparent !important;
         }
 
+        .login-form-section .fi-input-wrp:hover {
+            background: rgba(255, 255, 255, 0.9) !important;
+        }
+
         .login-form-section .fi-input-wrp:focus-within {
             border-color: #22c55e !important;
             box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15) !important;
             background: white !important;
+        }
+
+        .login-form-section .fi-input-wrp:has(.fi-input:not(:placeholder-shown)) {
+            background: rgba(220, 252, 231, 0.85) !important;
+            border-color: #22c55e !important;
+        }
+
+        .login-form-section .fi-input-wrp:has(.fi-input:not(:placeholder-shown)):hover {
+            background: rgba(220, 252, 231, 0.85) !important;
+        }
+
+        /* Keep password field background white after input */
+        .login-form-section .fi-input-wrp:has(input[type="password"]:not(:placeholder-shown)),
+        .login-form-section .fi-input-wrp:has(input[type="password"]:not(:placeholder-shown)):hover {
+            background: rgba(255, 255, 255, 0.9) !important;
         }
 
         .login-form-section .fi-input {
@@ -238,12 +257,53 @@
             color: #14532d !important;
         }
 
+        /* Override browser autofill gray/yellow background */
+        .login-form-section .fi-input:-webkit-autofill,
+        .login-form-section .fi-input:-webkit-autofill:hover,
+        .login-form-section .fi-input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0 1000px rgba(220, 252, 231, 0.85) inset !important;
+            -webkit-text-fill-color: #14532d !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
         .login-form-section .fi-input::placeholder {
             color: #067c31 !important;
         }
 
         .login-form-section .fi-checkbox-input {
             accent-color: #22c55e !important;
+            border: 2px solid #22c55e !important;
+            border-radius: 4px !important;
+            width: 1rem !important;
+            height: 1rem !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            background-color: white !important;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .login-form-section .fi-checkbox-input:checked {
+            background-color: #22c55e !important;
+            border-color: #16a34a !important;
+        }
+
+        .login-form-section .fi-checkbox-input:checked::after {
+            content: '';
+            position: absolute;
+            left: 3px;
+            top: 0px;
+            width: 5px;
+            height: 9px;
+            border: 2px solid white;
+            border-top: none;
+            border-left: none;
+            transform: rotate(45deg);
+        }
+
+        .login-form-section .fi-checkbox-input:hover {
+            border-color: #16a34a !important;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15) !important;
         }
 
         .login-form-section .fi-btn {
