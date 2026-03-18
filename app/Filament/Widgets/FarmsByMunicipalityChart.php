@@ -13,10 +13,10 @@ class FarmsByMunicipalityChart extends ApexChartWidget
 
     protected function getOptions(): array
     {
-        $data = Farm::selectRaw('municipality, COUNT(*) as count')
-            ->whereNotNull('municipality')
-            ->where('municipality', '!=', '')
-            ->groupBy('municipality')
+        $data = Farm::selectRaw('farmer_address_mun, COUNT(*) as count')
+            ->whereNotNull('farmer_address_mun')
+            ->where('farmer_address_mun', '!=', '')
+            ->groupBy('farmer_address_mun')
             ->orderByDesc('count')
             ->limit(10)
             ->get();
@@ -34,7 +34,7 @@ class FarmsByMunicipalityChart extends ApexChartWidget
                 ],
             ],
             'xaxis' => [
-                'categories' => $data->pluck('municipality')->toArray(),
+                'categories' => $data->pluck('farmer_address_mun')->toArray(),
                 'labels'     => [
                     'style'  => ['fontFamily' => 'inherit'],
                     'rotate' => -30,

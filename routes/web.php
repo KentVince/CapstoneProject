@@ -132,10 +132,10 @@ Route::get('/admin/print-report', function (Request $request) {
     });
 
     // ── Farms by municipality ────────────────────────────────────────────────
-    $farmsByMunicipality = Farm::selectRaw('municipality, COUNT(*) as count')
-        ->whereNotNull('municipality')
-        ->where('municipality', '!=', '')
-        ->groupBy('municipality')
+    $farmsByMunicipality = Farm::selectRaw('farmer_address_mun, COUNT(*) as count')
+        ->whereNotNull('farmer_address_mun')
+        ->where('farmer_address_mun', '!=', '')
+        ->groupBy('farmer_address_mun')
         ->orderByDesc('count')
         ->limit(10)
         ->get();

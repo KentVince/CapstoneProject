@@ -63,7 +63,7 @@ class EditFarmer extends EditRecord
                     ->margin(1)
                     ->errorCorrection('H')
                     ->generate(
-                        "CAFARM Farmer: {$farmer->app_no}\nName: {$farmer->firstname} {$farmer->lastname}",
+                        "CAFARM Farmer: {$farmer->app_no}\nName: {$farmer->first_name} {$farmer->last_name}",
                         $fullPath
                     );
 

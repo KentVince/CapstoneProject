@@ -6,8 +6,7 @@ use App\Models\Farmer;
 use App\Models\Farm;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Services\QrCodeService;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\FarmerRegistered;
 use Filament\Notifications\Notification;
@@ -38,22 +37,27 @@ class CreateFarmer extends CreateRecord
         DB::beginTransaction();
 
         try {
-            // ✅ Required auto-fill fields
             $data['app_no'] = $this->generateControlNumber('COF');
-            $data['crop'] = 'Coffee';
-            $data['province'] = 'Davao de Oro';
 
             // ✅ Create Farmer
             $farmer = Farmer::create($data);
 
             // ✅ Auto-create linked Farm record
             Farm::create([
-                'farmer_id'   => $farmer->id,
-                'name'        => $data['name'] ?? 'Unnamed Farm',
-                'barangay'    => $data['barangay'] ?? null,
-                'municipality'=> $data['municipality'] ?? null,
-                'province'    => $data['province'] ?? 'Davao de Oro',
-                'lot_hectare' => $data['lot_hectare'] ?? null,
+                'farmer_id'          => $farmer->id,
+                'farm_name'          => $data['farm_name']          ?? 'Unnamed Farm',
+                'farmer_address_bgy' => $data['farmer_address_bgy'] ?? null,
+                'farmer_address_mun' => $data['farmer_address_mun'] ?? null,
+                'farmer_address_prv' => $data['farmer_address_prv'] ?? 'Davao de Oro',
+                'crop_name'          => $data['crop_name']          ?? null,
+                'crop_variety'       => $data['crop_variety']       ?? null,
+                'crop_area'          => $data['crop_area']          ?? null,
+                'soil_type'          => $data['soil_type']          ?? null,
+                'cropping'           => $data['cropping']           ?? null,
+                'farmworker'         => $data['farmworker']         ?? null,
+                'latitude'           => $data['latitude']           ?? null,
+                'longtitude'         => $data['longtitude']         ?? null,
+                'status'             => 'pending',
             ]);
 
             // ✅ Generate QR Code for the farmer
@@ -68,7 +72,7 @@ class CreateFarmer extends CreateRecord
 
                     Notification::make()
                         ->title('✅ Farmer Registered')
-                        ->body("Farmer <b>{$farmer->firstname} {$farmer->lastname}</b> saved successfully. Registration email sent to <b>{$farmer->email_add}</b>.")
+                        ->body("Farmer <b>{$farmer->first_name} {$farmer->last_name}</b> saved successfully. Registration email sent to <b>{$farmer->email_add}</b>.")
                         ->success()
                         ->send();
                 } catch (\Throwable $mailError) {
@@ -76,14 +80,14 @@ class CreateFarmer extends CreateRecord
 
                     Notification::make()
                         ->title('✅ Farmer Registered')
-                        ->body("Farmer <b>{$farmer->firstname} {$farmer->lastname}</b> saved successfully, but the email could not be sent.")
+                        ->body("Farmer <b>{$farmer->first_name} {$farmer->last_name}</b> saved successfully, but the email could not be sent.")
                         ->warning()
                         ->send();
                 }
             } else {
                 Notification::make()
                     ->title('✅ Farmer Registered')
-                    ->body("Farmer <b>{$farmer->firstname} {$farmer->lastname}</b> saved successfully with QR code.")
+                    ->body("Farmer <b>{$farmer->first_name} {$farmer->last_name}</b> saved successfully with QR code.")
                     ->success()
                     ->send();
             }
@@ -109,30 +113,15 @@ class CreateFarmer extends CreateRecord
      */
     protected function generateFarmerQr(Farmer $farmer): void
     {
-        try {
-            $qrFolder = 'public/qrcodes';
-            $relativeFolder = 'qrcodes';
+        $qrPath = "qrcodes/{$farmer->app_no}.png";
 
-            if (!Storage::exists($qrFolder)) {
-                Storage::makeDirectory($qrFolder);
-            }
+        $saved = QrCodeService::generate(
+            "CAFARM Farmer: {$farmer->app_no}\nName: {$farmer->first_name} {$farmer->last_name}",
+            $qrPath
+        );
 
-            $filename = "{$farmer->app_no}.png";
-            $qrPath = "{$relativeFolder}/{$filename}";
-            $fullPath = Storage::path("public/{$qrPath}");
-
-            QrCode::format('png')
-                ->size(300)
-                ->margin(1)
-                ->errorCorrection('H')
-                ->generate(
-                    "CAFARM Farmer: {$farmer->app_no}\nName: {$farmer->firstname} {$farmer->lastname}",
-                    $fullPath
-                );
-
+        if ($saved) {
             $farmer->update(['qr_code' => $qrPath]);
-        } catch (\Throwable $th) {
-            Log::error("⚠️ QR generation failed for {$farmer->app_no}: {$th->getMessage()}");
         }
     }
 }

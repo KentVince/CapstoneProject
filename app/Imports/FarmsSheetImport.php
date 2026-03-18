@@ -2,83 +2,108 @@
 
 namespace App\Imports;
 
+use App\Models\Barangay;
 use App\Models\Farm;
-use App\Models\Farmer;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+
 class FarmsSheetImport implements ToCollection, WithHeadingRow
 {
     public int $importedCount = 0;
-    public int $skippedCount = 0;
+    public int $skippedCount  = 0;
     public array $errors = [];
 
     /**
-     * Reference to the farmers sheet importer to access row-index mapping.
+     * Reference to the farmers sheet importer.
+     * Farmers sheet (index 0) is processed before farms (index 1),
+     * so rowIndexToFarmerId is already populated when collection() runs here.
      */
     public ?FarmersSheetImport $farmersSheet = null;
 
+    /**
+     * Pre-loaded barangay lookup: "muni_filter|barangay_name_lowercase" => code
+     */
+    private array $barangayMap = [];
+
     public function collection(Collection $rows)
     {
-        // Get the mapping from row index to farmer ID
         $rowMap = $this->farmersSheet ? $this->farmersSheet->rowIndexToFarmerId : [];
+
+        // Build barangay lookup map once to avoid N+1 queries
+        $this->barangayMap = Barangay::all(['code', 'barangay', 'muni_filter'])
+            ->mapWithKeys(fn ($b) => [
+                $b->muni_filter . '|' . strtolower(trim($b->barangay)) => $b->code
+            ])
+            ->toArray();
 
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 2;
 
             try {
-                // Find the farmer by matching row index (row 1 in farms = row 1 in farmers)
-                $farmerId = $rowMap[$index] ?? null;
-                $farmer = $farmerId ? Farmer::find($farmerId) : null;
+                // farmer_id in Excel is 1-based sequential → 0-based index in farmers sheet
+                $farmerExcelId = (int) ($row['farmer_id'] ?? ($index + 1));
+                $farmerIndex   = $farmerExcelId - 1;
+                $farmerId      = $rowMap[$farmerIndex] ?? null;
 
-                if (!$farmer) {
+                if (!$farmerId) {
                     $this->skippedCount++;
-                    $this->errors[] = "Farms sheet row {$rowNumber}: No matching farmer found. Skipped.";
+                    $this->errors[] = "Farms row {$rowNumber}: No matching farmer (index {$farmerIndex}). Skipped.";
                     continue;
                 }
 
-                if (empty($row['farm_name']) && empty($row['lot_hectare']) && empty($row['variety'])) {
+                if (empty($row['farm_name']) && empty($row['crop_name'])) {
                     $this->skippedCount++;
-                    $this->errors[] = "Farms sheet row {$rowNumber}: No farm data found. Skipped.";
                     continue;
                 }
+
+                $munCode = trim($row['farmer_address_mun'] ?? '');
+                $bgyName = trim($row['farmer_address_bgy'] ?? '');
 
                 Farm::create([
-                    'farmer_id'            => $farmer->id,
-                    'name'                 => $row['farm_name'] ?? '',
-                    'lot_hectare'          => $row['lot_hectare'] ?? '',
-                    'sitio'                => $row['farm_sitio'] ?? '',
-                    'barangay'             => $row['farm_barangay'] ?? ($farmer->barangay ?? ''),
-                    'municipality'         => $row['farm_municipality'] ?? ($farmer->municipality ?? ''),
-                    'province'             => $row['farm_province'] ?? ($farmer->province ?? 'Davao de Oro'),
-                    'latitude'             => $row['latitude'] ?? '',
-                    'longitude'            => $row['longitude'] ?? '',
-                    'north'                => $row['north'] ?? '',
-                    'south'                => $row['south'] ?? '',
-                    'east'                 => $row['east'] ?? '',
-                    'west'                 => $row['west'] ?? '',
-                    'variety'              => $row['variety'] ?? '',
-                    'planning_method'      => $row['planning_method'] ?? null,
-                    'date_of_sowing'       => $row['date_of_sowing'] ?? null,
-                    'date_of_planning'     => $row['date_of_planning'] ?? '',
-                    'date_of_harvest'      => $row['date_of_harvest'] ?? null,
-                    'population_density'   => $row['population_density'] ?? null,
-                    'age_group'            => $row['age_group'] ?? '',
-                    'no_of_hills'          => $row['no_of_hills'] ?? '',
-                    'land_category'        => $row['land_category'] ?? null,
-                    'soil_type'            => $row['soil_type'] ?? null,
-                    'topography'           => $row['topography'] ?? null,
-                    'source_of_irrigation' => $row['source_of_irrigation'] ?? null,
-                    'tenurial_status'      => $row['tenurial_status'] ?? null,
+                    'farmer_id'          => $farmerId,
+                    'farm_name'          => $row['farm_name']    ?? null,
+                    'farmer_address_bgy' => $this->lookupBarangayCode($bgyName, $munCode),
+                    'farmer_address_mun' => $munCode ?: null,
+                    'farmer_address_prv' => trim($row['farmer_address_prv'] ?? 'Davao de Oro'),
+                    'latitude'           => $row['latitude']     ?? null,
+                    'longtitude'         => $row['longtitude']   ?? null,
+                    'crop_name'          => $row['crop_name']    ?? 'Coffee',
+                    'crop_variety'       => $row['crop_variety'] ?? null,
+                    'crop_area'          => is_numeric($row['crop_area'] ?? null) ? $row['crop_area'] : null,
+                    'soil_type'          => $this->nullIfEmpty($row['soil_type']     ?? null),
+                    'verified_area'      => is_numeric($row['verified_area'] ?? null) ? $row['verified_area'] : null,
+                    'farmworker'         => ucfirst(strtolower(trim($row['farmworker'] ?? 'No'))),
+                    'status'             => 'pending',
                 ]);
 
                 $this->importedCount++;
+
             } catch (\Exception $e) {
                 $this->skippedCount++;
-                $this->errors[] = "Farms sheet row {$rowNumber}: {$e->getMessage()}";
-                Log::warning("Farms sheet import error at row {$rowNumber}: {$e->getMessage()}");
+                $this->errors[] = "Farms row {$rowNumber}: {$e->getMessage()}";
+                Log::warning("Farms import error at row {$rowNumber}: {$e->getMessage()}");
             }
         }
+    }
+
+    private function lookupBarangayCode(?string $bgyName, ?string $munCode): ?string
+    {
+        if (empty($bgyName) || empty($munCode)) {
+            return null;
+        }
+
+        $key = $munCode . '|' . strtolower(trim($bgyName));
+
+        return $this->barangayMap[$key] ?? null;
+    }
+
+    private function nullIfEmpty($value): ?string
+    {
+        if ($value === null || $value === '' || strtolower((string) $value) === 'null') {
+            return null;
+        }
+        return $value;
     }
 }

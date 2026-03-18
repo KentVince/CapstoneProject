@@ -174,20 +174,19 @@ Route::post('/mobile/check-app-no', function (Request $request) {
     }
 
     $farm = Farm::where('farmer_id', $farmer->id)->first();
-    $farm_barangay = Barangay::where('code', $farmer->barangay)->first();
+    $farm_barangay = Barangay::where('code', $farmer->farmer_address_bgy)->first();
 
     $mobileUser = MobileUser::where('farmer_id', $farmer->id)->first();
 
     if (!$mobileUser) {
         $mobileUser = MobileUser::create([
             'farmer_id' => $farmer->id,
-            'username' => strtolower(str_replace(' ', '', $farmer->lastname)) . $farmer->id,
+            'username' => strtolower(str_replace(' ', '', $farmer->last_name)) . $farmer->id,
             'password' => Hash::make('cafarm123'),
             'app_no' => $farmer->app_no,
-            'farm_name' => $farm->name ?? 'Unknown Farm',
+            'farm_name' => $farm->farm_name ?? 'Unknown Farm',
             'type' => 'farmer',
             'barangay' => $farm_barangay->barangay ?? '',
-            
         ]);
     }
 
@@ -201,12 +200,15 @@ Route::post('/mobile/check-app-no', function (Request $request) {
         'farmer' => [
             'id' => $farmer->id,
             'app_no' => $farmer->app_no ?? '',
-            'name' => trim("{$farmer->lastname}, {$farmer->firstname} {$farmer->middlename}"),
+            'name' => trim("{$farmer->last_name}, {$farmer->first_name} {$farmer->middle_name}"),
+            'last_name' => $farmer->last_name ?? '',
+            'first_name' => $farmer->first_name ?? '',
             'barangay' => $farm_barangay->barangay ?? '',
             'farm' => [
-                'name' => $farm->name ?? 'Unknown Farm',
+                'id' => $farm->id ?? '',
+                'farm_name' => $farm->farm_name ?? 'Unknown Farm',
                 'latitude' => $farm->latitude ?? null,
-                'longitude' => $farm->longitude ?? null,
+                'longitude' => $farm->longtitude ?? null,
             ],
         ],
     ]);
@@ -263,7 +265,7 @@ Route::post('/mobile/check-username', function (Request $request) {
     }
 
     $farm = Farm::where('farmer_id', $farmer->id)->first();
-    $farm_barangay = Barangay::where('code', $farmer->barangay)->first();
+    $farm_barangay = Barangay::where('code', $farmer->farmer_address_bgy)->first();
 
     return response()->json([
         'message' => 'Username verified successfully',
@@ -275,12 +277,15 @@ Route::post('/mobile/check-username', function (Request $request) {
         'farmer' => [
             'id' => $farmer->id,
             'app_no' => $farmer->app_no ?? '',
-            'name' => trim("{$farmer->lastname}, {$farmer->firstname} {$farmer->middlename}"),
+            'name' => trim("{$farmer->last_name}, {$farmer->first_name} {$farmer->middle_name}"),
+            'last_name' => $farmer->last_name ?? '',
+            'first_name' => $farmer->first_name ?? '',
             'barangay' => $farm_barangay->barangay ?? '',
             'farm' => [
-                'name' => $farm->name ?? 'Unknown Farm',
+                'id' => $farm->id ?? '',
+                'farm_name' => $farm->farm_name ?? 'Unknown Farm',
                 'latitude' => $farm->latitude ?? null,
-                'longitude' => $farm->longitude ?? null,
+                'longitude' => $farm->longtitude ?? null,
             ],
         ],
     ]);
@@ -349,13 +354,17 @@ Route::post('/mobile/login', function (Request $request) {
         'farmer' => [
             'id' => $farmer->id,
             'app_no' => $farmer->app_no,
-            'name' => trim("{$farmer->lastname}, {$farmer->firstname} {$farmer->middlename}"),
-            'barangay' => $farmer->barangay,
+            'rsbsa_no' => $farmer->rsbsa_no ?? '',
+            'name' => trim("{$farmer->last_name}, {$farmer->first_name} {$farmer->middle_name}"),
+            'last_name' => $farmer->last_name ?? '',
+            'first_name' => $farmer->first_name ?? '',
+            'barangay' => $farmer->farmer_address_bgy,
             'farm' => [
                 'id' => optional($farmer->farm)->id ?? '',
-                'name' => optional($farmer->farm)->name ?? 'N/A',
+                'farm_name' => optional($farmer->farm)->farm_name ?? 'N/A',
+                'crop_area' => optional($farmer->farm)->crop_area ?? '',
                 'latitude' => optional($farmer->farm)->latitude ?? null,
-                'longitude' => optional($farmer->farm)->longitude ?? null,
+                'longitude' => optional($farmer->farm)->longtitude ?? null,
             ],
         ],
     ]);
@@ -379,31 +388,32 @@ Route::post('/mobile/expert/farms', function (Request $request) {
     // MAGRO = Municipal Agriculture Office → only farms in the expert's municipality
     // PAGRO / DDOSC / others = Provincial level → all farms
     if (str_contains($agency, 'MAGRO')) {
-        $farms = Farm::where('municipality', $professional->municipality)
-            ->with('farmer:id,app_no,firstname,lastname,middlename')
+        $farms = Farm::where('farmer_address_mun', $professional->municipality)
+            ->with('farmer:id,app_no,first_name,last_name,middle_name')
             ->get();
     } else {
-        $farms = Farm::with('farmer:id,app_no,firstname,lastname,middlename')->get();
+        $farms = Farm::with('farmer:id,app_no,first_name,last_name,middle_name')->get();
     }
 
     $result = $farms->map(function ($farm) {
         $farmer = $farm->farmer;
-        $barangayName = Barangay::where('code', $farm->barangay)->value('barangay') ?? $farm->barangay;
-        $municipalityName = Municipality::where('code', $farm->municipality)->value('municipality') ?? $farm->municipality;
+        $barangayName = Barangay::where('code', $farm->farmer_address_bgy)->value('barangay') ?? $farm->farmer_address_bgy;
+        $municipalityName = Municipality::where('code', $farm->farmer_address_mun)->value('municipality') ?? $farm->farmer_address_mun;
 
         return [
+            'id' => $farm->id,
             'farm_id' => $farm->id,
-            'farm_name' => $farm->name,
+            'farm_name' => $farm->farm_name,
             'farmer_id' => $farmer->id ?? null,
             'app_no' => $farmer->app_no ?? '',
             'farmer_name' => $farmer
-                ? trim("{$farmer->lastname}, {$farmer->firstname} {$farmer->middlename}")
+                ? trim("{$farmer->last_name}, {$farmer->first_name} {$farmer->middle_name}")
                 : 'Unknown',
             'barangay' => $barangayName,
             'municipality' => $municipalityName,
-            'lot_hectare' => $farm->lot_hectare,
+            'crop_area' => $farm->crop_area,
             'latitude' => $farm->latitude,
-            'longitude' => $farm->longitude,
+            'longitude' => $farm->longtitude,
         ];
     });
 

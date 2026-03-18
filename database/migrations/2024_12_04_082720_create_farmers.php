@@ -13,37 +13,23 @@ return new class extends Migration
     {
         Schema::create('farmers', function (Blueprint $table) {
             $table->id();
-            $table->string('app_no');
-            $table->string('crop');
-           
-            $table->string('funding_source');
-            $table->date('date_of_application');
-            $table->string('lastname');
-            $table->string('firstname');
-            $table->string('middlename');
-            $table->string('purok');
-            $table->string('barangay');
-            $table->string('municipality');
-            $table->string('province');
-            $table->string('phone_no');
-            $table->string('sex');
-            $table->date('birthdate');
-            $table->integer('age');
-            $table->string('civil_status');
-            $table->string('pwd');
-            $table->string('ip');
-            $table->string('bank_name')->nullable();
-            $table->string('bank_account_no')->nullable();
-            $table->string('bank_branch')->nullable();
-            $table->string('spouse')->nullable();
-            $table->string('primary_beneficiaries');
-            $table->integer('primary_beneficiaries_age');
-            $table->string('primary_beneficiaries_relationship');
-            $table->string('secondary_beneficiaries');
-            $table->integer('secondary_beneficiaries_age');
-            $table->string('secondary_beneficiaries_relationship');
-            $table->string('assignee')->nullable();
-            $table->string('reason_assignment')->nullable();
+            $table->string('app_no')->nullable();
+            $table->string('rsbsa_no')->nullable();
+            $table->string('qr_code')->nullable();
+            $table->string('user_type')->default('farmer');
+            $table->string('agency')->nullable();
+            $table->string('last_name');
+            $table->string('first_name');
+            $table->string('middle_name')->nullable();
+            $table->string('ext_name')->nullable();
+            $table->string('farmer_address_prk')->nullable();
+            $table->string('farmer_address_bgy')->nullable();
+            $table->string('farmer_address_mun')->nullable();
+            $table->string('farmer_address_prv')->nullable();
+            $table->date('birthday')->nullable();
+            $table->string('gender')->nullable();
+            $table->string('contact_num')->nullable();
+            $table->string('email_add')->nullable();
             $table->timestamps();
         });
     }

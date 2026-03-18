@@ -17,8 +17,8 @@
     <div class="print-card mx-auto" style="width: 400px; border: 2px solid #16a34a; border-radius: 12px; overflow: hidden; font-family: Arial, sans-serif;">
         {{-- Header --}}
         <div style="background: #16a34a; color: white; padding: 16px; text-align: center;">
-            <h2 style="margin: 0; font-size: 20px; font-weight: bold;">CAFARM</h2>
-            <p style="margin: 4px 0 0; font-size: 12px;">Coffee Agriculture Farm Management</p>
+            <h2 style="margin: 0; font-size: 20px; font-weight: bold;">CofSys</h2>
+            <p style="margin: 4px 0 0; font-size: 12px;">Coffee Farm Management System with Smart Disease Detection and Geoanalytics</p>
         </div>
 
         {{-- Body --}}
@@ -38,6 +38,9 @@
             <div style="margin-top: 12px;">
                 <p style="margin: 6px 0; font-size: 18px; font-weight: bold; color: #111;">{{ $fullName }}</p>
                 <p style="margin: 6px 0; font-size: 14px; color: #555;">Application No: <strong style="color: #16a34a;">{{ $appNo }}</strong></p>
+                @if($rsbsaNo)
+                <p style="margin: 6px 0; font-size: 14px; color: #555;">RSBSA No: <strong style="color: #16a34a;">{{ $rsbsaNo }}</strong></p>
+                @endif
                 <div style="margin-top: 12px; padding: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
                     <p style="margin: 4px 0; font-size: 13px; color: #555;">Default Password</p>
                     <p style="margin: 4px 0; font-size: 16px; font-weight: bold; color: #111; letter-spacing: 1px;">cafarm123</p>

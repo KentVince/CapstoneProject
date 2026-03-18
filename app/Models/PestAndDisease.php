@@ -65,6 +65,14 @@ class PestAndDisease extends Model
         'validated_at',
         'farmer_action',
         'farmer_action_date',
+        'pest_incidence',
+        'incidence_rating',
+        'pest_severity_pct',
+        'sum_ratings',
+        'n_infested',
+        'n_total',
+        'total_trees_planted',
+        'scan_results',
     ];
 
     protected $casts = [

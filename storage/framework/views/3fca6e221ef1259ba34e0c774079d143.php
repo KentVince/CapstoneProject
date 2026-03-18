@@ -444,25 +444,27 @@
                 item.area || 'N/A'
             ]);
         } else if (dataType === 'farms') {
-            headers = ['Farm Name', 'Farmer', 'Barangay', 'Area (ha)', 'Registered Date'];
+            headers = ['Farm Name', 'Farmer', 'Barangay', 'Area (ha)', 'Variety'];
             rows = paginatedData.map(item => [
-                item.name || 'N/A',
+                item.farm_name || 'N/A',
                 item.farmer_name || 'N/A',
                 item.barangay_name || item.barangay || 'N/A',
-                item.lot_hectare || 'N/A',
-                formatLongDate(item.created_at)
+                item.crop_area || 'N/A',
+                item.crop_variety || 'N/A',
+                // formatLongDate(item.created_at)
             ]);
         } else if (dataType === 'farmers') {
-            headers = ['App No', 'Full Name', 'Barangay', 'Sex', 'Age', 'Phone', 'Crop', 'Application Date'];
+            headers = ['App No', 'Full Rsbsa','Full Name', 'Barangay', 'Sex', 'Phone'];
             rows = paginatedData.map(item => [
                 item.app_no || 'N/A',
+                item.rsbsa_no || 'N/A',
                 item.full_name || 'N/A',
                 item.barangay_name || item.barangay || 'N/A',
-                `<span class="px-2 py-1 text-xs font-semibold rounded-full ${item.sex === 'Male' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300'}">${item.sex || 'N/A'}</span>`,
-                item.age || 'N/A',
-                item.phone_no || 'N/A',
-                item.crop || 'N/A',
-                item.date_of_application ? formatLongDate(item.date_of_application) : formatLongDate(item.created_at)
+                `<span class="px-2 py-1 text-xs font-semibold rounded-full ${item.gender === 'Male' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300'}">${item.gender || 'N/A'}</span>`,
+               
+                item.contact_num || 'N/A',
+               
+                // item.date_of_application ? formatLongDate(item.date_of_application) : formatLongDate(item.created_at)
             ]);
         } else if (dataType === 'soil') {
             headers = ['Farm Name', 'Date Collected', 'pH Level', 'Nitrogen (%)', 'Phosphorus (ppm)', 'Potassium (ppm)'];

@@ -139,17 +139,17 @@ class Dashboard extends \Filament\Pages\Dashboard
 
     public function getFarmsByMunicipality()
     {
-        $query = Farm::select('municipality', DB::raw('COUNT(*) as count'));
+        $query = Farm::select('farmer_address_mun', DB::raw('COUNT(*) as count'));
 
         // Apply municipality filter if exists
         if ($municipal = $this->filters['municipal'] ?? null) {
-            $query->where('municipality', $municipal);
+            $query->where('farmer_address_mun', $municipal);
         }
 
-        return $query->groupBy('municipality')
+        return $query->groupBy('farmer_address_mun')
             ->orderByDesc('count')
             ->limit(10)
-            ->pluck('count', 'municipality');
+            ->pluck('count', 'farmer_address_mun');
     }
 
     public function getSoilPhDistribution()
@@ -202,7 +202,7 @@ class Dashboard extends \Filament\Pages\Dashboard
         $barangays = \App\Models\Barangay::all()->pluck('barangay', 'code')->toArray();
 
         $query = Farm::with([
-            'farmer:id,firstname,lastname'
+            'farmer:id,first_name,last_name'
         ])
         ->orderBy('created_at', 'desc')
         ->limit(50);
@@ -212,10 +212,10 @@ class Dashboard extends \Filament\Pages\Dashboard
 
         return $query->get()->map(function ($farm) use ($barangays) {
             $farm->farmer_name = $farm->farmer ?
-                ($farm->farmer->firstname . ' ' . $farm->farmer->lastname) :
+                ($farm->farmer->first_name . ' ' . $farm->farmer->last_name) :
                 'N/A';
             // Get barangay name from lookup
-            $farm->barangay_name = $barangays[$farm->barangay] ?? $farm->barangay;
+            $farm->barangay_name = $barangays[$farm->farmer_address_bgy] ?? $farm->farmer_address_bgy;
             return $farm;
         });
     }
@@ -253,11 +253,11 @@ class Dashboard extends \Filament\Pages\Dashboard
         // Filters are for charts only
 
         return $query->get()->map(function ($farmer) use ($municipalities) {
-            $farmer->full_name = trim(($farmer->firstname ?? '') . ' ' . ($farmer->middlename ?? '') . ' ' . ($farmer->lastname ?? ''));
+            $farmer->full_name = trim(($farmer->first_name ?? '') . ' ' . ($farmer->middle_name ?? '') . ' ' . ($farmer->last_name ?? ''));
             // Get barangay name from relationship
-            $farmer->barangay_name = $farmer->barangayData ? $farmer->barangayData->barangay : $farmer->barangay;
+            $farmer->barangay_name = $farmer->barangayData ? $farmer->barangayData->barangay : $farmer->farmer_address_bgy;
             // Get municipality name from lookup
-            $farmer->municipality_name = $municipalities[$farmer->municipality] ?? $farmer->municipality;
+            $farmer->municipality_name = $municipalities[$farmer->farmer_address_mun] ?? $farmer->farmer_address_mun;
             return $farmer;
         });
     }
@@ -312,7 +312,7 @@ class Dashboard extends \Filament\Pages\Dashboard
             $query->where('created_at', '<=', $endDate);
         }
         if ($municipal = $this->filters['municipal'] ?? null) {
-            $query->where('municipality', $municipal);
+            $query->where('farmer_address_mun', $municipal);
         }
 
         $this->farmData = $query->groupBy('month')->pluck('count', 'month');

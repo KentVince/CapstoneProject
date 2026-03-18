@@ -116,19 +116,26 @@ class ListFarmers extends ListRecords
                     DB::beginTransaction();
 
                     try {
-                        $data['app_no']   = $this->generateControlNumber('COF');
-                        $data['crop']     = 'Coffee';
-                        $data['province'] = 'Davao de Oro';
+                        $data['app_no'] = $this->generateControlNumber('COF');
 
                         $farmer = Farmer::create($data);
 
                         Farm::create([
-                            'farmer_id'    => $farmer->id,
-                            'name'         => $data['name']         ?? 'Unnamed Farm',
-                            'barangay'     => $data['barangay']     ?? null,
-                            'municipality' => $data['municipality'] ?? null,
-                            'province'     => 'Davao de Oro',
-                            'lot_hectare'  => $data['lot_hectare']  ?? null,
+                            'farmer_id'          => $farmer->id,
+                            'farm_name'          => $data['farm_name']          ?? 'Unnamed Farm',
+                            'agency'             => $data['agency']             ?? null,
+                            'farmer_address_bgy' => $data['farmer_address_bgy'] ?? null,
+                            'farmer_address_mun' => $data['farmer_address_mun'] ?? null,
+                            'farmer_address_prv' => $data['farmer_address_prv'] ?? 'Davao de Oro',
+                            'crop_name'          => $data['crop_name']          ?? null,
+                            'crop_variety'       => $data['crop_variety']       ?? null,
+                            'crop_area'          => $data['crop_area']          ?? null,
+                            'soil_type'          => $data['soil_type']          ?? null,
+                            'cropping'           => $data['cropping']           ?? null,
+                            'farmworker'         => $data['farmworker']         ?? null,
+                            'latitude'           => $data['latitude']           ?? null,
+                            'longtitude'         => $data['longtitude']         ?? null,
+                            'status'             => 'pending',
                         ]);
 
                         // Generate QR Code
@@ -145,7 +152,7 @@ class ListFarmers extends ListRecords
                                 ->margin(1)
                                 ->errorCorrection('H')
                                 ->generate(
-                                    "CAFARM Farmer: {$farmer->app_no}\nName: {$farmer->firstname} {$farmer->lastname}",
+                                    "CAFARM Farmer: {$farmer->app_no}\nName: {$farmer->first_name} {$farmer->last_name}",
                                     $fullPath
                                 );
 
@@ -163,7 +170,7 @@ class ListFarmers extends ListRecords
 
                                 Notification::make()
                                     ->title('Farmer Registered')
-                                    ->body("Farmer <b>{$farmer->firstname} {$farmer->lastname}</b> saved. Registration email sent to <b>{$farmer->email_add}</b>.")
+                                    ->body("Farmer <b>{$farmer->first_name} {$farmer->last_name}</b> saved. Registration email sent to <b>{$farmer->email_add}</b>.")
                                     ->success()
                                     ->send();
                             } catch (\Throwable $mailErr) {
@@ -171,14 +178,14 @@ class ListFarmers extends ListRecords
 
                                 Notification::make()
                                     ->title('Farmer Registered')
-                                    ->body("Farmer <b>{$farmer->firstname} {$farmer->lastname}</b> saved, but the email could not be sent.")
+                                    ->body("Farmer <b>{$farmer->first_name} {$farmer->last_name}</b> saved, but the email could not be sent.")
                                     ->warning()
                                     ->send();
                             }
                         } else {
                             Notification::make()
                                 ->title('Farmer Registered')
-                                ->body("Farmer <b>{$farmer->firstname} {$farmer->lastname}</b> saved successfully.")
+                                ->body("Farmer <b>{$farmer->first_name} {$farmer->last_name}</b> saved successfully.")
                                 ->success()
                                 ->send();
                         }

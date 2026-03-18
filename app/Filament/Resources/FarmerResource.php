@@ -94,23 +94,29 @@ public static function table(Table $table): Table
                 ->sortable()
                 ->formatStateUsing(fn ($state) => strtoupper($state)),
 
+                Tables\Columns\TextColumn::make('rsbsa_no')
+                ->label('RSBSA No.')
+                ->searchable()
+                ->sortable()
+                ->formatStateUsing(fn ($state) => strtoupper($state)),
+
         Tables\Columns\TextColumn::make('full_name')
             ->label('Full Name')
             ->getStateUsing(function ($record) {
-                $middleInitial = $record->middlename ? strtoupper(substr($record->middlename, 0, 1)) . '.' : '';
-                return "{$record->lastname}, {$record->firstname} {$middleInitial}";
+                $middleInitial = $record->middle_name ? strtoupper(substr($record->middle_name, 0, 1)) . '.' : '';
+                return "{$record->last_name}, {$record->first_name} {$middleInitial}";
             })
-            ->searchable(['lastname', 'firstname', 'middlename'])
-            ->sortable(['lastname', 'firstname', 'middlename']),
+            ->searchable(['last_name', 'first_name', 'middle_name'])
+            ->sortable(['last_name', 'first_name', 'middle_name']),
 
-        Tables\Columns\TextColumn::make('municipality_name')
-            ->label('Municipality')
-            ->sortable()
-            ->searchable(query: function ($query, $search) {
-                $query->whereHas('municipalityData', function ($q) use ($search) {
-                    $q->where('municipality', 'like', "%{$search}%");
-                });
-            }),
+        // Tables\Columns\TextColumn::make('municipality_name')
+        //     ->label('Municipality')
+        //     ->sortable()
+        //     ->searchable(query: function ($query, $search) {
+        //         $query->whereHas('municipalityData', function ($q) use ($search) {
+        //             $q->where('municipality', 'like', "%{$search}%");
+        //         });
+        //     }),
 
         Tables\Columns\TextColumn::make('barangay_name')
             ->label('Barangay')
@@ -121,7 +127,7 @@ public static function table(Table $table): Table
                 });
             }),
 
-            Tables\Columns\TextColumn::make('phone_no')
+            Tables\Columns\TextColumn::make('contact_num')
                 ->label('Phone No.')
                 ->sortable(),
         ])
@@ -131,7 +137,7 @@ public static function table(Table $table): Table
             if ($user && $user->isAgriculturalProfessional()) {
                 $professional = $user->agriculturalProfessional;
                 if ($professional && $professional->agency === 'MAGRO' && $professional->municipality) {
-                    $query->where('municipality', $professional->municipality);
+                    $query->where('farmer_address_mun', $professional->municipality);
                 }
             }
         })
@@ -149,13 +155,14 @@ public static function table(Table $table): Table
                             ->modalSubmitAction(false)
                             ->modalCancelActionLabel('Close')
                             ->modalContent(function (Farmer $record) {
-                                $middleInitial = $record->middlename ? strtoupper(substr($record->middlename, 0, 1)) . '.' : '';
-                                $fullName = "{$record->lastname}, {$record->firstname} {$middleInitial}";
+                                $middleInitial = $record->middle_name ? strtoupper(substr($record->middle_name, 0, 1)) . '.' : '';
+                                $fullName = "{$record->last_name}, {$record->first_name} {$middleInitial}";
                                 $qrUrl = $record->qr_code ? asset('storage/' . $record->qr_code) : null;
 
                                 return view('components.farmer-print-card', [
                                     'fullName' => $fullName,
                                     'appNo' => $record->app_no,
+                                    'rsbsaNo' => $record->rsbsa_no,
                                     'qrUrl' => $qrUrl,
                                 ]);
                             }),
@@ -173,11 +180,21 @@ public static function table(Table $table): Table
 
                                 if ($farm = $record->farm) {
                                     $farm->update([
-                                        'name'         => $data['name']         ?? $farm->name,
-                                        'barangay'     => $data['barangay']     ?? $farm->barangay,
-                                        'municipality' => $data['municipality'] ?? $farm->municipality,
-                                        'province'     => $data['province']     ?? $farm->province,
-                                        'lot_hectare'  => $data['lot_hectare']  ?? $farm->lot_hectare,
+                                        'farm_name'          => $data['farm_name']          ?? $farm->farm_name,
+                                        'agency'             => $data['agency']             ?? $farm->agency,
+                                        'farmer_address_bgy' => $data['farmer_address_bgy'] ?? $farm->farmer_address_bgy,
+                                        'farmer_address_mun' => $data['farmer_address_mun'] ?? $farm->farmer_address_mun,
+                                        'farmer_address_prv' => $data['farmer_address_prv'] ?? $farm->farmer_address_prv,
+                                        'crop_name'          => $data['crop_name']          ?? $farm->crop_name,
+                                        'crop_variety'       => $data['crop_variety']       ?? $farm->crop_variety,
+                                        'crop_area'          => $data['crop_area']          ?? $farm->crop_area,
+                                        'soil_type'          => $data['soil_type']          ?? $farm->soil_type,
+                                        'cropping'           => $data['cropping']           ?? $farm->cropping,
+                                        'farmworker'         => $data['farmworker']         ?? $farm->farmworker,
+                                        'verified_area'      => $data['verified_area']      ?? $farm->verified_area,
+                                        'status'             => $data['status']             ?? $farm->status,
+                                        'latitude'           => $data['latitude']           ?? $farm->latitude,
+                                        'longtitude'         => $data['longtitude']         ?? $farm->longtitude,
                                     ]);
                                 }
 
@@ -198,7 +215,7 @@ public static function table(Table $table): Table
                                             ->margin(1)
                                             ->errorCorrection('H')
                                             ->generate(
-                                                "CAFARM Farmer: {$record->app_no}\nName: {$record->firstname} {$record->lastname}",
+                                                "CAFARM Farmer: {$record->app_no}\nName: {$record->first_name} {$record->last_name}",
                                                 $fullPath
                                             );
 

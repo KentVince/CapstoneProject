@@ -13,39 +13,22 @@ return new class extends Migration
     {
         Schema::create('farms', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('farmer_id'); // Add foreign key column
-            $table->string('name');
-            $table->string('lot_hectare');
-            $table->string('sitio');
-            $table->string('barangay');
-            $table->string('municipality');
-            $table->string('province');
-            $table->string('latitude');
-            $table->string('longitude');
-            $table->string('north');
-            $table->string('south');
-            $table->string('east');
-            $table->string('west');
-            $table->string('variety');
-            $table->string('planning_method')->nullable(); ;
-            $table->string('date_of_sowing')->nullable(); ;
-            $table->string('date_of_planning');
-            $table->string('date_of_harvest')->nullable(); ;
-            $table->string('population_density')->nullable(); ;
-            $table->string('age_group');
-            $table->string('no_of_hills');
-            $table->string('land_category')->nullable(); ;
-            $table->string('soil_type')->nullable(); ;
-            $table->string('topography')->nullable(); ;
-            $table->string('source_of_irrigation')->nullable(); ;
-            $table->string('tenurial_status')->nullable(); ;
+            $table->unsignedBigInteger('farmer_id');
+            $table->string('farm_name')->nullable();
+            $table->string('farmer_address_bgy')->nullable();
+            $table->string('farmer_address_mun')->nullable();
+            $table->string('farmer_address_prv')->nullable();
+            $table->string('latitude')->nullable();
+            $table->string('longtitude')->nullable();
+            $table->string('crop_name')->nullable();
+            $table->string('crop_variety')->nullable();
+            $table->decimal('crop_area', 10, 2)->nullable();
+            $table->string('soil_type')->nullable();
+            $table->decimal('verified_area', 10, 2)->nullable();
+            $table->string('status')->default('pending');
             $table->timestamps();
 
-
-         // Define the foreign key constraint
-         $table->foreign('farmer_id')->references('id')->on('farmers')->onDelete('cascade');
-
-
+            $table->foreign('farmer_id')->references('id')->on('farmers')->onDelete('cascade');
         });
     }
 

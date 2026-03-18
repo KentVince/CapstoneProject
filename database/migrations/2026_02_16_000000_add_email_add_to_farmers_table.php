@@ -1,22 +1,10 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
+// Neutralized: email_add is now included in the base create_farmers migration.
 return new class extends Migration
 {
-    public function up(): void
-    {
-        Schema::table('farmers', function (Blueprint $table) {
-            $table->string('email_add')->nullable()->after('phone_no');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::table('farmers', function (Blueprint $table) {
-            $table->dropColumn('email_add');
-        });
-    }
+    public function up(): void {}
+    public function down(): void {}
 };

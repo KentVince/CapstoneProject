@@ -1,29 +1,10 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
+// Neutralized: qr_code is now included in the base create_farmers migration.
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::table('farmers', function (Blueprint $table) {
-            //
-            $table->string('qr_code')->nullable()->after('app_no');
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::table('farmers', function (Blueprint $table) {
-            //
-        });
-    }
+    public function up(): void {}
+    public function down(): void {}
 };

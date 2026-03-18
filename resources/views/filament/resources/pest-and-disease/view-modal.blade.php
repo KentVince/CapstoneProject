@@ -316,6 +316,60 @@ if (!$info) {
 
 $tabs = ['Description', 'Symptoms', 'Causes / Risk Factors', 'Impact', 'Seven-Day Action Plan', 'Immediate Response', 'Long-term Strategy'];
 
+// ── Pest Incidence & Severity helpers ─────────────────────────────────────
+$pestIncidence    = $record->pest_incidence !== null ? (float) $record->pest_incidence : null;
+$incidenceRating  = $record->incidence_rating ?? null;
+
+// Derive incidence rating from % if not stored
+if ($pestIncidence !== null && !$incidenceRating) {
+    if ($pestIncidence == 0)            $incidenceRating = 'None';
+    elseif ($pestIncidence <= 5)        $incidenceRating = 'Low';
+    elseif ($pestIncidence <= 15)       $incidenceRating = 'Moderate';
+    elseif ($pestIncidence <= 30)       $incidenceRating = 'High';
+    else                                $incidenceRating = 'Severe';
+}
+
+$incidenceColorMap = [
+    'None'     => ['bg' => '#f0fdf4', 'border' => '#86efac', 'badge_bg' => '#dcfce7', 'badge_txt' => '#166534', 'icon' => '✅'],
+    'Low'      => ['bg' => '#f0fdf4', 'border' => '#86efac', 'badge_bg' => '#dcfce7', 'badge_txt' => '#166534', 'icon' => '✅'],
+    'Moderate' => ['bg' => '#fefce8', 'border' => '#fde047', 'badge_bg' => '#fef9c3', 'badge_txt' => '#854d0e', 'icon' => '⚠️'],
+    'High'     => ['bg' => '#fff7ed', 'border' => '#fdba74', 'badge_bg' => '#ffedd5', 'badge_txt' => '#9a3412', 'icon' => '🔴'],
+    'Severe'   => ['bg' => '#fef2f2', 'border' => '#fca5a5', 'badge_bg' => '#fee2e2', 'badge_txt' => '#991b1b', 'icon' => '🚨'],
+];
+$incidenceColors = $incidenceRating ? ($incidenceColorMap[$incidenceRating] ?? $incidenceColorMap['Moderate']) : null;
+
+$incidenceActionMap = [
+    'None'     => ['en' => 'No action required. Continue routine farm monitoring.', 'bi' => 'Walay aksyon ang gikinahanglan. Padayona ang regular nga pag-monitor sa uma.'],
+    'Low'      => ['en' => 'Monitor closely. Document affected trees and track spread weekly.', 'bi' => 'Bantayan pag-ayo. Irekord ang mga apektadong kahoy ug subayon ang pagkaylap matag semana.'],
+    'Moderate' => ['en' => 'Apply targeted control. Use appropriate biological or chemical treatment on affected zones.', 'bi' => 'Magamit og gipunting nga kontrol. Gamiton ang angay nga biological o chemical nga pagtambal sa mga apektadong lugar.'],
+    'High'     => ['en' => 'Immediate intervention required. Apply treatment within 48 hours. Escalate to local agricultural officer.', 'bi' => 'Kinahanglan dayon nga paglihok. Mag-apply og pagtambal sulod sa 48 oras. Ipatuman sa lokal nga agrikultura opisyal.'],
+    'Severe'   => ['en' => 'CRITICAL: Full farm containment protocol. Emergency treatment, coordinate with MAGRO/DA immediately.', 'bi' => 'KRITIKAL: Tibuok uma nga containment protocol. Emergency nga pagtambal, makig-koordinar sa MAGRO/DA dayon.'],
+];
+
+// Pest-specific severity thresholds from PDF v2.1
+$pestSeverityPct  = $record->pest_severity_pct !== null ? (float) $record->pest_severity_pct : null;
+$nInfested        = $record->n_infested;
+$nTotal           = $record->n_total;
+$pestNameLower    = strtolower($record->pest ?? '');
+
+if ($pestSeverityPct !== null) {
+    if (str_contains($pestNameLower, 'borer') || str_contains($pestNameLower, 'berry')) {
+        // Berry Borer: Mild<5, Moderate 5-20, Severe>20
+        $severityClass = $pestSeverityPct < 5 ? 'Mild' : ($pestSeverityPct <= 20 ? 'Moderate' : 'Severe');
+    } elseif (str_contains($pestNameLower, 'cercospora')) {
+        // Cercospora: Mild<5, Moderate 5-25, Severe>25
+        $severityClass = $pestSeverityPct < 5 ? 'Mild' : ($pestSeverityPct <= 25 ? 'Moderate' : 'Severe');
+    } elseif (str_contains($pestNameLower, 'rust') || str_contains($pestNameLower, 'roya')) {
+        // Leaf Rust: Mild<10, Moderate 10-40, Severe>40
+        $severityClass = $pestSeverityPct < 10 ? 'Mild' : ($pestSeverityPct <= 40 ? 'Moderate' : 'Severe');
+    } else {
+        // Default / Miner / Phoma: Mild<10, Moderate 10-30, Severe>30
+        $severityClass = $pestSeverityPct < 10 ? 'Mild' : ($pestSeverityPct <= 30 ? 'Moderate' : 'Severe');
+    }
+} else {
+    $severityClass = null;
+}
+
 // ── AI recommendation decoding (for print report) ─────────────────────────
 $printAiJson = null;
 if (!empty($record->ai_recommendation)) {
@@ -543,10 +597,12 @@ $printData = [
                 <p class="mt-1">
                     @php
                         $severityColors = [
-                            'Low'    => 'bg-green-100 text-green-800',
-                            'Medium' => 'bg-yellow-100 text-yellow-800',
-                            'High'   => 'bg-red-100 text-red-800',
-                            'Severe' => 'bg-red-100 text-red-800',
+                            'Mild'     => 'bg-green-100 text-green-800',
+                            'Low'      => 'bg-green-100 text-green-800',
+                            'Moderate' => 'bg-yellow-100 text-yellow-800',
+                            'Medium'   => 'bg-yellow-100 text-yellow-800',
+                            'High'     => 'bg-red-100 text-red-800',
+                            'Severe'   => 'bg-red-100 text-red-800',
                         ];
                         $severityColor = $severityColors[$record->severity] ?? 'bg-gray-100 text-gray-800';
                     @endphp
@@ -584,6 +640,41 @@ $printData = [
                     </p>
                 </div>
             @endif
+
+            {{-- Pest Incidence & Severity (Z-Method) --}}
+            @if($pestIncidence !== null)
+                <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                    <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Pest Incidence</h4>
+                    <p class="mt-1 text-sm font-bold text-gray-900 dark:text-white">{{ number_format($pestIncidence, 1) }}%</p>
+                    @if($nInfested !== null && $nTotal !== null)
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ $nInfested }} / {{ $nTotal }} trees</p>
+                    @endif
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                    <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Incidence Rating</h4>
+                    <p class="mt-1">
+                        @if($incidenceRating && $incidenceColors)
+                            <span class="inline-flex px-2 py-0.5 rounded text-xs font-semibold"
+                                  style="background:{{ $incidenceColors['badge_bg'] }};color:{{ $incidenceColors['badge_txt'] }};">
+                                {{ $incidenceColors['icon'] }} {{ $incidenceRating }}
+                            </span>
+                        @endif
+                    </p>
+                </div>
+                @if($pestSeverityPct !== null)
+                    <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                        <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Pest Severity</h4>
+                        <p class="mt-1 text-sm font-bold text-gray-900 dark:text-white">{{ number_format($pestSeverityPct, 1) }}%</p>
+                        @if($severityClass)
+                            @php
+                                $svColors = ['Mild' => 'bg-green-100 text-green-800', 'Moderate' => 'bg-yellow-100 text-yellow-800', 'Severe' => 'bg-red-100 text-red-800'];
+                                $svColor  = $svColors[$severityClass] ?? 'bg-gray-100 text-gray-800';
+                            @endphp
+                            <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium {{ $svColor }}">{{ $severityClass }}</span>
+                        @endif
+                    </div>
+                @endif
+            @endif
         </div>
     </div>
 
@@ -606,6 +697,54 @@ $printData = [
             Print PDF
         </button>
     </div>
+
+    {{-- ── Pest Incidence Action Required ─────────────────────────────────── --}}
+    @if($pestIncidence !== null && $incidenceRating && $incidenceColors)
+        <div class="rounded-xl overflow-hidden border" style="border-color:{{ $incidenceColors['border'] }};">
+            {{-- Header --}}
+            <div class="px-4 py-2.5 flex items-center gap-3" style="background:{{ $incidenceColors['bg'] }};">
+                <span class="text-base">{{ $incidenceColors['icon'] }}</span>
+                <div class="flex-1">
+                    <span class="text-xs font-bold uppercase tracking-wide" style="color:{{ $incidenceColors['badge_txt'] }};">
+                        Pest Incidence Action Required
+                    </span>
+                </div>
+                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full"
+                      style="background:{{ $incidenceColors['badge_bg'] }};color:{{ $incidenceColors['badge_txt'] }};">
+                    {{ $incidenceRating }}
+                    @if($pestIncidence !== null) — {{ number_format($pestIncidence, 1) }}% affected @endif
+                </span>
+            </div>
+
+            {{-- Action Text --}}
+            @php $action = $incidenceActionMap[$incidenceRating] ?? null; @endphp
+            @if($action)
+                <div class="px-4 py-3" style="background:{{ $incidenceColors['bg'] }};">
+                    <p class="text-sm font-medium" style="color:{{ $incidenceColors['badge_txt'] }};">{{ $action['en'] }}</p>
+                    <p class="text-xs mt-1" style="color:{{ $incidenceColors['badge_txt'] }};opacity:0.8;font-style:italic;">{{ $action['bi'] }}</p>
+                </div>
+            @endif
+
+            {{-- Z-method stats row --}}
+            @if($nInfested !== null && $nTotal !== null)
+                <div class="px-4 py-2 border-t flex flex-wrap gap-4 text-xs text-gray-600 dark:text-gray-400" style="border-color:{{ $incidenceColors['border'] }};background:#f9fafb;">
+                    <span><strong>Trees Scanned (N):</strong> {{ $nTotal }}</span>
+                    <span><strong>Infested (n):</strong> {{ $nInfested }}</span>
+                    <span><strong>Incidence:</strong> {{ number_format($pestIncidence, 1) }}%</span>
+                    @if($pestSeverityPct !== null)
+                        <span><strong>Severity:</strong> {{ number_format($pestSeverityPct, 1) }}%
+                            @if($severityClass) ({{ $severityClass }}) @endif
+                        </span>
+                    @endif
+                </div>
+            @endif
+
+            {{-- Note linking to Seven-Day Plan --}}
+            <div class="px-4 py-2 border-t text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20" style="border-color:{{ $incidenceColors['border'] }};">
+                See the <strong>Seven-Day Action Plan</strong> tab below for the full management schedule based on this severity level.
+            </div>
+        </div>
+    @endif
 
     {{-- ── Static Reference Tabs ──────────────────────────────────────────── --}}
     @if($info)
@@ -690,7 +829,12 @@ $printData = [
                 {{-- Seven-Day Action Plan --}}
                 <div x-show="activeTab === 'Seven-Day Action Plan'" style="display:none;">
                     <p class="text-xs text-gray-500 dark:text-gray-400 mb-3 italic">
-                        Tailored daily schedule based on severity. For Mild cases Day 4 chemical treatment may be skipped; for Severe cases all steps are critical.
+                        Tailored daily schedule based on severity (PDF v2.1).
+                        @if($severityClass)
+                            Detected severity: <strong>{{ $severityClass }}</strong>
+                            @if($pestSeverityPct !== null)({{ number_format($pestSeverityPct, 1) }}%)@endif.
+                        @endif
+                        For Mild cases Day 4 chemical treatment may be skipped; for Severe cases all steps are critical.
                     </p>
                     <div class="space-y-2">
                         @foreach($info['seven_day_plan'] as $step)
