@@ -21,19 +21,23 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>CAFARM</h1>
-            <p style="margin: 4px 0 0;">Coffee Agriculture Farm Management</p>
+            <h1>CofSys</h1>
+            <p style="margin: 4px 0 0;">Coffee Farm Management System With Smart Disease Detection And Geoanalytics</p>
         </div>
 
         <div class="body">
             <p>Dear <strong>{{ $farmer->firstname }} {{ $farmer->lastname }}</strong>,</p>
 
-            <p>Your account has been successfully registered in the CAFARM system. Below are your account details:</p>
+            <p>Your account has been successfully registered in the CofSys system. Below are your account details:</p>
 
             <table class="info-table">
                 <tr>
                     <td>Application No.</td>
                     <td><strong>{{ $farmer->app_no }}</strong></td>
+                </tr>
+                  <tr>
+                    <td>RSBSA No.</td>
+                    <td><strong>{{ $farmer->rsbsa_no }}</strong></td>
                 </tr>
                 <tr>
                     <td>Name</td>
@@ -58,15 +62,15 @@
                 <p>Default Password: <strong>{{ $defaultPassword }}</strong></p>
             </div>
 
-            <p>You can use the CAFARM mobile app to access your account. Please change your password after your first login for security purposes.</p>
+            <p>You can use the CofSys mobile app to access your account. Please change your password after your first login for security purposes.</p>
 
             <p>If you have any questions, please contact your local agricultural office.</p>
 
-            <p>Thank you,<br><strong>CAFARM Team</strong></p>
+            <p>Thank you,<br><strong>CofSys Team</strong></p>
         </div>
 
         <div class="footer">
-            <p>This is an automated message from the CAFARM System. Please do not reply to this email.</p>
+            <p>This is an automated message from the CofSys System. Please do not reply to this email.</p>
         </div>
     </div>
 </body>

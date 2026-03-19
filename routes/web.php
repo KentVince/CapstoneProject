@@ -23,7 +23,7 @@ use App\Http\Controllers\PestAndDiseaseController;
 */
 
 Route::get('/', function () {
-    return redirect('/admin/login');
+    return view('landing');
 });
 
 // Lightweight endpoint for sidebar badge polling

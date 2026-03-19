@@ -112,17 +112,14 @@ class CafarmMap extends Page
             'soil_analysis.organic_matter',
             'soil_analysis.recommendation',
             'farms.latitude',
-            'farms.longitude',
-            'farms.barangay',
-            'farms.municipality'
+            'farms.longtitude as longitude',
+            'farms.farmer_address_bgy as barangay',
+            'farms.farmer_address_mun as municipality'
         )
         ->join('farms', 'soil_analysis.farm_id', '=', 'farms.id')
         ->whereNotNull('farms.latitude')
-        ->whereNotNull('farms.longitude')
-        ->get()
-        ->map(function ($item) {
-            return $item;
-        });
+        ->whereNotNull('farms.longtitude')
+        ->get();
     }
 
     // Get all registered farms
@@ -131,8 +128,8 @@ class CafarmMap extends Page
         $municipalities = Municipality::pluck('municipality', 'code');
         $barangays = Barangay::pluck('barangay', 'code');
 
-        return Farm::select('id', 'name', 'latitude', 'longitude', 'barangay', 'municipality')
-            ->orderBy('name')
+        return Farm::select('id', 'farm_name as name', 'latitude', 'longtitude as longitude', 'farmer_address_bgy as barangay', 'farmer_address_mun as municipality')
+            ->orderBy('farm_name')
             ->get()
             ->map(function ($farm) use ($municipalities, $barangays) {
                 $farm->municipality_name = $municipalities[$farm->municipality] ?? $farm->municipality;
