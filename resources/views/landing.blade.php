@@ -1921,6 +1921,7 @@
                     </div>
                 </div>
 
+
                 <div class="mission-image reveal reveal-delay-2">
                     <img src="/images/coffee_farm2.jpg" alt="Coffee farm"
                          onerror="this.style.background='linear-gradient(160deg, #14532d, #003432)';this.style.display='block'">
@@ -1932,6 +1933,8 @@
             </div>
         </div>
     </section>
+
+    
 
     <!-- ── CTA ──────────────────────────────────────── -->
     <section class="cta-section">
