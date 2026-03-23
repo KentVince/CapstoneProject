@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use App\Models\SoilAnalysis;
 use App\Models\SoilAnalysisConversation;
 use App\Models\Farmer;
@@ -133,11 +134,21 @@ class SoilAnalysisController extends Controller
                         'farm_name' => $analysis->farm_name,
                         'crop_variety' => $analysis->crop_variety,
                         'soil_type' => $analysis->soil_type,
+                        // Lab information fields
+                        'ref_no' => $analysis->ref_no,
+                        'submitted_by' => $analysis->submitted_by,
+                        'date_submitted' => $analysis->date_submitted?->toDateString(),
+                        'date_analyzed' => $analysis->date_analyzed?->toDateString(),
+                        'lab_no' => $analysis->lab_no,
+                        'field_no' => $analysis->field_no,
                         'ph_level' => $analysis->ph_level,
                         'nitrogen' => $analysis->nitrogen,
                         'phosphorus' => $analysis->phosphorus,
                         'potassium' => $analysis->potassium,
                         'organic_matter' => $analysis->organic_matter,
+                        'lab_file_url' => $analysis->lab_file
+                            ? url('storage/' . $analysis->lab_file)
+                            : null,
                         'recommendation' => $analysis->recommendation,
                         'validation_status' => $analysis->validation_status,
                         'farmer_reply' => $analysis->farmer_reply,
@@ -198,9 +209,8 @@ class SoilAnalysisController extends Controller
                 : "Farmer #{$analysis->farmer_id}";
             $farmName = $analysis->farm_name ?? 'Unknown Farm';
 
-            $viewUrl = route('filament.admin.resources.soil-analyses.index', [
-                'viewRecord' => $analysis->id,
-            ], false);
+            $viewUrl = route('filament.admin.resources.soil-analyses.index', [], false)
+                . '?viewRecord=' . $analysis->id . '&scrollTo=conversation';
 
             $adminUsers = collect();
             try {
@@ -217,7 +227,7 @@ class SoilAnalysisController extends Controller
                     ->iconColor('info')
                     ->actions([
                         Action::make('view')
-                            ->label('View Details')
+                            ->label('View Action Taken')
                             ->url($viewUrl)
                             ->button()
                             ->markAsRead(),
@@ -486,6 +496,9 @@ class SoilAnalysisController extends Controller
             'phosphorus' => $analysis->phosphorus,
             'potassium' => $analysis->potassium,
             'organic_matter' => $analysis->organic_matter,
+            'lab_file_url' => $analysis->lab_file
+                ? url('storage/' . $analysis->lab_file)
+                : null,
             'recommendation' => $analysis->recommendation,
             'validation_status' => $analysis->validation_status,
             'expert_comments' => $analysis->expert_comments,

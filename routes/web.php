@@ -26,12 +26,33 @@ Route::get('/', function () {
     return view('landing');
 });
 
-// Lightweight endpoint for sidebar badge polling
+// Lightweight endpoint for sidebar badge polling (unviewed by current user)
 Route::get('/admin/api/pending-detections-count', function () {
-    return response()->json([
-        'count' => PestAndDisease::where('validation_status', 'pending')->count(),
-    ]);
+    $userId = auth()->id();
+    $count = PestAndDisease::where('validation_status', 'pending')
+        ->whereNotExists(function ($q) use ($userId) {
+            $q->from('admin_record_views')
+                ->whereColumn('record_id', 'pest_and_disease.case_id')
+                ->where('record_type', 'pest_disease')
+                ->where('user_id', $userId);
+        })
+        ->count();
+    return response()->json(['count' => $count]);
 })->middleware(['web', 'auth'])->name('admin.pending-count');
+
+// Lightweight endpoint for Soil Analysis sidebar badge polling (unviewed by current user)
+Route::get('/admin/api/pending-soil-count', function () {
+    $userId = auth()->id();
+    $count = SoilAnalysis::where('validation_status', 'pending')
+        ->whereNotExists(function ($q) use ($userId) {
+            $q->from('admin_record_views')
+                ->whereColumn('record_id', 'soil_analysis.id')
+                ->where('record_type', 'soil_analysis')
+                ->where('user_id', $userId);
+        })
+        ->count();
+    return response()->json(['count' => $count]);
+})->middleware(['web', 'auth'])->name('admin.pending-soil-count');
 
 // Impersonate routes
 Route::impersonate();

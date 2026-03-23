@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SoilAnalysisResource\Pages;
+use App\Models\AdminRecordView;
 use App\Models\SoilAnalysis;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -21,8 +22,6 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use App\Services\GeminiService;
-use App\Services\SoilRecommendationService;
-use App\Services\NoLabRecommendationService;
 
 class SoilAnalysisResource extends Resource
 {
@@ -49,7 +48,15 @@ class SoilAnalysisResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $count = static::getModel()::where('validation_status', 'pending')->count();
+        $userId = auth()->id();
+        $count = static::getModel()::where('validation_status', 'pending')
+            ->whereNotExists(function ($q) use ($userId) {
+                $q->from('admin_record_views')
+                    ->whereColumn('record_id', 'soil_analysis.id')
+                    ->where('record_type', 'soil_analysis')
+                    ->where('user_id', $userId);
+            })
+            ->count();
         return $count > 0 ? (string) $count : null;
     }
 
@@ -68,57 +75,81 @@ class SoilAnalysisResource extends Resource
                         ->schema([
                             Forms\Components\Hidden::make('farmer_id')
                                 ->dehydrated(true),
+
+                            // Preload farm data for instant client-side population
+                            Placeholder::make('_farm_data_loader')
+                                ->hiddenLabel()
+                                ->columnSpanFull()
+                                ->extraAttributes(['class' => 'hidden'])
+                                ->content(function () {
+                                    $json = \App\Models\Farm::with('farmer:id,last_name')
+                                        ->get(['id', 'farm_name', 'soil_type', 'latitude', 'longtitude'])
+                                        ->keyBy('id')
+                                        ->map(fn ($f) => [
+                                            'farm_name'        => $f->farm_name ?? '',
+                                            'soil_type'        => $f->soil_type ?? '',
+                                            'location'         => ($f->latitude && $f->longtitude) ? "{$f->latitude}, {$f->longtitude}" : '',
+                                        ])
+                                        ->toJson(JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+                                    return new \Illuminate\Support\HtmlString(
+                                        "<script>window.__cafarmFarms={$json};</script>"
+                                    );
+                                }),
+
                             Grid::make(3)->schema([
                                 // Farm select - required field
-                                Forms\Components\Select::make('farm_id')        
+                                Forms\Components\Select::make('farm_id')
                                     ->label('Farm')
-                                    ->relationship('farm', 'name')
+                                    ->relationship('farm', 'farm_name')
                                     ->searchable()
                                     ->preload()
                                     ->required()
+                                    ->extraInputAttributes([
+                                        // Instantly populate Farm Name before the Livewire round-trip returns
+                                        'x-on:change' => "
+                                            const farm = window.__cafarmFarms?.[this.value];
+                                            if (!farm) return;
+                                            const nameEl = document.getElementById('cafarm-farm-name-input');
+                                            if (nameEl) nameEl.value = farm.farm_name;
+                                        ",
+                                    ])
                                     ->afterStateUpdated(function ($state, Forms\Set $set) {
                                         if ($state) {
-                                            $farm = \App\Models\Farm::with('farmer')->find($state);
+                                            $farm = \App\Models\Farm::with('farmer:id,last_name')
+                                                ->select(['id', 'farm_name', 'soil_type', 'latitude', 'longtitude', 'farmer_id'])
+                                                ->find($state);
                                             if ($farm) {
-                                                // Set farm_name from farm's name
-                                                $set('farm_name', $farm->name);
-                                                
-                                                // Set farmer_id from farm's farmer relationship
+                                                $set('farm_name', $farm->farm_name);
+
                                                 if ($farm->farmer) {
                                                     $set('farmer_id', $farm->farmer->id);
-                                                    
-                                                    // Generate unique sample_id: W1-{farmer_id}-{MM}-{DD}-{sequence}
+
+                                                    // Generate sample_id: Lastname-Sample-MMDDYY-XX
                                                     $now = now();
-                                                    $month = $now->format('m');
-                                                    $day = $now->format('d');
-                                                    $farmerId = str_pad($farm->farmer->id, 2, '0', STR_PAD_LEFT);
-                                                    
-                                                    // Get the count of samples created today for this farmer to make it unique
-                                                    $todayCount = \App\Models\SoilAnalysis::where('farmer_id', $farm->farmer->id)
-                                                        ->whereDate('created_at', $now->toDateString())
-                                                        ->count() + 1;
-                                                    $sequence = str_pad($todayCount, 2, '0', STR_PAD_LEFT);
-                                                    
-                                                    $sampleId = "W1-{$farmerId}-{$month}-{$day}-{$sequence}";
-                                                    $set('sample_id', $sampleId);
+                                                    $dateStr = $now->format('mdy');
+                                                    $lastName = ucfirst(strtolower(trim($farm->farmer->last_name ?? 'Farmer')));
+                                                    $prefix = "{$lastName}-Sample-{$dateStr}";
+
+                                                    $existingCount = \App\Models\SoilAnalysis::where('sample_id', 'like', "{$prefix}-%")->count();
+                                                    $sequence = str_pad($existingCount + 1, 2, '0', STR_PAD_LEFT);
+                                                    $set('sample_id', "{$prefix}-{$sequence}");
                                                 }
-                                                // Set soil type from farm
                                                 if ($farm->soil_type) {
                                                     $set('soil_type', $farm->soil_type);
                                                 }
-                                                // Set location/GPS from farm coordinates (latitude and longitude)
-                                                if ($farm->latitude && $farm->longitude) {
-                                                    $set('location', "{$farm->latitude}, {$farm->longitude}");
+                                                if ($farm->latitude && $farm->longtitude) {
+                                                    $set('location', "{$farm->latitude}, {$farm->longtitude}");
                                                 }
                                             }
                                         }
                                     }),
 
-                                Forms\Components\TextInput::make('farm_name')   
-                                    ->label('Farm Name')    
+                                Forms\Components\TextInput::make('farm_name')
+                                    ->label('Farm Name')
                                     ->maxLength(255)
                                     ->disabled()
-                                    ->dehydrated(true),
+                                    ->dehydrated(true)
+                                    ->extraInputAttributes(['id' => 'cafarm-farm-name-input']),
 
                                      Forms\Components\Select::make('soil_type')
                                     ->options([
@@ -140,7 +171,8 @@ class SoilAnalysisResource extends Resource
                                         'with_lab' => 'With Lab',
                                         'without_lab' => 'Without Lab',
                                     ])
-                                    ->native(false),
+                                    ->native(false)
+                                    ->live(),
 
                                 Forms\Components\Select::make('crop_variety')
                                     ->label('Crop Variety')
@@ -163,6 +195,18 @@ class SoilAnalysisResource extends Resource
                                     ->label('Date Collected')
                                     ->native(false),
                             ]),
+
+                            Forms\Components\FileUpload::make('lab_file')
+                                ->label('Laboratory Analysis File')
+                                ->helperText('Upload the laboratory analysis result (image or PDF).')
+                                ->disk('public')
+                                ->directory('soil-lab-files')
+                                ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'application/pdf'])
+                                ->maxSize(10240)
+                                ->downloadable()
+                                ->previewable()
+                                ->columnSpanFull()
+                                ->visible(fn (Forms\Get $get) => $get('analysis_type') === 'with_lab'),
                         ]),
 
                     // ————————————————————— Lab Information —————————————————————
@@ -247,116 +291,6 @@ class SoilAnalysisResource extends Resource
                             ]),
                         ]),
 
-                    // ————————————————————— Recommendation —————————————————————
-                    Tab::make('Recommendation')
-                        ->schema([
-                            Forms\Components\Actions::make([
-                                // ── Static recommendation (PDF-based, instant) ──
-                                Forms\Components\Actions\Action::make('generateStaticRecommendation')
-                                    ->label('Generate Recommendation (Guide-Based)')
-                                    ->icon('heroicon-o-document-text')
-                                    ->color('warning')
-                                    ->tooltip('For WITH LAB: uses BSWM/FAO soil interpretation guidelines. For WITHOUT LAB: uses the KAPE non-bearing coffee fertilizer guide based on soil type.')
-                                    ->action(function (Forms\Get $get, Forms\Set $set) {
-                                        $soilData = [
-                                            'soil_type'      => $get('soil_type'),
-                                            'crop_variety'   => $get('crop_variety'),
-                                            'ph_level'       => $get('ph_level'),
-                                            'organic_matter' => $get('organic_matter'),
-                                            'nitrogen'       => $get('nitrogen'),
-                                            'phosphorus'     => $get('phosphorus'),
-                                            'potassium'      => $get('potassium'),
-                                        ];
-
-                                        $isNoLab = $get('analysis_type') === 'without_lab';
-
-                                        if ($isNoLab) {
-                                            $recommendation = app(NoLabRecommendationService::class)->generate($soilData);
-                                            $body = 'Based on KAPE / BSWM non-bearing coffee guide (no laboratory). Review before saving.';
-                                        } else {
-                                            $recommendation = app(SoilRecommendationService::class)->generate($soilData);
-                                            $body = 'Based on BSWM/FAO Philippine soil guidelines. Review and edit before saving.';
-                                        }
-
-                                        $set('recommendation', $recommendation);
-
-                                        Notification::make()
-                                            ->title('Recommendation Generated')
-                                            ->body($body)
-                                            ->success()
-                                            ->send();
-                                    }),
-
-                                // ── AI recommendation (Gemini, requires API key) ──
-                                Forms\Components\Actions\Action::make('generateAiRecommendation')
-                                    ->label('Generate AI Recommendation')
-                                    ->icon('heroicon-o-sparkles')
-                                    ->color('success')
-                                    ->tooltip('Uses Google Gemini AI to generate a recommendation based on the soil analysis values entered above.')
-                                    ->disabled(fn (Forms\Get $get) => $get('analysis_type') === 'without_lab')
-                                    ->action(function (Forms\Get $get, Forms\Set $set) {
-                                        if (!config('services.gemini.api_key')) {
-                                            Notification::make()
-                                                ->title('API Key Not Configured')
-                                                ->body('Please set GEMINI_API_KEY in your .env file.')
-                                                ->danger()
-                                                ->send();
-                                            return;
-                                        }
-
-                                        $soilData = [
-                                            'soil_type'      => $get('soil_type'),
-                                            'crop_variety'   => $get('crop_variety'),
-                                            'ph_level'       => $get('ph_level'),
-                                            'organic_matter' => $get('organic_matter'),
-                                            'nitrogen'       => $get('nitrogen'),
-                                            'phosphorus'     => $get('phosphorus'),
-                                            'potassium'      => $get('potassium'),
-                                            'farm_name'      => $get('farm_name'),
-                                            'location'       => $get('location'),
-                                            'analysis_type'  => $get('analysis_type'),
-                                        ];
-
-                                        $recommendation = app(GeminiService::class)->generateSoilRecommendation($soilData);
-                                        $set('recommendation', $recommendation);
-
-                                        Notification::make()
-                                            ->title('AI Recommendation Generated')
-                                            ->body('Review and edit the recommendation before saving.')
-                                            ->success()
-                                            ->send();
-                                    }),
-                            ]),
-                            Forms\Components\Textarea::make('recommendation')
-                                ->rows(20)
-                                ->autosize()
-                                ->extraAttributes(['style' => 'min-height: 400px; font-family: monospace; font-size: 0.85rem;'])
-                                ->helperText('AI-generated or manually entered recommendation. Summarize fertilizer rates, timing, and condition-specific advice.'),
-                        ]),
-
-                    // ————————————————————— Expert Validation —————————————————————
-                    Tab::make('Expert Validation')
-                        ->schema([
-                            Forms\Components\Select::make('validation_status')
-                                ->label('Validation Status')
-                                ->options([
-                                    'pending' => 'Pending',
-                                    'approved' => 'Approved',
-                                    'disapproved' => 'Disapproved',
-                                ])
-                                ->default('pending')
-                                ->disabled(),
-
-                            Forms\Components\Textarea::make('expert_comments')
-                                ->label('Expert Recommendation/Comments')
-                                ->rows(4)
-                                ->autosize()
-                                ->helperText('Comments or recommendations from the agricultural expert'),
-
-                            Placeholder::make('validated_by_name')
-                                ->label('Validated By')
-                                ->content(fn ($record) => $record?->validator?->name ?? '—'),
-                        ]),
                 ])
                 ->columnSpanFull(),
         ]);
@@ -365,8 +299,12 @@ class SoilAnalysisResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->recordClasses(function (SoilAnalysis $record) {
+                if ($record->validation_status !== 'pending') return '';
+                $viewed = AdminRecordView::hasViewed(auth()->id(), 'soil_analysis', $record->getKey());
+                return $viewed ? '' : 'new-unread-record';
+            })
             ->columns([
-        
                 Tables\Columns\TextColumn::make('sample_id')
                     ->label('Sample ID')
                     ->toggleable()
@@ -451,7 +389,16 @@ class SoilAnalysisResource extends Resource
                             ->modalHeading(fn (SoilAnalysis $record) => "Soil Analysis: {$record->farm->name}")
                             ->modalWidth('6xl')
                             ->extraModalWindowAttributes(['class' => 'p-2'])
-                            ->modalContent(fn (SoilAnalysis $record) => view('filament.resources.soil-analysis.view-modal', ['record' => $record]))
+                            ->modalContent(function (SoilAnalysis $record) {
+                                if ($record->validation_status === 'pending') {
+                                    AdminRecordView::markViewed(auth()->id(), 'soil_analysis', $record->getKey());
+                                }
+                                // Mark related header notifications as read
+                                auth()->user()?->unreadNotifications()
+                                    ->where('data', 'like', '%viewRecord=' . $record->id . '%')
+                                    ->update(['read_at' => now()]);
+                                return view('filament.resources.soil-analysis.view-modal', ['record' => $record]);
+                            })
                             ->modalFooterActions(fn (SoilAnalysis $record, Action $action) => [
 
                                 // ── Expert Recommendation (manual entry) ──

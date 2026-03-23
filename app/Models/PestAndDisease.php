@@ -73,12 +73,14 @@ class PestAndDisease extends Model
         'n_total',
         'total_trees_planted',
         'scan_results',
+        'admin_viewed_at',
     ];
 
     protected $casts = [
         'options' => 'array',
         'validated_at' => 'datetime',
         'farmer_action_date' => 'datetime',
+        'admin_viewed_at' => 'datetime',
     ];
 
     /**

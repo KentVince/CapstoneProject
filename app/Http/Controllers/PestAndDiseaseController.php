@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Farm;
 use App\Models\Farmer;
 use App\Models\PestAndDisease;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -304,7 +306,8 @@ public function store(Request $request)
             $pestName = $detection->pest ?? 'Detection';
             $preview  = Str::limit($validated['farmer_action'], 80);
 
-            $viewUrl = route('filament.admin.resources.pest-and-diseases.index', [], false) . '?detail-modal=' . $detection->case_id;
+            $viewUrl = route('filament.admin.resources.pest-and-diseases.index', [], false)
+                . '?viewRecord=' . $detection->case_id . '&scrollTo=conversation';
 
             $adminUsers = collect();
             try {
@@ -321,7 +324,7 @@ public function store(Request $request)
                     ->iconColor('success')
                     ->actions([
                         Action::make('view')
-                            ->label('View Detection')
+                            ->label('View Action Taken')
                             ->url($viewUrl)
                             ->button()
                             ->markAsRead(),
@@ -390,6 +393,70 @@ public function store(Request $request)
                 'is_initial'   => false,
                 'is_extra_comment' => true,
             ],
+        ]);
+    }
+
+    /**
+     * Get nearby severe/high pest detections that have been approved.
+     * Used by Flutter to poll for outbreak alerts near the farmer's farm.
+     */
+    public function getNearbySevere(Request $request)
+    {
+        $request->validate([
+            'latitude'       => 'required|numeric',
+            'longitude'      => 'required|numeric',
+            'radius_km'      => 'nullable|numeric|min:1|max:50',
+            'exclude_app_no' => 'nullable|string',
+        ]);
+
+        $lat = $request->input('latitude');
+        $lng = $request->input('longitude');
+        $radiusKm = $request->input('radius_km', 10);
+        $excludeAppNo = $request->input('exclude_app_no');
+
+        // Haversine formula to calculate distance in km
+        $haversine = "(6371 * acos(
+            cos(radians(?)) * cos(radians(latitude)) *
+            cos(radians(longitude) - radians(?)) +
+            sin(radians(?)) * sin(radians(latitude))
+        ))";
+
+        $query = PestAndDisease::select('*')
+            ->selectRaw("{$haversine} AS distance_km", [$lat, $lng, $lat])
+            ->where('validation_status', 'approved')
+            ->whereIn('severity', ['High', 'Severe'])
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->where('latitude', '!=', 0)
+            ->where('longitude', '!=', 0)
+            ->having('distance_km', '<=', $radiusKm)
+            ->orderBy('date_detected', 'desc')
+            ->limit(50);
+
+        if ($excludeAppNo) {
+            $query->where('app_no', '!=', $excludeAppNo);
+        }
+
+        $detections = $query->get()->map(function ($d) {
+            return [
+                'id'                => $d->case_id,
+                'pest'              => $d->pest,
+                'type'              => $d->type,
+                'severity'          => $d->severity,
+                'confidence'        => $d->confidence,
+                'latitude'          => $d->latitude,
+                'longitude'         => $d->longitude,
+                'area'              => $d->area,
+                'date_detected'     => $d->date_detected,
+                'validation_status' => $d->validation_status,
+                'distance_km'       => round($d->distance_km, 2),
+                'farm_name'         => $d->farm?->farm_name ?? 'Unknown Farm',
+            ];
+        });
+
+        return response()->json([
+            'count' => $detections->count(),
+            'data'  => $detections,
         ]);
     }
 

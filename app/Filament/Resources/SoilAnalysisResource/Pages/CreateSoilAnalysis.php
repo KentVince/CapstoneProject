@@ -12,6 +12,11 @@ class CreateSoilAnalysis extends CreateRecord
     use HasControl;
     protected static string $resource = SoilAnalysisResource::class;
 
+    protected function getRedirectUrl(): string
+    {
+        return SoilAnalysisResource::getUrl('index') . '?viewRecord=' . $this->record->getKey();
+    }
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Ensure farmer_id and sample_id are preserved

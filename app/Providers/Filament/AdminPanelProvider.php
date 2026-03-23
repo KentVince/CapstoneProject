@@ -68,7 +68,7 @@ class AdminPanelProvider extends PanelProvider
             //     Widgets\FilamentInfoWidget::class,
             // ])
             ->databaseNotifications()
-            ->databaseNotificationsPolling('10s')
+            ->databaseNotificationsPolling('3s')
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -125,6 +125,68 @@ class AdminPanelProvider extends PanelProvider
                 ]);
             });
 
+            // "New" badge overlay on the checkbox cell for unread pending records
+            // Visual: pure CSS ::after driven by server-side recordClasses — never stripped by Livewire morphdom
+            // Click: event delegation on document — never needs re-attachment
+            FilamentView::registerRenderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => <<<'HTML'
+                    <style>
+                        tr.new-unread-record td:first-child {
+                            position: relative;
+                            cursor: pointer;
+                        }
+                        tr.new-unread-record td:first-child::after {
+                            content: 'New';
+                            position: absolute;
+                            top: 4px;
+                            right: 2px;
+                            background: #ef4444;
+                            color: #fff;
+                            font-size: 9px;
+                            font-weight: 700;
+                            padding: 1px 6px;
+                            border-radius: 9999px;
+                            line-height: 1.5;
+                            z-index: 10;
+                            letter-spacing: 0.04em;
+                            pointer-events: none;
+                        }
+                        tr.new-unread-record td:first-child:hover::after {
+                            background: #dc2626;
+                        }
+                    </style>
+                    <script>
+                        (function() {
+                            // Single delegated listener on document — survives all Livewire DOM morphs
+                            document.addEventListener('click', function(e) {
+                                var td = e.target.closest('tr.new-unread-record td:first-child');
+                                if (!td) return;
+
+                                e.stopPropagation();
+                                e.preventDefault();
+
+                                var row = td.closest('tr');
+                                var wireKey = row ? (row.getAttribute('wire:key') || '') : '';
+                                var recordId = wireKey.split('.').pop();
+                                if (!recordId) return;
+
+                                var components = window.Livewire ? window.Livewire.all() : [];
+                                for (var i = 0; i < components.length; i++) {
+                                    try {
+                                        var wire = components[i].$wire;
+                                        if (wire && typeof wire.mountTableAction === 'function') {
+                                            wire.mountTableAction('view', recordId);
+                                            return;
+                                        }
+                                    } catch(err) {}
+                                }
+                            });
+                        })();
+                    </script>
+                    HTML
+            );
+
             // Register the change password modal
             FilamentView::registerRenderHook(
                 PanelsRenderHook::BODY_END,
@@ -137,95 +199,6 @@ class AdminPanelProvider extends PanelProvider
                 fn (): string => Blade::render('@livewire(\'pest-disease-approval-modal\')')
             );
 
-            // Intercept notification "View Details" links: replace URL with modal dispatch
-            FilamentView::registerRenderHook(
-                PanelsRenderHook::BODY_END,
-                fn (): string => <<<'HTML'
-                    <script>
-                        (function() {
-                            // Convert a notification action link into a modal opener
-                            function convertLink(link) {
-                                var href = link.getAttribute('href') || '';
-                                var match = href.match(/[?&]detail-modal=(\d+)/);
-                                if (!match) return;
-
-                                var recordId = parseInt(match[1]);
-                                if (!recordId) return;
-
-                                // Mark as already converted so we don't process twice
-                                if (link.dataset.modalConverted) return;
-                                link.dataset.modalConverted = 'true';
-
-                                // Remove href and wire:navigate so Livewire cannot navigate
-                                link.removeAttribute('href');
-                                link.removeAttribute('wire:navigate');
-                                link.removeAttribute('wire:navigate.hover');
-                                link.style.cursor = 'pointer';
-
-                                // Add click handler to open the approval modal
-                                link.addEventListener('click', function(e) {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    if (window.Livewire) {
-                                        Livewire.dispatch('openApprovalModal', { recordId: recordId });
-                                    }
-                                });
-                            }
-
-                            // Scan all existing and future links via MutationObserver
-                            function scanLinks(root) {
-                                var links = root.querySelectorAll('a[href*="detail-modal"]');
-                                links.forEach(convertLink);
-                            }
-
-                            // Watch the DOM for new notification action links
-                            var observer = new MutationObserver(function(mutations) {
-                                mutations.forEach(function(mutation) {
-                                    mutation.addedNodes.forEach(function(node) {
-                                        if (node.nodeType !== 1) return;
-                                        // Check the node itself
-                                        if (node.matches && node.matches('a[href*="detail-modal"]')) {
-                                            convertLink(node);
-                                        }
-                                        // Check child nodes
-                                        if (node.querySelectorAll) {
-                                            scanLinks(node);
-                                        }
-                                    });
-                                });
-                            });
-
-                            observer.observe(document.body, { childList: true, subtree: true });
-
-                            // Also scan on page load and after Livewire navigations
-                            document.addEventListener('DOMContentLoaded', function() {
-                                scanLinks(document.body);
-                            });
-                            document.addEventListener('livewire:navigated', function() {
-                                setTimeout(function() { scanLinks(document.body); }, 300);
-                            });
-
-                            // Handle if page was loaded with ?detail-modal= in the URL
-                            function handleDetailModalParam() {
-                                var urlParams = new URLSearchParams(window.location.search);
-                                var detailModalId = urlParams.get('detail-modal');
-
-                                if (detailModalId && window.Livewire) {
-                                    Livewire.dispatch('openApprovalModal', { recordId: parseInt(detailModalId) });
-                                    window.history.replaceState({}, document.title, window.location.pathname);
-                                }
-                            }
-
-                            document.addEventListener('DOMContentLoaded', function() {
-                                setTimeout(handleDetailModalParam, 500);
-                            });
-                            document.addEventListener('livewire:navigated', function() {
-                                setTimeout(handleDetailModalParam, 300);
-                            });
-                        })();
-                    </script>
-                HTML
-            );
 
             // Poll pending detections count and update sidebar badge in real-time
             FilamentView::registerRenderHook(
@@ -291,18 +264,96 @@ class AdminPanelProvider extends PanelProvider
                                 .catch(function() {});
                             }
 
-                            // Poll every 10 seconds
-                            setInterval(updateBadge, 10000);
+                            // Poll every 3 seconds
+                            setInterval(updateBadge, 3000);
 
                             // Re-check after Livewire SPA navigations
                             document.addEventListener('livewire:navigated', function() {
                                 lastCount = null;
-                                setTimeout(updateBadge, 1000);
+                                setTimeout(updateBadge, 500);
                             });
 
                             // Initial check after page load
                             document.addEventListener('DOMContentLoaded', function() {
-                                setTimeout(updateBadge, 2000);
+                                setTimeout(updateBadge, 1000);
+                            });
+                        })();
+                    </script>
+                    HTML
+            );
+
+            // Poll pending soil analysis count and update sidebar badge in real-time
+            FilamentView::registerRenderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => <<<'HTML'
+                    <script>
+                        (function() {
+                            let lastSoilCount = null;
+
+                            function findSoilAnalysisBadge() {
+                                const items = document.querySelectorAll('.fi-sidebar-item');
+                                for (const item of items) {
+                                    const label = item.querySelector('.fi-sidebar-item-label');
+                                    if (label && label.textContent.trim() === 'Soil Analysis') {
+                                        return {
+                                            item: item,
+                                            badge: item.querySelector('.fi-badge')
+                                        };
+                                    }
+                                }
+                                return null;
+                            }
+
+                            function updateSoilBadge() {
+                                fetch('/admin/api/pending-soil-count', {
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'X-Requested-With': 'XMLHttpRequest'
+                                    }
+                                })
+                                .then(function(r) { return r.json(); })
+                                .then(function(data) {
+                                    var count = data.count;
+                                    if (lastSoilCount === count) return;
+                                    lastSoilCount = count;
+
+                                    var result = findSoilAnalysisBadge();
+                                    if (!result) return;
+
+                                    if (count > 0) {
+                                        if (result.badge) {
+                                            var textEl = result.badge.querySelector('.truncate') || result.badge.querySelector('span span');
+                                            if (textEl) textEl.textContent = count;
+                                            if (result.badge.parentElement) {
+                                                result.badge.parentElement.style.display = '';
+                                            }
+                                        } else {
+                                            // Badge doesn't exist yet, trigger Livewire navigate to render it
+                                            if (window.Livewire && window.Livewire.navigate) {
+                                                window.Livewire.navigate(window.location.href);
+                                            }
+                                        }
+                                    } else {
+                                        if (result.badge && result.badge.parentElement) {
+                                            result.badge.parentElement.style.display = 'none';
+                                        }
+                                    }
+                                })
+                                .catch(function() {});
+                            }
+
+                            // Poll every 3 seconds
+                            setInterval(updateSoilBadge, 3000);
+
+                            // Re-check after Livewire SPA navigations
+                            document.addEventListener('livewire:navigated', function() {
+                                lastSoilCount = null;
+                                setTimeout(updateSoilBadge, 500);
+                            });
+
+                            // Initial check after page load
+                            document.addEventListener('DOMContentLoaded', function() {
+                                setTimeout(updateSoilBadge, 1000);
                             });
                         })();
                     </script>

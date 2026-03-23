@@ -32,6 +32,7 @@ class SoilAnalysis extends Model
         'phosphorus',
         'potassium',
         'organic_matter',
+        'lab_file',
         'recommendation',
         'validation_status',
         'expert_comments',
@@ -39,6 +40,7 @@ class SoilAnalysis extends Model
         'validated_at',
         'farmer_reply',
         'farmer_reply_date',
+        'admin_viewed_at',
     ];
 
     protected $casts = [
@@ -52,6 +54,7 @@ class SoilAnalysis extends Model
         'potassium' => 'float',
         'organic_matter' => 'float',
         'farmer_reply_date' => 'datetime',
+        'admin_viewed_at' => 'datetime',
     ];
 
     // Optional relationships

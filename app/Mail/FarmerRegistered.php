@@ -32,7 +32,7 @@ class FarmerRegistered extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'CAFARM - Your Account Has Been Registered',
+            subject: 'CofSys - Your Account Has Been Registered',
         );
     }
 

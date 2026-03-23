@@ -31,7 +31,7 @@ class ProfessionalRegistered extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'CAFARM - Your Professional Account Has Been Registered',
+            subject: 'CofSys - Your Professional Account Has Been Registered',
         );
     }
 

@@ -74,6 +74,27 @@ class SoilAnalysisObserver
                         ->markAsRead(),
                 ])
                 ->broadcast($adminUsers);
+
+            // Send FCM notification to the farmer so Flutter shows the new record immediately
+            try {
+                $farmer = $soilAnalysis->farmer;
+                $appNo = $farmer?->app_no;
+                if ($appNo) {
+                    $this->sendFcmNotification(
+                        $appNo,
+                        'New Soil Analysis Record',
+                        "A soil analysis record has been added for {$farmName}.",
+                        [
+                            'type'        => 'soil_analysis_created',
+                            'analysis_id' => (string) $soilAnalysis->id,
+                            'sample_id'   => $soilAnalysis->sample_id ?? '',
+                            'farm_name'   => $farmName,
+                        ]
+                    );
+                }
+            } catch (\Exception $e) {
+                Log::error('Error sending soil_analysis_created FCM to farmer: ' . $e->getMessage());
+            }
         } catch (\Exception $e) {
             // Log the error but don't fail the entire process
             Log::error('Error sending soil analysis notification: ' . $e->getMessage());

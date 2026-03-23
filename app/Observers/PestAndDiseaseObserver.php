@@ -35,7 +35,8 @@ class PestAndDiseaseObserver
             }
 
             // Send database notification to each admin user
-            $detailUrl = route('filament.admin.resources.pest-and-diseases.index', [], false) . '?detail-modal=' . $pestAndDisease->case_id;
+            $detailUrl = route('filament.admin.resources.pest-and-diseases.index', [], false)
+                . '?viewRecord=' . $pestAndDisease->case_id;
 
             foreach ($adminUsers as $user) {
                 Notification::make()
@@ -47,8 +48,8 @@ class PestAndDiseaseObserver
                         Action::make('view')
                             ->label('View Details')
                             ->url($detailUrl)
-                            ->markAsRead()
-                            ->button(),
+                            ->button()
+                            ->markAsRead(),
                     ])
                     ->sendToDatabase($user);
             }
@@ -84,6 +85,12 @@ class PestAndDiseaseObserver
         if ($pestAndDisease->wasChanged('validation_status') &&
             in_array($pestAndDisease->validation_status, ['approved', 'disapproved'])) {
             FcmNotificationService::sendValidationUpdate($pestAndDisease);
+
+            // When a High/Severe detection is APPROVED, alert nearby farms about the outbreak
+            if ($pestAndDisease->validation_status === 'approved' &&
+                in_array($pestAndDisease->severity, ['High', 'Severe'])) {
+                FcmNotificationService::sendNearbySevereAlert($pestAndDisease);
+            }
         }
     }
 }

@@ -6,6 +6,7 @@ use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use App\Models\AdminRecordView;
 use App\Models\PestAndDisease;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
@@ -69,7 +70,15 @@ class PestAndDiseaseResource extends Resource
      */
     public static function getNavigationBadge(): ?string
     {
-        $query = static::getModel()::where('validation_status', 'pending');
+        $userId = auth()->id();
+
+        $query = static::getModel()::where('validation_status', 'pending')
+            ->whereNotExists(function ($q) use ($userId) {
+                $q->from('admin_record_views')
+                    ->whereColumn('record_id', 'pest_and_disease.case_id')
+                    ->where('record_type', 'pest_disease')
+                    ->where('user_id', $userId);
+            });
 
         $user = auth()->user();
         if ($user && $user->isAgriculturalProfessional()) {
@@ -133,7 +142,7 @@ class PestAndDiseaseResource extends Resource
 
                     // Other form fields...
                     Forms\Components\Select::make('farm_id')
-                        ->relationship('farm', 'name')
+                        ->relationship('farm', 'farm_name')
                         ->label('Farm')
                         ->reactive()
                         ->afterStateUpdated(function (callable $set, $state) {
@@ -191,6 +200,11 @@ class PestAndDiseaseResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+        ->recordClasses(function (PestAndDisease $record) {
+            if ($record->validation_status !== 'pending') return '';
+            $viewed = AdminRecordView::hasViewed(auth()->id(), 'pest_disease', $record->case_id);
+            return $viewed ? '' : 'new-unread-record';
+        })
         ->columns([
             // ImageColumn::make('qr_code')
             //     ->label('QR Code')
@@ -209,7 +223,16 @@ class PestAndDiseaseResource extends Resource
                         ->modalHeading(fn (PestAndDisease $record) => "Detection: {$record->pest}")
                         ->modalWidth('5xl')
                         ->extraModalWindowAttributes(['class' => 'p-2'])
-                        ->modalContent(fn (PestAndDisease $record) => view('filament.resources.pest-and-disease.view-modal', ['record' => $record]))
+                        ->modalContent(function (PestAndDisease $record) {
+                            if ($record->validation_status === 'pending') {
+                                AdminRecordView::markViewed(auth()->id(), 'pest_disease', $record->case_id);
+                            }
+                            // Mark related header notifications as read
+                            auth()->user()?->unreadNotifications()
+                                ->where('data', 'like', '%viewRecord=' . $record->case_id . '%')
+                                ->update(['read_at' => now()]);
+                            return view('filament.resources.pest-and-disease.view-modal', ['record' => $record]);
+                        })
                         ->modalFooterActions(fn (PestAndDisease $record, Action $action) => [
                             Action::make('generateAiRecommendation')
                                 ->label('Generate AI Recommendation')
@@ -372,7 +395,16 @@ class PestAndDiseaseResource extends Resource
                     ->modalHeading(fn (PestAndDisease $record) => "Detection: {$record->pest}")
                     ->modalWidth('5xl')
                     ->extraModalWindowAttributes(['class' => 'p-2'])
-                    ->modalContent(fn (PestAndDisease $record) => view('filament.resources.pest-and-disease.view-modal', ['record' => $record]))
+                    ->modalContent(function (PestAndDisease $record) {
+                        if ($record->validation_status === 'pending') {
+                            AdminRecordView::markViewed(auth()->id(), 'pest_disease', $record->case_id);
+                        }
+                        // Mark related header notifications as read
+                        auth()->user()?->unreadNotifications()
+                            ->where('data', 'like', '%viewRecord=' . $record->case_id . '%')
+                            ->update(['read_at' => now()]);
+                        return view('filament.resources.pest-and-disease.view-modal', ['record' => $record]);
+                    })
                     ->modalFooterActions(fn (PestAndDisease $record, Action $action) => [
                         Action::make('generateAiRecommendation')
                             ->label('Generate AI Recommendation')

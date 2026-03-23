@@ -13,17 +13,18 @@ class ListSoilAnalyses extends ListRecords
 {
     protected static string $resource = SoilAnalysisResource::class;
 
-    // Auto-refresh table every 10 seconds when Flutter syncs new data
+    // Auto-refresh table every 3 seconds when Flutter syncs new data
     protected function getTablePollingInterval(): ?string
     {
-        return '10s';
+        return '3s';
     }
 
     protected function getHeaderActions(): array
     {
         return [
             Actions\CreateAction::make()
-                ->modalWidth('7xl'),
+                ->modalWidth('7xl')
+                ->successRedirectUrl(fn ($record) => SoilAnalysisResource::getUrl('index') . '?viewRecord=' . $record->id),
         ];
     }
 
@@ -60,9 +61,20 @@ class ListSoilAnalyses extends ListRecords
         if ($viewRecordId) {
             return view('filament.resources.soil-analysis.auto-open-modal', [
                 'recordId' => $viewRecordId,
+                'scrollTo' => request()->query('scrollTo'),
             ]);
         }
 
         return null;
+    }
+
+    /**
+     * Explicitly mark all unread notifications related to this record as read.
+     */
+    public function markRelatedNotificationsRead(int $recordId): void
+    {
+        auth()->user()?->unreadNotifications()
+            ->where('data', 'like', '%viewRecord=' . $recordId . '%')
+            ->update(['read_at' => now()]);
     }
 }

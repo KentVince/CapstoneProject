@@ -73,6 +73,7 @@ Route::post('/detections/check-status', [PestAndDiseaseController::class, 'check
 Route::post('/detections/by-app-no', [PestAndDiseaseController::class, 'getByAppNo']);
 Route::post('/detections/farmer-action', [PestAndDiseaseController::class, 'saveFarmerAction']);
 Route::post('/detections/{id}/expert-comments', [PestAndDiseaseController::class, 'addExpertComment']);
+Route::post('/detections/nearby-severe', [PestAndDiseaseController::class, 'getNearbySevere']);
 
 
 // 🧪 2. Test Upload Endpoint (For mobile image testing)
@@ -519,6 +520,33 @@ Route::post('/soil-analysis/{id}/expert-comments', [SoilAnalysisController::clas
 
 // Add this route with your other mobile routes
 Route::post('/mobile/change-password', [MobileController::class, 'changePassword']);
+
+// Update farm GPS coordinates from mobile device
+Route::post('/mobile/update-farm-gps', function (Request $request) {
+    $request->validate([
+        'farm_id'   => 'required|integer',
+        'latitude'  => 'required|numeric',
+        'longitude' => 'required|numeric',
+    ]);
+
+    $farm = Farm::find($request->farm_id);
+
+    if (!$farm) {
+        return response()->json(['success' => false, 'message' => 'Farm not found'], 404);
+    }
+
+    $farm->update([
+        'latitude'   => $request->latitude,
+        'longtitude' => $request->longitude, // note: column has typo in DB
+    ]);
+
+    return response()->json([
+        'success'   => true,
+        'message'   => 'Farm GPS updated successfully',
+        'latitude'  => $request->latitude,
+        'longitude' => $request->longitude,
+    ]);
+});
 
 // FCM Token Update - for push notifications
 Route::post('/mobile/update-fcm-token', function (Request $request) {

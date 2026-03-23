@@ -629,7 +629,7 @@
     
     <!--[if BLOCK]><![endif]--><?php if($record->expert_comments || $record->farmer_reply): ?>
         <?php $isApproved = $record->validation_status === 'approved'; ?>
-        <div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.13);border:1px solid #e2e8f0;">
+        <div id="conversation-thread" style="border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.13);border:1px solid #e2e8f0;">
             <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:linear-gradient(90deg,#1e293b 0%,#334155 100%);border-bottom:1px solid #475569;">
                 <svg style="width:15px;height:15px;color:#94a3b8;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2H6z" clip-rule="evenodd"/>

@@ -129,7 +129,7 @@
         .hero-bg-img {
             position: absolute;
             inset: 0;
-            background-image: url('/images/coffee farm area.jpg');
+            background-image: url('/images/coffee farm area.webp');
             background-size: cover;
             background-position: center;
             z-index: 1;
@@ -1847,7 +1847,7 @@
             <div class="coverage-grid">
                 <!-- Map visual -->
                 <div class="map-placeholder reveal">
-                    <img src="/images/coffee_farm1.jpg" alt="Coffee farm aerial view"
+                    <img src="/images/coffee_farm1.webp" alt="Coffee farm aerial view"
                          onerror="this.style.background='linear-gradient(135deg, #107737, #003432)';this.style.display='block'">
                     <div class="map-overlay-badge">
                         <div class="mob-val">12+</div>
@@ -1921,8 +1921,9 @@
                     </div>
                 </div>
 
+
                 <div class="mission-image reveal reveal-delay-2">
-                    <img src="/images/coffee_farm2.jpg" alt="Coffee farm"
+                    <img src="/images/coffee_farm2.webp" alt="Coffee farm"
                          onerror="this.style.background='linear-gradient(160deg, #14532d, #003432)';this.style.display='block'">
                     <div class="mission-img-badge">
                         <div style="font-size:1.4rem;font-weight:700;font-family:'Playfair Display',serif;color:var(--gold)">100%</div>
@@ -1932,6 +1933,8 @@
             </div>
         </div>
     </section>
+
+    
 
     <!-- ── CTA ──────────────────────────────────────── -->
     <section class="cta-section">

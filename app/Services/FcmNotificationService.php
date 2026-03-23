@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Farm;
 use App\Models\MobileUser;
 use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Messaging\CloudMessage;
@@ -170,6 +171,93 @@ class FcmNotificationService
                 'error' => $e->getMessage(),
             ]);
             return ['success' => 0, 'failures' => count($fcmTokens)];
+        }
+    }
+
+    /**
+     * When a High/Severe pest detection is approved, notify nearby farmers via FCM.
+     * Finds all farms within $radiusKm of the detection and sends alerts to each farmer's topic.
+     */
+    public static function sendNearbySevereAlert($detection, float $radiusKm = 10.0): void
+    {
+        try {
+            $lat = $detection->latitude;
+            $lng = $detection->longitude;
+
+            if (!$lat || !$lng || $lat == 0 || $lng == 0) {
+                Log::warning("FCM nearby alert: No valid coordinates for detection #{$detection->case_id}");
+                return;
+            }
+
+            // Haversine formula to find nearby farms
+            $haversine = "(6371 * acos(
+                cos(radians(?)) * cos(radians(latitude)) *
+                cos(radians(longtitude) - radians(?)) +
+                sin(radians(?)) * sin(radians(latitude))
+            ))";
+
+            $nearbyFarms = Farm::select('farms.*')
+                ->selectRaw("{$haversine} AS distance_km", [$lat, $lng, $lat])
+                ->whereNotNull('latitude')
+                ->whereNotNull('longtitude')
+                ->where('latitude', '!=', 0)
+                ->where('longtitude', '!=', 0)
+                ->having('distance_km', '<=', $radiusKm)
+                ->get();
+
+            // Exclude the farm that reported the detection
+            $nearbyFarms = $nearbyFarms->filter(function ($farm) use ($detection) {
+                return $farm->farmer_id != $detection->farmer_id;
+            });
+
+            if ($nearbyFarms->isEmpty()) {
+                Log::info("FCM nearby alert: No nearby farms within {$radiusKm}km for detection #{$detection->case_id}");
+                return;
+            }
+
+            $messaging = app('firebase.messaging');
+            $pest = $detection->pest ?? 'Unknown pest';
+            $severity = $detection->severity ?? 'High';
+            $area = $detection->area ?? 'your area';
+            $farmName = $detection->farm?->farm_name ?? 'a nearby farm';
+            $sentCount = 0;
+
+            foreach ($nearbyFarms as $farm) {
+                // Get the farmer's app_no to build the FCM topic
+                $farmer = $farm->farmer;
+                if (!$farmer || empty($farmer->app_no)) continue;
+
+                $topic = 'app_' . str_replace('-', '_', $farmer->app_no);
+                $distKm = round($farm->distance_km, 1);
+
+                $title = "⚠️ Pest Outbreak Alert Near You";
+                $body = "\"{$pest}\" ({$severity} severity) detected at {$farmName}, ~{$distKm}km from your farm. Take preventive action.";
+
+                $message = CloudMessage::withTarget('topic', $topic)
+                    ->withNotification(Notification::create($title, $body))
+                    ->withData([
+                        'type'         => 'nearby_severe_alert',
+                        'detection_id' => (string) $detection->case_id,
+                        'pest'         => $pest,
+                        'severity'     => $severity,
+                        'area'         => $area,
+                        'distance_km'  => (string) $distKm,
+                        'farm_name'    => $farmName,
+                        'date'         => $detection->date_detected ?? now()->toIso8601String(),
+                        'lat'          => (string) $lat,
+                        'lng'          => (string) $lng,
+                    ]);
+
+                $messaging->send($message);
+                $sentCount++;
+
+                Log::info("FCM nearby alert sent to topic '{$topic}' (farm: {$farm->farm_name}, {$distKm}km away)");
+            }
+
+            Log::info("FCM nearby alert: Sent {$sentCount} alerts for detection #{$detection->case_id} ({$pest}, {$severity})");
+
+        } catch (\Exception $e) {
+            Log::error("FCM nearby alert failed: " . $e->getMessage());
         }
     }
 }
