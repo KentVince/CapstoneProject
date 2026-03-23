@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\SoilAnalysisExpertComment;
 use Illuminate\Support\Facades\Log;
+use Kreait\Firebase\Messaging\CloudMessage;
 
 class SoilAnalysisExpertCommentObserver
 {
@@ -58,11 +59,15 @@ class SoilAnalysisExpertCommentObserver
             ? ['token'  => $mobileUser->fcm_token]
             : ['topic'  => 'app_' . str_replace('-', '_', $appNo)];
 
+        // Data-only message — title/body in data so Flutter background handler always runs
+        $data['title'] = $title;
+        $data['body']  = $body;
+
         $messaging->send(
-            \Kreait\Firebase\Messaging\CloudMessage::fromArray(
+            CloudMessage::fromArray(
                 array_merge($payload, [
-                    'notification' => ['title' => $title, 'body' => $body],
-                    'data'         => $data,
+                    'data'    => $data,
+                    'android' => ['priority' => 'high'],
                 ])
             )
         );

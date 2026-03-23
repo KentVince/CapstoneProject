@@ -160,7 +160,7 @@ class SoilAnalysisObserver
     }
 
     /**
-     * Send FCM notification to farmer
+     * Send FCM notification to farmer (data-only for reliable background delivery)
      */
     private function sendFcmNotification($appNo, $title, $body, $data)
     {
@@ -170,34 +170,26 @@ class SoilAnalysisObserver
             // Get mobile user to find FCM token
             $mobileUser = \App\Models\MobileUser::where('app_no', $appNo)->first();
 
+            // Data-only message — no 'notification' key so background handler always fires
+            $data['title'] = $title;
+            $data['body']  = $body;
+
             if ($mobileUser && $mobileUser->fcm_token) {
-                // Send to specific device using token
-                $notification = \Kreait\Firebase\Messaging\Notification::create($title, $body);
                 $message = \Kreait\Firebase\Messaging\CloudMessage::fromArray([
-                    'token' => $mobileUser->fcm_token,
-                    'notification' => [
-                        'title' => $title,
-                        'body' => $body,
-                    ],
-                    'data' => $data,
+                    'token'   => $mobileUser->fcm_token,
+                    'data'    => $data,
+                    'android' => ['priority' => 'high'],
                 ]);
-
-                $messaging->send($message);
             } else {
-                // Use topic-based messaging
                 $topic = 'app_' . str_replace('-', '_', $appNo);
-                $notification = \Kreait\Firebase\Messaging\Notification::create($title, $body);
                 $message = \Kreait\Firebase\Messaging\CloudMessage::fromArray([
-                    'topic' => $topic,
-                    'notification' => [
-                        'title' => $title,
-                        'body' => $body,
-                    ],
-                    'data' => $data,
+                    'topic'   => $topic,
+                    'data'    => $data,
+                    'android' => ['priority' => 'high'],
                 ]);
-
-                $messaging->send($message);
             }
+
+            $messaging->send($message);
         } catch (\Exception $e) {
             Log::error('FCM notification error: ' . $e->getMessage());
         }

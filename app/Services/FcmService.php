@@ -9,30 +9,33 @@ class FcmService
 {
     public function sendToTopic(string $topic, string $title, string $body, array $data = []): bool
     {
-        $projectId = 'cafarm-d907a'; // ✅ your Firebase Project ID
+        $projectId = 'cafarm-d907a';
         $credentialsPath = base_path(env('FIREBASE_CREDENTIALS'));
 
-        // 🔑 Initialize Google client
+        // Initialize Google client
         $googleClient = new Client();
         $googleClient->setAuthConfig($credentialsPath);
         $googleClient->addScope('https://www.googleapis.com/auth/firebase.messaging');
         $token = $googleClient->fetchAccessTokenWithAssertion()['access_token'];
 
-        // 🛰️ Build request body (important: no empty arrays)
+        // Data-only message — title/body in data so Flutter background handler always runs
+        $data['title'] = $title;
+        $data['body']  = $body;
+
+        // Ensure type is set for Flutter handler routing
+        if (!isset($data['type'])) {
+            $data['type'] = 'bulletin';
+        }
+
         $message = [
             'topic' => $topic,
-            'notification' => [
-                'title' => $title,
-                'body' => $body,
+            'data'  => $data,
+            'android' => [
+                'priority' => 'high',
             ],
         ];
 
-        // Only add data if not empty
-        if (!empty($data)) {
-            $message['data'] = $data;
-        }
-
-        // 🧭 Send to Firebase
+        // Send to Firebase v1 API
         $http = new HttpClient();
         $response = $http->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", [
             'headers' => [
@@ -40,7 +43,7 @@ class FcmService
                 'Content-Type'  => 'application/json',
             ],
             'json' => [
-                'message' => $message, // ✅ correct key here
+                'message' => $message,
             ],
         ]);
 

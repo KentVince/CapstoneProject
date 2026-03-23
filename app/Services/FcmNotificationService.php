@@ -5,14 +5,23 @@ namespace App\Services;
 use App\Models\Farm;
 use App\Models\MobileUser;
 use Illuminate\Support\Facades\Log;
+use Kreait\Firebase\Messaging\AndroidConfig;
 use Kreait\Firebase\Messaging\CloudMessage;
-use Kreait\Firebase\Messaging\Notification;
 
 class FcmNotificationService
 {
     /**
+     * Android high-priority config so messages wake the device even in doze mode.
+     * Data-only messages (no 'notification' key) ensure onBackgroundMessage always runs.
+     */
+    private static function androidHighPriority(): AndroidConfig
+    {
+        return AndroidConfig::fromArray(['priority' => 'high']);
+    }
+
+    /**
      * Send FCM notification to the farmer's topic when detection is validated.
-     * The Flutter app subscribes to topic 'app_COF_2026_02_00001' (app_no with dashes replaced by underscores).
+     * Uses DATA-ONLY message so Flutter background handler always runs on all Android OEMs.
      */
     public static function sendValidationUpdate($detection): void
     {
@@ -21,7 +30,6 @@ class FcmNotificationService
         try {
             $messaging = app('firebase.messaging');
 
-            // Build the FCM topic from the detection's app_no
             $appNo = $detection->app_no ?? '';
             if (empty($appNo)) {
                 Log::warning("FCM: No app_no found for detection #{$detection->case_id}");
@@ -30,7 +38,7 @@ class FcmNotificationService
 
             $topic = 'app_' . str_replace('-', '_', $appNo);
 
-            $status = $detection->validation_status; // 'approved' or 'disapproved'
+            $status = $detection->validation_status;
             $pest = $detection->pest ?? 'Unknown';
 
             $title = $status === 'approved'
@@ -42,15 +50,18 @@ class FcmNotificationService
                 : "Your detection of \"{$pest}\" was disapproved."
                   . ($detection->expert_comments ? " Reason: {$detection->expert_comments}" : '');
 
+            // Data-only message — no withNotification() so background handler always fires
             $message = CloudMessage::withTarget('topic', $topic)
-                ->withNotification(Notification::create($title, $body))
                 ->withData([
                     'type' => 'validation_update',
+                    'title' => $title,
+                    'body' => $body,
                     'detection_id' => (string) $detection->case_id,
                     'status' => $status,
                     'pest' => $pest,
                     'expert_comments' => $detection->expert_comments ?? '',
-                ]);
+                ])
+                ->withAndroidConfig(self::androidHighPriority());
 
             $messaging->send($message);
 
@@ -62,7 +73,7 @@ class FcmNotificationService
     }
 
     /**
-     * Send FCM notification to a specific device token
+     * Send FCM notification to a specific device token (data-only)
      */
     public static function send(
         string $fcmToken,
@@ -73,11 +84,12 @@ class FcmNotificationService
         try {
             $messaging = app('firebase.messaging');
 
-            $notification = Notification::create($title, $body);
+            $data['title'] = $title;
+            $data['body'] = $body;
 
             $message = CloudMessage::withTarget('token', $fcmToken)
-                ->withNotification($notification)
-                ->withData($data);
+                ->withData($data)
+                ->withAndroidConfig(self::androidHighPriority());
 
             $messaging->send($message);
 
@@ -105,7 +117,7 @@ class FcmNotificationService
     }
 
     /**
-     * Send FCM notification to a topic
+     * Send FCM notification to a topic (data-only)
      */
     public static function sendToTopic(
         string $topic,
@@ -116,11 +128,12 @@ class FcmNotificationService
         try {
             $messaging = app('firebase.messaging');
 
-            $notification = Notification::create($title, $body);
+            $data['title'] = $title;
+            $data['body'] = $body;
 
             $message = CloudMessage::withTarget('topic', $topic)
-                ->withNotification($notification)
-                ->withData($data);
+                ->withData($data)
+                ->withAndroidConfig(self::androidHighPriority());
 
             $messaging->send($message);
 
@@ -137,7 +150,7 @@ class FcmNotificationService
     }
 
     /**
-     * Send FCM notification to multiple tokens
+     * Send FCM notification to multiple tokens (data-only)
      */
     public static function sendToMultiple(
         array $fcmTokens,
@@ -148,11 +161,12 @@ class FcmNotificationService
         try {
             $messaging = app('firebase.messaging');
 
-            $notification = Notification::create($title, $body);
+            $data['title'] = $title;
+            $data['body'] = $body;
 
             $message = CloudMessage::new()
-                ->withNotification($notification)
-                ->withData($data);
+                ->withData($data)
+                ->withAndroidConfig(self::androidHighPriority());
 
             $report = $messaging->sendMulticast($message, $fcmTokens);
 
@@ -223,7 +237,6 @@ class FcmNotificationService
             $sentCount = 0;
 
             foreach ($nearbyFarms as $farm) {
-                // Get the farmer's app_no to build the FCM topic
                 $farmer = $farm->farmer;
                 if (!$farmer || empty($farmer->app_no)) continue;
 
@@ -233,10 +246,12 @@ class FcmNotificationService
                 $title = "⚠️ Pest Outbreak Alert Near You";
                 $body = "\"{$pest}\" ({$severity} severity) detected at {$farmName}, ~{$distKm}km from your farm. Take preventive action.";
 
+                // Data-only message for reliable background delivery
                 $message = CloudMessage::withTarget('topic', $topic)
-                    ->withNotification(Notification::create($title, $body))
                     ->withData([
                         'type'         => 'nearby_severe_alert',
+                        'title'        => $title,
+                        'body'         => $body,
                         'detection_id' => (string) $detection->case_id,
                         'pest'         => $pest,
                         'severity'     => $severity,
@@ -246,7 +261,8 @@ class FcmNotificationService
                         'date'         => $detection->date_detected ?? now()->toIso8601String(),
                         'lat'          => (string) $lat,
                         'lng'          => (string) $lng,
-                    ]);
+                    ])
+                    ->withAndroidConfig(self::androidHighPriority());
 
                 $messaging->send($message);
                 $sentCount++;
