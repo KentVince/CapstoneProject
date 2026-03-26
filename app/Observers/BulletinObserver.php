@@ -34,25 +34,10 @@ class BulletinObserver
     private function sendBulletinNotification(Bulletin $bulletin): void
     {
         try {
-            // Collect all FCM tokens from registered mobile users
-            $tokens = MobileUser::whereNotNull('fcm_token')
-                ->where('fcm_token', '!=', '')
-                ->pluck('fcm_token')
-                ->unique()
-                ->values()
-                ->toArray();
-
-            if (empty($tokens)) {
-                Log::info("BulletinObserver: No FCM tokens found. Skipping push notification for bulletin #{$bulletin->bulletin_id}.");
-                $this->markNotificationSent($bulletin);
-                return;
-            }
-
             $category = $bulletin->category ?? 'Announcement';
             $title    = "[{$category}] " . ($bulletin->title ?? 'New Bulletin');
             $body     = strip_tags($bulletin->content ?? 'A new bulletin has been posted. Tap to view.');
-            // Keep body concise for push notifications
-            $body = mb_strlen($body) > 120 ? mb_substr($body, 0, 117) . '...' : $body;
+            $body     = mb_strlen($body) > 120 ? mb_substr($body, 0, 117) . '...' : $body;
 
             $data = [
                 'type'        => 'bulletin',
@@ -64,13 +49,32 @@ class BulletinObserver
                     : now()->format('Y-m-d'),
             ];
 
-            $result = FcmNotificationService::sendToMultiple($tokens, $title, $body, $data);
+            // 1. Send to 'all_users' topic — Flutter app subscribes to this on startup
+            $topicSent = FcmNotificationService::sendToTopic('all_users', $title, $body, $data);
 
-            Log::info("BulletinObserver: Bulletin #{$bulletin->bulletin_id} notification sent.", [
-                'success'  => $result['success'],
-                'failures' => $result['failures'],
-                'total'    => count($tokens),
-            ]);
+            if ($topicSent) {
+                Log::info("BulletinObserver: Bulletin #{$bulletin->bulletin_id} sent to 'all_users' topic.");
+            }
+
+            // 2. Also send to individual tokens as fallback (for devices that haven't subscribed to topic)
+            $tokens = MobileUser::whereNotNull('fcm_token')
+                ->where('fcm_token', '!=', '')
+                ->pluck('fcm_token')
+                ->unique()
+                ->values()
+                ->toArray();
+
+            if (!empty($tokens)) {
+                $result = FcmNotificationService::sendToMultiple($tokens, $title, $body, $data);
+
+                Log::info("BulletinObserver: Bulletin #{$bulletin->bulletin_id} multicast sent.", [
+                    'success'  => $result['success'],
+                    'failures' => $result['failures'],
+                    'total'    => count($tokens),
+                ]);
+            } else {
+                Log::info("BulletinObserver: No FCM tokens found for multicast (topic delivery still active).");
+            }
 
             $this->markNotificationSent($bulletin);
 

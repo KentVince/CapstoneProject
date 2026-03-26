@@ -10,7 +10,7 @@ class FcmService
     public function sendToTopic(string $topic, string $title, string $body, array $data = []): bool
     {
         $projectId = 'cafarm-d907a';
-        $credentialsPath = base_path(env('FIREBASE_CREDENTIALS'));
+        $credentialsPath = base_path(config('firebase.projects.app.credentials'));
 
         // Initialize Google client
         $googleClient = new Client();
