@@ -7,7 +7,7 @@ use App\Models\Farmer;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\Storage;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Services\QrCodeService;
 use Filament\Notifications\Notification;
 
 class EditFarmer extends EditRecord
@@ -44,37 +44,28 @@ class EditFarmer extends EditRecord
         $farmer = $this->record;
 
         // Only generate QR if missing or file not exists
-        if (empty($farmer->qr_code) || !Storage::exists("public/{$farmer->qr_code}")) {
+        if (empty($farmer->qr_code) || !Storage::disk('public')->exists($farmer->qr_code)) {
             try {
-                $qrFolder = 'public/qrcodes';
-                $relativeFolder = 'qrcodes';
+                $qrPath = "farmers_qr/{$farmer->app_no}.png";
+                $data = "CAFARM Farmer: {$farmer->app_no}\nName: {$farmer->first_name} {$farmer->last_name}";
 
-                if (!Storage::exists($qrFolder)) {
-                    Storage::makeDirectory($qrFolder);
+                $result = QrCodeService::generate($data, $qrPath);
+
+                if ($result) {
+                    $farmer->updateQuietly(['qr_code' => $qrPath]);
+
+                    Notification::make()
+                        ->title('✅ QR Code Generated')
+                        ->body("QR code for <b>{$farmer->app_no}</b> has been created successfully.")
+                        ->success()
+                        ->send();
+                } else {
+                    Notification::make()
+                        ->title('⚠️ QR Generation Failed')
+                        ->body('An error occurred while creating the QR code, but the record was still saved.')
+                        ->warning()
+                        ->send();
                 }
-
-                $filename = "{$farmer->app_no}.png";
-                $qrPath = "{$relativeFolder}/{$filename}";
-                $fullPath = Storage::path("public/{$qrPath}");
-
-                // Generate QR code image
-                QrCode::format('png')
-                    ->size(300)
-                    ->margin(1)
-                    ->errorCorrection('H')
-                    ->generate(
-                        "CAFARM Farmer: {$farmer->app_no}\nName: {$farmer->first_name} {$farmer->last_name}",
-                        $fullPath
-                    );
-
-                // Save path
-                $farmer->update(['qr_code' => $qrPath]);
-
-                Notification::make()
-                    ->title('✅ QR Code Generated')
-                    ->body("QR code for <b>{$farmer->app_no}</b> has been created successfully.")
-                    ->success()
-                    ->send();
             } catch (\Throwable $th) {
                 Notification::make()
                     ->title('⚠️ QR Generation Failed')

@@ -149,6 +149,9 @@ class SoilAnalysisController extends Controller
                         'lab_file_url' => $analysis->lab_file
                             ? url('storage/' . $analysis->lab_file)
                             : null,
+                        'lab_file_relative' => $analysis->lab_file
+                            ? 'storage/' . $analysis->lab_file
+                            : null,
                         'recommendation' => $analysis->recommendation,
                         'validation_status' => $analysis->validation_status,
                         'farmer_reply' => $analysis->farmer_reply,

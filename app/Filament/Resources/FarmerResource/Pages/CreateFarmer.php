@@ -113,7 +113,7 @@ class CreateFarmer extends CreateRecord
      */
     protected function generateFarmerQr(Farmer $farmer): void
     {
-        $qrPath = "qrcodes/{$farmer->app_no}.png";
+        $qrPath = "farmers_qr/{$farmer->app_no}.png";
 
         $saved = QrCodeService::generate(
             "CAFARM Farmer: {$farmer->app_no}\nName: {$farmer->first_name} {$farmer->last_name}",

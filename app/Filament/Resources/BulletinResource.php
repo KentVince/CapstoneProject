@@ -59,6 +59,7 @@ class BulletinResource extends Resource
                             'Announcement' => 'Announcement',
                             'Event' => 'Event',
                             'Notice' => 'Notice',
+                            'Advisory' => 'Advisory',
                         ])
                         ->default('Announcement')
                         ->required(),
@@ -97,6 +98,7 @@ class BulletinResource extends Resource
                     'success' => 'Event',
                     'warning' => 'Notice',
                     'info' => 'Announcement',
+                    'danger' => 'Advisory',
                 ]),
 
             Tables\Columns\TextColumn::make('date_posted')

@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Services\QrCodeService;
 
 class ListFarmers extends ListRecords
 {
@@ -140,23 +140,13 @@ class ListFarmers extends ListRecords
 
                         // Generate QR Code
                         try {
-                            $qrFolder = 'public/qrcodes';
-                            if (!Storage::exists($qrFolder)) {
-                                Storage::makeDirectory($qrFolder);
+                            $qrPath = "farmers_qr/{$farmer->app_no}.png";
+                            $data = "CAFARM Farmer: {$farmer->app_no}\nName: {$farmer->first_name} {$farmer->last_name}";
+
+                            $result = QrCodeService::generate($data, $qrPath);
+                            if ($result) {
+                                $farmer->updateQuietly(['qr_code' => $qrPath]);
                             }
-                            $qrPath   = "qrcodes/{$farmer->app_no}.png";
-                            $fullPath = Storage::path("public/{$qrPath}");
-
-                            QrCode::format('png')
-                                ->size(300)
-                                ->margin(1)
-                                ->errorCorrection('H')
-                                ->generate(
-                                    "CAFARM Farmer: {$farmer->app_no}\nName: {$farmer->first_name} {$farmer->last_name}",
-                                    $fullPath
-                                );
-
-                            $farmer->update(['qr_code' => $qrPath]);
                         } catch (\Throwable $qrErr) {
                             Log::warning("QR generation failed for {$farmer->app_no}: {$qrErr->getMessage()}");
                         }

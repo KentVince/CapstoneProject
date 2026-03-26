@@ -537,6 +537,9 @@ public function store(Request $request)
             'image_url' => $detection->image_path
                 ? Storage::disk('public')->url($detection->image_path)
                 : null,
+            'image_path_relative' => $detection->image_path
+                ? 'storage/' . $detection->image_path
+                : null,
             'validation_status' => $detection->validation_status,
             'expert_comments' => $detection->expert_comments,
             'validated_by' => $detection->validator?->agriculturalProfessional

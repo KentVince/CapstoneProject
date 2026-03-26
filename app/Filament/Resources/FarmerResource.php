@@ -19,7 +19,7 @@ use App\Filament\Resources\FarmerResource\Pages;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Services\QrCodeService;
 
 class FarmerResource extends Resource implements HasShieldPermissions
 {
@@ -201,30 +201,26 @@ public static function table(Table $table): Table
                                 return $record->fresh();
                             })
                             ->after(function (Farmer $record): void {
-                                if (empty($record->qr_code) || !Storage::exists("public/{$record->qr_code}")) {
+                                if (empty($record->qr_code) || !Storage::disk('public')->exists($record->qr_code)) {
                                     try {
-                                        $qrFolder = 'public/qrcodes';
-                                        if (!Storage::exists($qrFolder)) {
-                                            Storage::makeDirectory($qrFolder);
+                                        $filePath = "farmers_qr/{$record->app_no}.png";
+                                        $data = "CAFARM Farmer: {$record->app_no}\nName: {$record->first_name} {$record->last_name}";
+
+                                        $result = QrCodeService::generate($data, $filePath);
+
+                                        if ($result) {
+                                            $record->updateQuietly(['qr_code' => $filePath]);
+
+                                            Notification::make()
+                                                ->title('QR Code Generated')
+                                                ->success()
+                                                ->send();
+                                        } else {
+                                            Notification::make()
+                                                ->title('QR Generation Failed')
+                                                ->warning()
+                                                ->send();
                                         }
-                                        $qrPath  = "qrcodes/{$record->app_no}.png";
-                                        $fullPath = Storage::path("public/{$qrPath}");
-
-                                        QrCode::format('png')
-                                            ->size(300)
-                                            ->margin(1)
-                                            ->errorCorrection('H')
-                                            ->generate(
-                                                "CAFARM Farmer: {$record->app_no}\nName: {$record->first_name} {$record->last_name}",
-                                                $fullPath
-                                            );
-
-                                        $record->update(['qr_code' => $qrPath]);
-
-                                        Notification::make()
-                                            ->title('QR Code Generated')
-                                            ->success()
-                                            ->send();
                                     } catch (\Throwable $th) {
                                         Log::error("QR generation failed for {$record->app_no}: {$th->getMessage()}");
                                         Notification::make()
