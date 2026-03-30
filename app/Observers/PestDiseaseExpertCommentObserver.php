@@ -4,7 +4,6 @@ namespace App\Observers;
 
 use App\Models\PestDiseaseExpertComment;
 use Illuminate\Support\Facades\Log;
-use Kreait\Firebase\Messaging\AndroidConfig;
 use Kreait\Firebase\Messaging\CloudMessage;
 
 class PestDiseaseExpertCommentObserver
@@ -47,22 +46,37 @@ class PestDiseaseExpertCommentObserver
     {
         $messaging  = app('firebase.messaging');
         $mobileUser = \App\Models\MobileUser::where('app_no', $appNo)->first();
-
-        $payload = $mobileUser?->fcm_token
-            ? ['token' => $mobileUser->fcm_token]
-            : ['topic' => 'app_' . str_replace('-', '_', $appNo)];
+        $topic      = 'app_' . str_replace('-', '_', $appNo);
 
         // Data-only message — title/body in data so Flutter background handler always runs
         $data['title'] = $title;
         $data['body']  = $body;
 
+        if ($mobileUser?->fcm_token) {
+            // Try device token first; fall back to topic if token is stale/invalid
+            try {
+                $messaging->send(
+                    CloudMessage::fromArray([
+                        'token'   => $mobileUser->fcm_token,
+                        'data'    => $data,
+                        'android' => ['priority' => 'high'],
+                    ])
+                );
+                return;
+            } catch (\Kreait\Firebase\Exception\Messaging\NotFound $e) {
+                \Illuminate\Support\Facades\Log::warning("FCM: Stale token for app_no {$appNo}, falling back to topic");
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning("FCM: Token send failed for app_no {$appNo}, falling back to topic: " . $e->getMessage());
+            }
+        }
+
+        // Use topic (either no token stored, or token was stale)
         $messaging->send(
-            CloudMessage::fromArray(
-                array_merge($payload, [
-                    'data'    => $data,
-                    'android' => ['priority' => 'high'],
-                ])
-            )
+            CloudMessage::fromArray([
+                'topic'   => $topic,
+                'data'    => $data,
+                'android' => ['priority' => 'high'],
+            ])
         );
     }
 }

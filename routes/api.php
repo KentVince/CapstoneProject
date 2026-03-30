@@ -555,18 +555,20 @@ Route::post('/mobile/update-fcm-token', function (Request $request) {
         'fcm_token' => 'required|string',
     ]);
 
-    $updated = MobileUser::where('app_no', $request->app_no)
-        ->update(['fcm_token' => $request->fcm_token]);
+    $exists = MobileUser::where('app_no', $request->app_no)->exists();
 
-    if ($updated) {
+    if (!$exists) {
         return response()->json([
-            'success' => true,
-            'message' => 'FCM token updated successfully',
-        ]);
+            'success' => false,
+            'message' => 'User not found',
+        ], 404);
     }
 
+    MobileUser::where('app_no', $request->app_no)
+        ->update(['fcm_token' => $request->fcm_token]);
+
     return response()->json([
-        'success' => false,
-        'message' => 'User not found',
-    ], 404);
+        'success' => true,
+        'message' => 'FCM token updated successfully',
+    ]);
 });

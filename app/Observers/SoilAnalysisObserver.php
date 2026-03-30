@@ -167,28 +167,36 @@ class SoilAnalysisObserver
         try {
             $messaging = app('firebase.messaging');
 
-            // Get mobile user to find FCM token
-            $mobileUser = \App\Models\MobileUser::where('app_no', $appNo)->first();
-
             // Data-only message — no 'notification' key so background handler always fires
             $data['title'] = $title;
             $data['body']  = $body;
 
+            $topic = 'app_' . str_replace('-', '_', $appNo);
+            $mobileUser = \App\Models\MobileUser::where('app_no', $appNo)->first();
+
             if ($mobileUser && $mobileUser->fcm_token) {
-                $message = \Kreait\Firebase\Messaging\CloudMessage::fromArray([
-                    'token'   => $mobileUser->fcm_token,
-                    'data'    => $data,
-                    'android' => ['priority' => 'high'],
-                ]);
-            } else {
-                $topic = 'app_' . str_replace('-', '_', $appNo);
-                $message = \Kreait\Firebase\Messaging\CloudMessage::fromArray([
-                    'topic'   => $topic,
-                    'data'    => $data,
-                    'android' => ['priority' => 'high'],
-                ]);
+                // Try token first; fall back to topic if token is stale/invalid
+                try {
+                    $message = \Kreait\Firebase\Messaging\CloudMessage::fromArray([
+                        'token'   => $mobileUser->fcm_token,
+                        'data'    => $data,
+                        'android' => ['priority' => 'high'],
+                    ]);
+                    $messaging->send($message);
+                    return;
+                } catch (\Kreait\Firebase\Exception\Messaging\NotFound $e) {
+                    Log::warning("FCM: Stale token for app_no {$appNo}, falling back to topic");
+                } catch (\Exception $e) {
+                    Log::warning("FCM: Token send failed for app_no {$appNo}, falling back to topic: " . $e->getMessage());
+                }
             }
 
+            // Use topic (either no token stored, or token was stale)
+            $message = \Kreait\Firebase\Messaging\CloudMessage::fromArray([
+                'topic'   => $topic,
+                'data'    => $data,
+                'android' => ['priority' => 'high'],
+            ]);
             $messaging->send($message);
         } catch (\Exception $e) {
             Log::error('FCM notification error: ' . $e->getMessage());
