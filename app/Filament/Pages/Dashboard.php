@@ -183,8 +183,7 @@ class Dashboard extends \Filament\Pages\Dashboard
             'validation_status'
         )
         ->where('validation_status', 'approved')
-        ->orderBy('date_detected', 'desc')
-        ->limit(50);
+        ->orderBy('date_detected', 'desc');
 
         // Don't apply filters for table data - show all recent records
         // Filters are for charts only
@@ -204,8 +203,7 @@ class Dashboard extends \Filament\Pages\Dashboard
         $query = Farm::with([
             'farmer:id,first_name,last_name'
         ])
-        ->orderBy('created_at', 'desc')
-        ->limit(50);
+        ->orderBy('created_at', 'desc');
 
         // Don't apply filters for table data - show all recent records
         // Filters are for charts only
@@ -233,8 +231,7 @@ class Dashboard extends \Filament\Pages\Dashboard
             'potassium',
             'organic_matter'
         )
-        ->orderBy('date_collected', 'desc')
-        ->limit(50);
+        ->orderBy('date_collected', 'desc');
 
         return $query->get();
     }
@@ -246,8 +243,7 @@ class Dashboard extends \Filament\Pages\Dashboard
         $municipalities = Municipality::all()->pluck('municipality', 'municipality')->toArray();
 
         $query = Farmer::with('barangayData')
-        ->orderBy('created_at', 'desc')
-        ->limit(50);
+        ->orderBy('created_at', 'desc');
 
         // Don't apply filters for table data - show all recent records
         // Filters are for charts only

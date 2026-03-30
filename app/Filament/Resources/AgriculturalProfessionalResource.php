@@ -16,6 +16,10 @@ use Filament\Forms\Components\ViewField;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use App\Services\QrCodeService;
 use App\Filament\Resources\AgriculturalProfessionalResource\Pages;
 
 class AgriculturalProfessionalResource extends Resource
@@ -135,8 +139,7 @@ class AgriculturalProfessionalResource extends Resource
                 ->schema([
                     ViewField::make('qr_code')
                         ->label('QR Code Preview')
-                        ->view('components.qr-code')
-                        ->visible(fn ($record) => filled($record?->qr_code)),
+                        ->view('components.qr-code'),
                 ])
                 ->collapsible()
                 ->visible(fn ($record) => $record !== null),
@@ -204,9 +207,60 @@ class AgriculturalProfessionalResource extends Resource
                                 'fullName' => $fullName,
                                 'appNo' => $record->app_no,
                                 'qrUrl' => $qrUrl,
+                                'rsbsaNo' => null,
                             ]);
                         }),
-                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\EditAction::make()
+                        ->after(function (AgriculturalProfessional $record): void {
+                            if (empty($record->qr_code) || !Storage::disk('public')->exists($record->qr_code)) {
+                                try {
+                                    $filePath = "professionals_qr/{$record->app_no}.png";
+                                    $result = QrCodeService::generate($record->app_no, $filePath);
+
+                                    if ($result) {
+                                        $record->updateQuietly(['qr_code' => $filePath]);
+                                        Notification::make()
+                                            ->title('QR Code Generated')
+                                            ->success()
+                                            ->send();
+                                    }
+                                } catch (\Throwable $th) {
+                                    Log::error("QR generation failed for {$record->app_no}: {$th->getMessage()}");
+                                }
+                            }
+                        }),
+                    Tables\Actions\Action::make('regenerate_qr')
+                        ->label('Regenerate QR')
+                        ->icon('heroicon-o-arrow-path')
+                        ->color('warning')
+                        ->requiresConfirmation()
+                        ->action(function (AgriculturalProfessional $record): void {
+                            try {
+                                $filePath = "professionals_qr/{$record->app_no}.png";
+                                $result = QrCodeService::generate($record->app_no, $filePath);
+
+                                if ($result) {
+                                    $record->updateQuietly(['qr_code' => $filePath]);
+                                    Notification::make()
+                                        ->title('QR Code Regenerated')
+                                        ->body("QR code for <b>{$record->app_no}</b> has been regenerated.")
+                                        ->success()
+                                        ->send();
+                                } else {
+                                    Notification::make()
+                                        ->title('QR Generation Failed')
+                                        ->warning()
+                                        ->send();
+                                }
+                            } catch (\Throwable $th) {
+                                Log::error("QR regeneration failed for {$record->app_no}: {$th->getMessage()}");
+                                Notification::make()
+                                    ->title('QR Generation Failed')
+                                    ->body($th->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        }),
                     Tables\Actions\DeleteAction::make(),
                 ])
                     ->icon('heroicon-m-ellipsis-vertical')

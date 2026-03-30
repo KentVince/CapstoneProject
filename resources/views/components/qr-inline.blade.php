@@ -1,6 +1,9 @@
-@php($farmer = $getState())
+@php
+    $farmer = $getState();
+    $hasQr = $farmer && $farmer->qr_code && Storage::disk('public')->exists($farmer->qr_code);
+@endphp
 
-@if ($farmer && $farmer->qr_code)
+@if ($hasQr)
 
     <div class=" flex items-center justify-center" x-data="{ open: false }">
         {{-- Clickable QR Thumbnail --}}

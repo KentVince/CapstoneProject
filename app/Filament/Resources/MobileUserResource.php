@@ -42,7 +42,7 @@ class MobileUserResource extends Resource
             // 🔗 Farmer selector dropdown
             Select::make('farmer_id')
                 ->label('Select Farmer')
-                ->relationship('farmer', 'lastname')
+                ->relationship('farmer', 'last_name')
                 ->preload()
                 ->searchable()
                 ->reactive()
@@ -50,9 +50,9 @@ class MobileUserResource extends Resource
                     // Auto-fill app_no when farmer is selected
                     $farmer = Farmer::find($state);
                     $set('app_no', $farmer?->app_no);
-                    $set('full_name', trim("{$farmer->firstname} {$farmer->middlename}. {$farmer->lastname}"));
-                    $set('contact_no', $farmer?->phone_no);
-                    $set('email', $farmer?->email);
+                    $set('full_name', trim(($farmer->first_name ?? '') . ' ' . ($farmer->middle_name ? $farmer->middle_name . '. ' : '') . ($farmer->last_name ?? '')));
+                    $set('contact_no', $farmer?->contact_num);
+                    $set('email', $farmer?->email_add);
                 })
                 ->helperText('Select a farmer record to link with this mobile user.')
                 ->required(),

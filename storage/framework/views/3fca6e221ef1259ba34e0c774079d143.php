@@ -396,8 +396,22 @@
         // Apply search filter
         if (searchTerm) {
             data = data.filter(item => {
-                const searchableText = JSON.stringify(item).toLowerCase();
-                return searchableText.includes(searchTerm);
+                const searchableFields = [
+                    item.last_name,
+                    item.first_name,
+                    item.middle_name,
+                    item.full_name,
+                    item.farmer_name,
+                    item.farm_name,
+                    item.app_no,
+                    item.rsbsa_no,
+                    item.barangay_name,
+                    item.pest,
+                    item.case_id,
+                ];
+                return searchableFields.some(field =>
+                    field && field.toString().toLowerCase().includes(searchTerm)
+                );
             });
         }
 
@@ -429,11 +443,10 @@
 
         // Determine table structure based on data type
         if (dataType === 'pest_disease') {
-            headers = ['Case ID', 'Pest/Disease', 'Type', 'Severity', 'Confidence', 'Date Detected', 'Area (ha)'];
+            headers = ['Case ID', 'Pest/Disease', 'Severity', 'Confidence', 'Date Detected', 'Area (ha)'];
             rows = paginatedData.map(item => [
                 item.case_id || 'N/A',
                 item.pest || 'N/A',
-                `<span class="px-2 py-1 text-xs font-semibold rounded-full ${item.type === 'pest' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'}">${item.type || 'N/A'}</span>`,
                 `<span class="px-2 py-1 text-xs font-semibold rounded-full ${
                     item.severity === 'high' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
                     item.severity === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
@@ -482,11 +495,10 @@
             ]);
         } else {
             // Mixed data view
-            headers = ['Type', 'Name/ID', 'Details', 'Date', 'Status'];
+            headers = ['Name/ID', 'Details', 'Date', 'Status'];
             rows = paginatedData.map(item => {
                 if (item.dataType === 'pest_disease') {
                     return [
-                        '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">Pest/Disease</span>',
                         item.pest || 'N/A',
                         `Severity: ${item.severity || 'N/A'}`,
                         formatLongDate(item.date_detected),
@@ -494,15 +506,13 @@
                     ];
                 } else if (item.dataType === 'farms') {
                     return [
-                        '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">Farm</span>',
-                        item.name || 'N/A',
+                        item.farm_name || item.name || 'N/A',
                         item.barangay_name || item.barangay || 'N/A',
                         formatLongDate(item.created_at),
                         `<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">${item.lot_hectare || 'N/A'} ha</span>`
                     ];
                 } else if (item.dataType === 'farmers') {
                     return [
-                        '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">Farmer</span>',
                         item.full_name || 'N/A',
                         item.barangay_name || item.barangay || 'N/A',
                         item.date_of_application ? formatLongDate(item.date_of_application) : formatLongDate(item.created_at),
@@ -510,7 +520,6 @@
                     ];
                 } else {
                     return [
-                        '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">Soil</span>',
                         item.farm_name || 'N/A',
                         `pH: ${item.ph_level ? item.ph_level.toFixed(2) : 'N/A'}`,
                         formatLongDate(item.date_collected),

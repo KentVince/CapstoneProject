@@ -133,7 +133,7 @@
             background-size: cover;
             background-position: center;
             z-index: 1;
-            animation: slowZoom 20s ease-in-out infinite alternate;
+            /* animation: slowZoom 20s ease-in-out infinite alternate; */
         }
 
         @keyframes slowZoom {
