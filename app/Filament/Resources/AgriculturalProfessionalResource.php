@@ -25,7 +25,6 @@ use App\Filament\Resources\AgriculturalProfessionalResource\Pages;
 class AgriculturalProfessionalResource extends Resource
 {
     protected static ?string $model = AgriculturalProfessional::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
     protected static ?string $navigationLabel = 'Agricultural Professionals';
     protected static ?string $pluralLabel = 'Agricultural Professionals';
