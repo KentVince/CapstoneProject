@@ -84,7 +84,7 @@ class PestAndDiseaseResource extends Resource
         if ($user && $user->isAgriculturalProfessional()) {
             $professional = $user->agriculturalProfessional;
             if ($professional && $professional->agency === 'MAGRO' && $professional->municipality) {
-                $appNos = \App\Models\Farmer::where('municipality', $professional->municipality)
+                $appNos = \App\Models\Farmer::where('farmer_address_mun', $professional->municipality)
                     ->pluck('app_no');
                 $query->whereIn('app_no', $appNos);
             }
