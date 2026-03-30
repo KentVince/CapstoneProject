@@ -363,7 +363,7 @@ class SoilAnalysisResource extends Resource
                 if ($user && $user->isAgriculturalProfessional()) {
                     $professional = $user->agriculturalProfessional;
                     if ($professional && $professional->agency === 'MAGRO' && $professional->municipality) {
-                        $query->whereHas('farmer', fn ($q) => $q->where('municipality', $professional->municipality));
+                        $query->whereHas('farmer', fn ($q) => $q->where('farmer_address_mun', $professional->municipality));
                     }
                 }
             })

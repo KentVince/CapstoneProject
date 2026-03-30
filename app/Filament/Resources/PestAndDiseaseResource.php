@@ -205,6 +205,7 @@ class PestAndDiseaseResource extends Resource
             $viewed = AdminRecordView::hasViewed(auth()->id(), 'pest_disease', $record->case_id);
             return $viewed ? '' : 'new-unread-record';
         })
+        ->selectable(false)
         ->columns([
             // ImageColumn::make('qr_code')
             //     ->label('QR Code')
@@ -339,17 +340,12 @@ class PestAndDiseaseResource extends Resource
                         ->modalFooterActionsAlignment(\Filament\Support\Enums\Alignment::Center)
                 ),
 
+            Tables\Columns\TextColumn::make('farm.farm_name')
+                ->label('Farm Name')
+                ->placeholder('—'),
             Tables\Columns\TextColumn::make('date_detected')->date(),
             Tables\Columns\TextColumn::make('pest'),
             Tables\Columns\TextColumn::make('severity')->badge(),
-            Tables\Columns\TextColumn::make('type')
-                ->label('Type')
-                ->badge()
-                ->color(fn (string $state): string => match ($state) {
-                    'pest' => 'danger',
-                    'disease' => 'warning',
-                    default => 'gray',
-                }),
             Tables\Columns\TextColumn::make('validation_status')
                 ->label('Status')
                 ->badge()
@@ -572,7 +568,7 @@ class PestAndDiseaseResource extends Resource
             if ($user && $user->isAgriculturalProfessional()) {
                 $professional = $user->agriculturalProfessional;
                 if ($professional && $professional->agency === 'MAGRO' && $professional->municipality) {
-                    $appNos = \App\Models\Farmer::where('municipality', $professional->municipality)
+                    $appNos = \App\Models\Farmer::where('farmer_address_mun', $professional->municipality)
                         ->pluck('app_no');
                     $query->whereIn('app_no', $appNos);
                 }
