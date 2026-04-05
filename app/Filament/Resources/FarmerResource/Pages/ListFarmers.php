@@ -32,7 +32,7 @@ class ListFarmers extends ListRecords
             Actions\Action::make('importExcel')
                 ->label('Import Excel')
                 ->icon('heroicon-o-arrow-up-tray')
-                ->color('success')
+                ->color('gray')
                 ->form([
                     FileUpload::make('file')
                         ->label('Excel File')
@@ -109,6 +109,8 @@ class ListFarmers extends ListRecords
                 }),
 
             Actions\CreateAction::make()
+                ->color('gray')
+                ->icon('heroicon-o-plus')
                 ->modalWidth('7xl')
                 ->modalHeading('Register New Farmer')
                 ->createAnother(false)

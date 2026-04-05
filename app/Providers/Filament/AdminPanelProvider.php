@@ -68,7 +68,7 @@ class AdminPanelProvider extends PanelProvider
             //     Widgets\FilamentInfoWidget::class,
             // ])
             ->databaseNotifications()
-            ->databaseNotificationsPolling('3s')
+            ->databaseNotificationsPolling('30s')
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -264,8 +264,8 @@ class AdminPanelProvider extends PanelProvider
                                 .catch(function() {});
                             }
 
-                            // Poll every 3 seconds
-                            setInterval(updateBadge, 3000);
+                            // Poll every 15 seconds
+                            setInterval(updateBadge, 15000);
 
                             // Re-check after Livewire SPA navigations
                             document.addEventListener('livewire:navigated', function() {
@@ -342,8 +342,8 @@ class AdminPanelProvider extends PanelProvider
                                 .catch(function() {});
                             }
 
-                            // Poll every 3 seconds
-                            setInterval(updateSoilBadge, 3000);
+                            // Poll every 15 seconds
+                            setInterval(updateSoilBadge, 15000);
 
                             // Re-check after Livewire SPA navigations
                             document.addEventListener('livewire:navigated', function() {

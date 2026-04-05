@@ -51,7 +51,7 @@
             'bg-gray-50 dark:bg-white/5' => $active,
         ]); ?>"
     >
-        <!--[if BLOCK]><![endif]--><?php if(filled($icon)): ?>
+        <?php if(filled($icon)): ?>
             <?php if (isset($component)) { $__componentOriginalbfc641e0710ce04e5fe02876ffc6f950 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalbfc641e0710ce04e5fe02876ffc6f950 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament::components.icon','data' => ['alias' => $iconAlias,'icon' => $icon,'class' => 'fi-pagination-item-icon h-5 w-5 text-gray-400 transition duration-75 group-hover/button:text-gray-500 dark:text-gray-500 dark:group-hover/button:text-gray-400']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
@@ -72,9 +72,9 @@
 <?php $component = $__componentOriginalbfc641e0710ce04e5fe02876ffc6f950; ?>
 <?php unset($__componentOriginalbfc641e0710ce04e5fe02876ffc6f950); ?>
 <?php endif; ?>
-        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+        <?php endif; ?>
 
-        <!--[if BLOCK]><![endif]--><?php if(filled($label)): ?>
+        <?php if(filled($label)): ?>
             <span
                 class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                     'fi-pagination-item-label px-1.5 text-sm font-semibold',
@@ -86,7 +86,7 @@
                 <?php echo e($label ?? '...'); ?>
 
             </span>
-        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+        <?php endif; ?>
     </button>
 </li>
 <?php /**PATH /var/www/html/CapstoneProject/vendor/filament/support/resources/views/components/pagination/item.blade.php ENDPATH**/ ?>

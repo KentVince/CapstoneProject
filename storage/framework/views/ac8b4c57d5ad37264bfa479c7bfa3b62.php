@@ -22,7 +22,7 @@
 <?php unset($__defined_vars); ?>
 
 <div <?php echo e($attributes->class('mt-2 flex gap-x-3')); ?>>
-    <!--[if BLOCK]><![endif]--><?php if($unreadNotificationsCount): ?>
+    <?php if($unreadNotificationsCount): ?>
         <?php if (isset($component)) { $__componentOriginal549c94d872270b69c72bdf48cb183bc9 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal549c94d872270b69c72bdf48cb183bc9 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament::components.link','data' => ['color' => 'primary','tabindex' => '-1','tag' => 'button','wire:click' => 'markAllNotificationsAsRead']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
@@ -45,7 +45,7 @@
 <?php $component = $__componentOriginal549c94d872270b69c72bdf48cb183bc9; ?>
 <?php unset($__componentOriginal549c94d872270b69c72bdf48cb183bc9); ?>
 <?php endif; ?>
-    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+    <?php endif; ?>
 
     <?php if (isset($component)) { $__componentOriginal549c94d872270b69c72bdf48cb183bc9 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal549c94d872270b69c72bdf48cb183bc9 = $attributes; } ?>

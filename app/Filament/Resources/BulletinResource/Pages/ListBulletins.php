@@ -15,6 +15,8 @@ class ListBulletins extends ListRecords
     {
         return [
             Actions\CreateAction::make()
+                ->color('gray')
+                ->icon('heroicon-o-plus')
                 ->mutateFormDataUsing(function (array $data): array {
                     $data['created_by'] = Auth::user()->name ?? 'System';
                     return $data;

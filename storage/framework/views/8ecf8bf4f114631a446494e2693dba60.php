@@ -48,7 +48,7 @@
     }
 ?>
 
-<!--[if BLOCK]><![endif]--><?php if($actions): ?>
+<?php if($actions): ?>
     <div
         <?php echo e($attributes->class([
                 'fi-ta-actions flex shrink-0 items-center gap-3',
@@ -65,10 +65,10 @@
             ])); ?>
 
     >
-        <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $actions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $action): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <?php $__currentLoopData = $actions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $action): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <?php echo e($action); ?>
 
-        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </div>
-<?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+<?php endif; ?>
 <?php /**PATH /var/www/html/CapstoneProject/vendor/filament/tables/resources/views/components/actions.blade.php ENDPATH**/ ?>

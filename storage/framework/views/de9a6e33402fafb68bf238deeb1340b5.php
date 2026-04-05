@@ -52,11 +52,11 @@
 <?php unset($__componentOriginal087b30d649cc1cfb7e9ea8930c92d47d); ?>
 <?php endif; ?>
 
-    <!--[if BLOCK]><![endif]--><?php if(filled($label)): ?>
+    <?php if(filled($label)): ?>
         <span class="sr-only">
             <?php echo e($label); ?>
 
         </span>
-    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+    <?php endif; ?>
 </label>
 <?php /**PATH /var/www/html/CapstoneProject/vendor/filament/tables/resources/views/components/selection/checkbox.blade.php ENDPATH**/ ?>

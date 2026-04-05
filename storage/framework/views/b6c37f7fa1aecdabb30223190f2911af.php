@@ -40,8 +40,8 @@
 
     <span class="text-sm font-medium leading-6 text-gray-950 dark:text-white">
         
-        <?php echo e($slot); ?><!--[if BLOCK]><![endif]--><?php if($required && (! $disabled)): ?><sup class="text-danger-600 dark:text-danger-400 font-medium">*</sup>
-        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+        <?php echo e($slot); ?><?php if($required && (! $disabled)): ?><sup class="text-danger-600 dark:text-danger-400 font-medium">*</sup>
+        <?php endif; ?>
     </span>
 
     <?php echo e($suffix); ?>

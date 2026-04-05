@@ -114,11 +114,11 @@
     <?php echo e($form); ?>
 
 
-    <!--[if BLOCK]><![endif]--><?php if($applyAction->isVisible()): ?>
+    <?php if($applyAction->isVisible()): ?>
         <div>
             <?php echo e($applyAction); ?>
 
         </div>
-    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+    <?php endif; ?>
 </div>
 <?php /**PATH /var/www/html/CapstoneProject/vendor/filament/tables/resources/views/components/filters/index.blade.php ENDPATH**/ ?>

@@ -391,22 +391,22 @@
                     <h2>Welcome Back</h2>
                     <p class="subtitle">Sign in to your account to continue</p>
 
-                    <!--[if BLOCK]><![endif]--><?php if(session('status')): ?>
+                    <?php if(session('status')): ?>
                         <div style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; border-left: 4px solid #22c55e; font-size: 0.9rem;">
                             <?php echo e(session('status')); ?>
 
                         </div>
-                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endif; ?>
 
-                    <!--[if BLOCK]><![endif]--><?php if($errors->any()): ?>
+                    <?php if($errors->any()): ?>
                         <div class="login-error-message">
                             <ul>
-                                <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <li><?php echo e($error); ?></li>
-                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </ul>
                         </div>
-                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endif; ?>
 
                     <?php if (isset($component)) { $__componentOriginald09a0ea6d62fc9155b01d885c3fdffb3 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginald09a0ea6d62fc9155b01d885c3fdffb3 = $attributes; } ?>
@@ -452,14 +452,14 @@
 <?php unset($__componentOriginald09a0ea6d62fc9155b01d885c3fdffb3); ?>
 <?php endif; ?>
 
-                    <!--[if BLOCK]><![endif]--><?php if(filament()->hasRegistration()): ?>
+                    <?php if(filament()->hasRegistration()): ?>
                         <div class="login-register-link">
                             <?php echo e(__('filament-panels::pages/auth/login.actions.register.before')); ?>
 
                             <?php echo e($this->registerAction); ?>
 
                         </div>
-                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

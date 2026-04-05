@@ -1,4 +1,4 @@
-<!--[if BLOCK]><![endif]--><?php if(filament()->hasUnsavedChangesAlerts()): ?>
+<?php if(filament()->hasUnsavedChangesAlerts()): ?>
         <?php
         $__scriptKey = '2008606762-0';
         ob_start();
@@ -41,5 +41,5 @@
 
         \Livewire\store($this)->push('scripts', $__output, $__scriptKey)
     ?>
-<?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+<?php endif; ?>
 <?php /**PATH /var/www/html/CapstoneProject/vendor/filament/filament/resources/views/components/unsaved-action-changes-alert.blade.php ENDPATH**/ ?>

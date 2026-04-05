@@ -21,6 +21,8 @@ class ListAgriculturalProfessionals extends ListRecords
     {
         return [
             Actions\CreateAction::make()
+                ->color('gray')
+                ->icon('heroicon-o-plus')
                 ->createAnother(false)
                 ->using(function (array $data): AgriculturalProfessional {
                     DB::beginTransaction();

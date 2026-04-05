@@ -158,7 +158,7 @@
             class="text-sm text-danger-600 dark:text-danger-400"
         ></div>
 
-        <!--[if BLOCK]><![endif]--><?php if($hasImageEditor && (! $isDisabled)): ?>
+        <?php if($hasImageEditor && (! $isDisabled)): ?>
             <div
                 x-show="isEditorOpen"
                 x-cloak
@@ -198,7 +198,7 @@
                                     <div class="flex-1 overflow-auto">
                                         <div class="space-y-6 p-4">
                                             <div class="w-full space-y-3">
-                                                <!--[if BLOCK]><![endif]--><?php $__currentLoopData = [
+                                                <?php $__currentLoopData = [
                                                     [
                                                         'label' => __('filament-forms::components.file_upload.editor.fields.x_position.label'),
                                                         'ref' => 'xPositionInput',
@@ -258,11 +258,11 @@
 
                                                         </span>
                                                     </label>
-                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </div>
 
                                             <div class="space-y-3">
-                                                <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $getImageEditorActions(iconSizeClasses: 'h-5 w-5 mx-auto'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $groupedActions): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <?php $__currentLoopData = $getImageEditorActions(iconSizeClasses: 'h-5 w-5 mx-auto'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $groupedActions): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <?php if (isset($component)) { $__componentOriginalfdab887de9877b48a57ef00a75a2effb = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalfdab887de9877b48a57ef00a75a2effb = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament::components.button.group','data' => ['class' => 'w-full']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
@@ -273,7 +273,7 @@
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['class' => 'w-full']); ?>
-                                                        <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $groupedActions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $action): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <?php $__currentLoopData = $groupedActions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $action): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                             <?php if (isset($component)) { $__componentOriginal6330f08526bbb3ce2a0da37da512a11f = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal6330f08526bbb3ce2a0da37da512a11f = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament::components.button.index','data' => ['color' => 'gray','grouped' => true,'icon' => new \Illuminate\Support\HtmlString($action['iconHtml']),'labelSrOnly' => true,'xOn:click.stop.prevent' => ''.e($action['alpineClickHandler']).'','xTooltip' => '{ content: ' . \Illuminate\Support\Js::from($action['label']) . ', theme: $store.theme }']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
@@ -296,7 +296,7 @@
 <?php $component = $__componentOriginal6330f08526bbb3ce2a0da37da512a11f; ?>
 <?php unset($__componentOriginal6330f08526bbb3ce2a0da37da512a11f); ?>
 <?php endif; ?>
-                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                      <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginalfdab887de9877b48a57ef00a75a2effb)): ?>
@@ -307,10 +307,10 @@
 <?php $component = $__componentOriginalfdab887de9877b48a57ef00a75a2effb; ?>
 <?php unset($__componentOriginalfdab887de9877b48a57ef00a75a2effb); ?>
 <?php endif; ?>
-                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </div>
 
-                                            <!--[if BLOCK]><![endif]--><?php if(count($aspectRatios = $getImageEditorAspectRatiosForJs())): ?>
+                                            <?php if(count($aspectRatios = $getImageEditorAspectRatiosForJs())): ?>
                                                 <div class="space-y-3">
                                                     <div
                                                         class="text-xs text-gray-950 dark:text-white"
@@ -319,7 +319,7 @@
 
                                                     </div>
 
-                                                    <!--[if BLOCK]><![endif]--><?php $__currentLoopData = collect($aspectRatios)->chunk(5); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ratiosChunk): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <?php $__currentLoopData = collect($aspectRatios)->chunk(5); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ratiosChunk): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                         <?php if (isset($component)) { $__componentOriginalfdab887de9877b48a57ef00a75a2effb = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalfdab887de9877b48a57ef00a75a2effb = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament::components.button.group','data' => ['class' => 'w-full']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
@@ -330,7 +330,7 @@
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['class' => 'w-full']); ?>
-                                                            <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $ratiosChunk; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $label => $ratio): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                            <?php $__currentLoopData = $ratiosChunk; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $label => $ratio): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                                 <?php if (isset($component)) { $__componentOriginal6330f08526bbb3ce2a0da37da512a11f = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal6330f08526bbb3ce2a0da37da512a11f = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament::components.button.index','data' => ['xTooltip' => '{ content: ' . \Illuminate\Support\Js::from(__('filament-forms::components.file_upload.editor.actions.set_aspect_ratio.label', ['ratio' => $label])) . ', theme: $store.theme }','xOn:click.stop.prevent' => 'currentRatio = \''.e($label).'\'; editor.setAspectRatio('.e($ratio).')','color' => 'gray','xBind:class' => '{\'!bg-gray-50 dark:!bg-gray-700\': currentRatio === \''.e($label).'\'}','grouped' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
@@ -353,7 +353,7 @@
 <?php $component = $__componentOriginal6330f08526bbb3ce2a0da37da512a11f; ?>
 <?php unset($__componentOriginal6330f08526bbb3ce2a0da37da512a11f); ?>
 <?php endif; ?>
-                                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                          <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginalfdab887de9877b48a57ef00a75a2effb)): ?>
@@ -364,9 +364,9 @@
 <?php $component = $__componentOriginalfdab887de9877b48a57ef00a75a2effb; ?>
 <?php unset($__componentOriginalfdab887de9877b48a57ef00a75a2effb); ?>
 <?php endif; ?>
-                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                 </div>
-                                            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                            <?php endif; ?>
                                         </div>
                                     </div>
 
@@ -448,7 +448,7 @@
                     </div>
                 </div>
             </div>
-        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+        <?php endif; ?>
     </div>
  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>

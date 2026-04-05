@@ -25,9 +25,9 @@
 
 <nav <?php echo e($attributes->class(['fi-breadcrumbs'])); ?>>
     <ol class="fi-breadcrumbs-list flex flex-wrap items-center gap-x-2">
-        <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $breadcrumbs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $url => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <?php $__currentLoopData = $breadcrumbs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $url => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <li class="fi-breadcrumbs-item flex items-center gap-x-2">
-                <!--[if BLOCK]><![endif]--><?php if(! $loop->first): ?>
+                <?php if(! $loop->first): ?>
                     <?php if (isset($component)) { $__componentOriginalbfc641e0710ce04e5fe02876ffc6f950 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalbfc641e0710ce04e5fe02876ffc6f950 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament::components.icon','data' => ['alias' => 'breadcrumbs.separator','icon' => 'heroicon-m-chevron-right','class' => \Illuminate\Support\Arr::toCssClasses([
@@ -81,9 +81,9 @@
 <?php $component = $__componentOriginalbfc641e0710ce04e5fe02876ffc6f950; ?>
 <?php unset($__componentOriginalbfc641e0710ce04e5fe02876ffc6f950); ?>
 <?php endif; ?>
-                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                <?php endif; ?>
 
-                <!--[if BLOCK]><![endif]--><?php if(is_int($url)): ?>
+                <?php if(is_int($url)): ?>
                     <span class="<?php echo e($itemLabelClasses); ?>">
                         <?php echo e($label); ?>
 
@@ -97,9 +97,9 @@
                         <?php echo e($label); ?>
 
                     </a>
-                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                <?php endif; ?>
             </li>
-        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </ol>
 </nav>
 <?php /**PATH /var/www/html/CapstoneProject/vendor/filament/support/resources/views/components/breadcrumbs.blade.php ENDPATH**/ ?>

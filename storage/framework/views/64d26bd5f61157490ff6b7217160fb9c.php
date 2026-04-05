@@ -3,7 +3,7 @@
     $hasQr = $record && $record->qr_code && Storage::disk('public')->exists($record->qr_code);
 ?>
 
-<!--[if BLOCK]><![endif]--><?php if($hasQr): ?>
+<?php if($hasQr): ?>
     <div class="flex flex-col items-center space-y-3">
         <img
             src="<?php echo e(asset('storage/' . $record->qr_code)); ?>"
@@ -20,5 +20,5 @@
     </div>
 <?php else: ?>
     <p class="text-gray-500 text-center italic">QR Code will be generated after saving this record.</p>
-<?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+<?php endif; ?>
 <?php /**PATH /var/www/html/CapstoneProject/resources/views/components/qr-code.blade.php ENDPATH**/ ?>

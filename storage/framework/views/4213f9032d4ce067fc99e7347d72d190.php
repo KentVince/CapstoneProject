@@ -82,7 +82,7 @@
 
         </span>
 
-        <!--[if BLOCK]><![endif]--><?php if($sortable): ?>
+        <?php if($sortable): ?>
             <?php if (isset($component)) { $__componentOriginalbfc641e0710ce04e5fe02876ffc6f950 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalbfc641e0710ce04e5fe02876ffc6f950 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament::components.icon','data' => ['alias' => 
@@ -123,7 +123,7 @@
 <?php $component = $__componentOriginalbfc641e0710ce04e5fe02876ffc6f950; ?>
 <?php unset($__componentOriginalbfc641e0710ce04e5fe02876ffc6f950); ?>
 <?php endif; ?>
-        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+        <?php endif; ?>
     </span>
 </th>
 <?php /**PATH /var/www/html/CapstoneProject/vendor/filament/tables/resources/views/components/header-cell.blade.php ENDPATH**/ ?>

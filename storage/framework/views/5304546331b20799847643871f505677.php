@@ -243,11 +243,11 @@
     <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Status</h3>
         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold <?php echo e($statusColor); ?>">
-            <!--[if BLOCK]><![endif]--><?php if($record->validation_status === 'approved'): ?>
+            <?php if($record->validation_status === 'approved'): ?>
                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
             <?php elseif($record->validation_status === 'disapproved'): ?>
                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+            <?php endif; ?>
             <?php echo e(ucfirst($record->validation_status)); ?>
 
         </span>
@@ -286,12 +286,12 @@
                           d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
                 Soil Health Indicators
-                <!--[if BLOCK]><![endif]--><?php if($record->analysis_type !== 'with_lab'): ?>
+                <?php if($record->analysis_type !== 'with_lab'): ?>
                     <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
                         <svg class="w-2.5 h-2.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
                         pH Only
                     </span>
-                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                <?php endif; ?>
             </h4>
             <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
                 <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>Normal</span>
@@ -300,14 +300,14 @@
             </div>
         </div>
 
-        <!--[if BLOCK]><![endif]--><?php if($record->analysis_type === 'with_lab'): ?>
+        <?php if($record->analysis_type === 'with_lab'): ?>
             <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">Based on BSWM / FAO Soil Interpretation Guidelines (Landon 1991)</p>
         <?php else: ?>
             <p class="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 mb-2">
                 <svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
                 pH-based assessment only — NPK &amp; Organic Matter require laboratory analysis
             </p>
-        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+        <?php endif; ?>
 
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -316,90 +316,90 @@
             <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg <?php echo e($borderClass($phStat)); ?>">
                 <div class="flex items-center justify-between mb-1">
                     <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">pH Level</h4>
-                    <!--[if BLOCK]><![endif]--><?php if($phVal !== null): ?>
+                    <?php if($phVal !== null): ?>
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold <?php echo e($badgeClass($phStat)); ?>">
                             <span class="w-1.5 h-1.5 rounded-full <?php echo e($dotClass($phStat)); ?>"></span>
                             <?php echo e($statusLbl($phStat)); ?>
 
                         </span>
-                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endif; ?>
                 </div>
                 <p class="text-sm font-semibold text-gray-900 dark:text-white"><?php echo e($phVal !== null ? number_format($phVal, 2) : 'N/A'); ?></p>
-                <!--[if BLOCK]><![endif]--><?php if($phVal !== null): ?>
+                <?php if($phVal !== null): ?>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Rating: <?php echo e($phRating); ?></p>
-                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                <?php endif; ?>
             </div>
 
             
             <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg <?php echo e($borderClass($omStat)); ?>">
                 <div class="flex items-center justify-between mb-1">
                     <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Organic Matter</h4>
-                    <!--[if BLOCK]><![endif]--><?php if($omVal !== null): ?>
+                    <?php if($omVal !== null): ?>
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold <?php echo e($badgeClass($omStat)); ?>">
                             <span class="w-1.5 h-1.5 rounded-full <?php echo e($dotClass($omStat)); ?>"></span>
                             <?php echo e($statusLbl($omStat)); ?>
 
                         </span>
-                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endif; ?>
                 </div>
                 <p class="text-sm font-semibold text-gray-900 dark:text-white"><?php echo e($omVal !== null ? number_format($omVal, 2).'%' : 'N/A'); ?></p>
-                <!--[if BLOCK]><![endif]--><?php if($omVal !== null): ?>
+                <?php if($omVal !== null): ?>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Rating: <?php echo e($omRating); ?></p>
-                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                <?php endif; ?>
             </div>
 
             
             <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg <?php echo e($borderClass($nStat)); ?>">
                 <div class="flex items-center justify-between mb-1">
                     <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Nitrogen (N)</h4>
-                    <!--[if BLOCK]><![endif]--><?php if($nVal !== null): ?>
+                    <?php if($nVal !== null): ?>
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold <?php echo e($badgeClass($nStat)); ?>">
                             <span class="w-1.5 h-1.5 rounded-full <?php echo e($dotClass($nStat)); ?>"></span>
                             <?php echo e($statusLbl($nStat)); ?>
 
                         </span>
-                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endif; ?>
                 </div>
                 <p class="text-sm font-semibold text-gray-900 dark:text-white"><?php echo e($nVal !== null ? number_format($nVal, 2).'%' : 'N/A'); ?></p>
-                <!--[if BLOCK]><![endif]--><?php if($nVal !== null): ?>
+                <?php if($nVal !== null): ?>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Rating: <?php echo e($nRating); ?></p>
-                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                <?php endif; ?>
             </div>
 
             
             <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg <?php echo e($borderClass($pStat)); ?>">
                 <div class="flex items-center justify-between mb-1">
                     <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Phosphorus (P)</h4>
-                    <!--[if BLOCK]><![endif]--><?php if($pVal !== null): ?>
+                    <?php if($pVal !== null): ?>
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold <?php echo e($badgeClass($pStat)); ?>">
                             <span class="w-1.5 h-1.5 rounded-full <?php echo e($dotClass($pStat)); ?>"></span>
                             <?php echo e($statusLbl($pStat)); ?>
 
                         </span>
-                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endif; ?>
                 </div>
                 <p class="text-sm font-semibold text-gray-900 dark:text-white"><?php echo e($pVal !== null ? number_format($pVal, 2).' ppm' : 'N/A'); ?></p>
-                <!--[if BLOCK]><![endif]--><?php if($pVal !== null): ?>
+                <?php if($pVal !== null): ?>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Rating: <?php echo e($pRating); ?></p>
-                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                <?php endif; ?>
             </div>
 
             
             <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg md:col-span-2 <?php echo e($borderClass($kStat)); ?>">
                 <div class="flex items-center justify-between mb-1">
                     <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Potassium (K)</h4>
-                    <!--[if BLOCK]><![endif]--><?php if($kVal !== null): ?>
+                    <?php if($kVal !== null): ?>
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold <?php echo e($badgeClass($kStat)); ?>">
                             <span class="w-1.5 h-1.5 rounded-full <?php echo e($dotClass($kStat)); ?>"></span>
                             <?php echo e($statusLbl($kStat)); ?>
 
                         </span>
-                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endif; ?>
                 </div>
                 <p class="text-sm font-semibold text-gray-900 dark:text-white"><?php echo e($kVal !== null ? number_format($kVal, 2).' ppm' : 'N/A'); ?></p>
-                <!--[if BLOCK]><![endif]--><?php if($kVal !== null): ?>
+                <?php if($kVal !== null): ?>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Rating: <?php echo e($kRating); ?></p>
-                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                <?php endif; ?>
             </div>
 
         </div>
@@ -417,7 +417,7 @@
                     .soil-tabs-scroll::-webkit-scrollbar-thumb { background-color: #d1d5db; border-radius: 9999px; }
                     .dark .soil-tabs-scroll::-webkit-scrollbar-thumb { background-color: #6b7280; }
                 </style>
-                <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $soilTabs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tab): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php $__currentLoopData = $soilTabs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tab): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <button
                         type="button"
                         @click.stop.prevent="activeTab = '<?php echo e($tab); ?>'"
@@ -426,7 +426,7 @@
                             : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'"
                         class="flex-shrink-0 px-4 py-2.5 text-xs transition-colors duration-150 whitespace-nowrap focus:outline-none"
                     ><?php echo e($tab); ?></button>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
         </div>
 
@@ -448,7 +448,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
-                            <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $fertRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php $__currentLoopData = $fertRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
                                     <td class="px-3 py-2.5 font-semibold text-gray-800 dark:text-gray-200 whitespace-nowrap"><?php echo e($row[0]); ?></td>
                                     <td class="px-3 py-2.5 text-gray-700 dark:text-gray-300"><?php echo e($row[1]); ?></td>
@@ -456,7 +456,7 @@
                                     <td class="px-3 py-2.5 text-gray-600 dark:text-gray-400 whitespace-nowrap"><?php echo e($row[3]); ?></td>
                                     <td class="px-3 py-2.5 text-xs text-gray-500 dark:text-gray-400"><?php echo e($row[4]); ?></td>
                                 </tr>
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>
                     </table>
                 </div>
@@ -476,14 +476,14 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
-                            <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $amendRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php $__currentLoopData = $amendRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
                                     <td class="px-3 py-2.5 font-semibold text-gray-800 dark:text-gray-200"><?php echo e($row[0]); ?></td>
                                     <td class="px-3 py-2.5 text-gray-700 dark:text-gray-300"><?php echo e($row[1]); ?></td>
                                     <td class="px-3 py-2.5 font-medium text-amber-700 dark:text-amber-300 whitespace-nowrap"><?php echo e($row[2]); ?></td>
                                     <td class="px-3 py-2.5 text-gray-600 dark:text-gray-400"><?php echo e($row[3]); ?></td>
                                 </tr>
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>
                     </table>
                 </div>
@@ -501,7 +501,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
-                            <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $schedRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php $__currentLoopData = $schedRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
                                     <td class="px-3 py-2.5">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold
@@ -516,7 +516,7 @@
                                     </td>
                                     <td class="px-3 py-2.5 text-gray-700 dark:text-gray-300"><?php echo e($row[1]); ?></td>
                                 </tr>
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>
                     </table>
                 </div>
@@ -526,7 +526,7 @@
             <div x-show="activeTab === 'Farming Practices'" style="display:none;">
                 <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">Recommended cultural practices for sustainable coffee soil management.</p>
                 <ul class="space-y-3">
-                    <!--[if BLOCK]><![endif]--><?php $__currentLoopData = [
+                    <?php $__currentLoopData = [
                         'Mulch around coffee plants with dried leaves or rice straw (5–10 cm thick).',
                         'Keep crop residues on the field after harvest — do NOT burn them.',
                         'Plant legume cover crops during fallow season to naturally add nitrogen.',
@@ -540,7 +540,7 @@
                             </span>
                             <span><?php echo e($practice); ?></span>
                         </li>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
             </div>
 
@@ -548,7 +548,7 @@
             <div x-show="activeTab === 'Important Notes'" style="display:none;">
                 <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">Critical reminders to ensure effective fertilizer use and soil health improvement.</p>
                 <ul class="space-y-3">
-                    <!--[if BLOCK]><![endif]--><?php $__currentLoopData = [
+                    <?php $__currentLoopData = [
                         ['ALWAYS correct soil pH FIRST — fertilizers do not work on wrong pH.', 'red'],
                         ['SPLIT nitrogen and potassium — never apply the full dose at once.', 'orange'],
                         ['RE-TEST your soil every 6–12 months after major amendments.', 'blue'],
@@ -560,7 +560,7 @@
                             </span>
                             <span class="text-sm font-medium text-gray-800 dark:text-gray-200"><?php echo e($note); ?></span>
                         </li>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
             </div>
 
@@ -604,7 +604,7 @@
         $paramLabels = ['ph' => 'Soil pH', 'om' => 'Organic Matter', 'n' => 'Nitrogen (N)', 'p' => 'Phosphorus (P)', 'k' => 'Potassium (K)'];
     ?>
 
-    <!--[if BLOCK]><![endif]--><?php if($hasAi): ?>
+    <?php if($hasAi): ?>
     <div class="rounded-xl overflow-hidden border border-purple-200 dark:border-purple-800 shadow-md mt-2">
 
         
@@ -622,7 +622,7 @@
         <div class="bg-white dark:bg-gray-900 px-6 py-5 space-y-6">
 
             
-            <!--[if BLOCK]><![endif]--><?php if(!empty($record->ai_farmer_summary)): ?>
+            <?php if(!empty($record->ai_farmer_summary)): ?>
             <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4">
                 <h2 class="text-sm font-bold text-yellow-800 dark:text-yellow-300 uppercase tracking-wide mb-2 flex items-center gap-2">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
@@ -630,48 +630,48 @@
                 </h2>
                 <p class="text-sm text-yellow-900 dark:text-yellow-200 leading-relaxed"><?php echo e($aiFarmerSummary); ?></p>
             </div>
-            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+            <?php endif; ?>
 
             
-            <!--[if BLOCK]><![endif]--><?php if(!empty($record->ai_diagnosis)): ?>
+            <?php if(!empty($record->ai_diagnosis)): ?>
             <div>
                 <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Soil Diagnosis</h2>
                 <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed"><?php echo e($aiDiagnosis); ?></p>
             </div>
-            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+            <?php endif; ?>
 
             
-            <!--[if BLOCK]><![endif]--><?php if(!empty($aiKeyConcerns)): ?>
+            <?php if(!empty($aiKeyConcerns)): ?>
             <div>
                 <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Key Concerns</h2>
                 <ul class="space-y-2">
-                    <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $aiKeyConcerns; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $concern): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php $__currentLoopData = $aiKeyConcerns; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $concern): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <li class="flex gap-2 text-sm text-gray-700 dark:text-gray-300">
                         <span class="mt-1 flex-shrink-0 w-2 h-2 rounded-full bg-red-400"></span>
                         <span class="leading-relaxed"><?php echo e($concern); ?></span>
                     </li>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
             </div>
-            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+            <?php endif; ?>
 
             
-            <!--[if BLOCK]><![endif]--><?php if(!empty($aiPriorityActions)): ?>
+            <?php if(!empty($aiPriorityActions)): ?>
             <div>
                 <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Priority Actions</h2>
                 <ol class="space-y-2 list-none">
-                    <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $aiPriorityActions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $action): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php $__currentLoopData = $aiPriorityActions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $action): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <li class="flex gap-3 text-sm text-gray-700 dark:text-gray-300">
                         <span class="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold"><?php echo e($idx + 1); ?></span>
                         <span class="leading-relaxed pt-0.5"><?php echo e($action); ?></span>
                     </li>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ol>
             </div>
-            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+            <?php endif; ?>
 
             
-            <!--[if BLOCK]><![endif]--><?php if(!empty($soilRemarks)): ?>
+            <?php if(!empty($soilRemarks)): ?>
             <div>
                 <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Soil Parameter Analysis</h2>
                 <div class="overflow-x-auto">
@@ -683,90 +683,90 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $paramLabels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <!--[if BLOCK]><![endif]--><?php if(!empty($soilRemarks[$key])): ?>
+                            <?php $__currentLoopData = $paramLabels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php if(!empty($soilRemarks[$key])): ?>
                             <tr class="border-b border-gray-100 dark:border-gray-700 <?php echo e($loop->even ? 'bg-gray-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-900'); ?>">
                                 <td class="px-3 py-3 font-semibold text-purple-700 dark:text-purple-400 text-xs align-top"><?php echo e($label); ?></td>
                                 <td class="px-3 py-3 text-gray-700 dark:text-gray-300 leading-relaxed text-xs"><?php echo e($soilRemarks[$key]); ?></td>
                             </tr>
-                            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                            <?php endif; ?>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>
                     </table>
                 </div>
             </div>
-            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+            <?php endif; ?>
 
             
-            <!--[if BLOCK]><![endif]--><?php if(!empty($aiOrganicAlts)): ?>
+            <?php if(!empty($aiOrganicAlts)): ?>
             <div>
                 <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Organic &amp; Low-Cost Alternatives</h2>
                 <ul class="space-y-2">
-                    <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $aiOrganicAlts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $alt): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php $__currentLoopData = $aiOrganicAlts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $alt): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <li class="flex gap-2 text-sm text-gray-700 dark:text-gray-300">
                         <span class="flex-shrink-0 text-green-500 font-bold text-xs mt-0.5"><?php echo e($idx + 1); ?>.</span>
                         <span class="leading-relaxed"><?php echo e($alt); ?></span>
                     </li>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
             </div>
-            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+            <?php endif; ?>
 
             
-            <!--[if BLOCK]><![endif]--><?php if(!empty($aiPractices)): ?>
+            <?php if(!empty($aiPractices)): ?>
             <div>
                 <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Good Farming Practices</h2>
                 <ol class="space-y-2 list-none">
-                    <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $aiPractices; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $practice): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php $__currentLoopData = $aiPractices; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $practice): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <li class="flex gap-2 text-sm text-gray-700 dark:text-gray-300">
                         <span class="flex-shrink-0 text-purple-500 font-bold text-xs mt-0.5"><?php echo e($idx + 1); ?>.</span>
                         <span class="leading-relaxed"><?php echo e($practice); ?></span>
                     </li>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ol>
             </div>
-            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+            <?php endif; ?>
 
             
-            <!--[if BLOCK]><![endif]--><?php if(!empty($aiMonitoring)): ?>
+            <?php if(!empty($aiMonitoring)): ?>
             <div>
                 <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Monitoring Plan</h2>
                 <ul class="space-y-2">
-                    <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $aiMonitoring; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php $__currentLoopData = $aiMonitoring; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <li class="flex gap-2 text-sm text-gray-700 dark:text-gray-300">
                         <span class="mt-1.5 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-blue-400"></span>
                         <span class="leading-relaxed"><?php echo e($item); ?></span>
                     </li>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
             </div>
-            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+            <?php endif; ?>
 
             
-            <!--[if BLOCK]><![endif]--><?php if(!empty($record->ai_expected_outcomes)): ?>
+            <?php if(!empty($record->ai_expected_outcomes)): ?>
             <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
                 <h2 class="text-xs font-bold text-green-800 dark:text-green-400 uppercase tracking-wide mb-2">Expected Outcomes</h2>
                 <p class="text-sm text-green-900 dark:text-green-200 leading-relaxed"><?php echo e($aiOutcomes); ?></p>
             </div>
-            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+            <?php endif; ?>
 
             
-            <!--[if BLOCK]><![endif]--><?php if(!empty($aiReminders)): ?>
+            <?php if(!empty($aiReminders)): ?>
             <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4">
                 <h2 class="text-xs font-bold text-red-800 dark:text-red-400 uppercase tracking-wide mb-2 flex items-center gap-2">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
                     Important Reminders
                 </h2>
                 <ul class="space-y-2 mt-1">
-                    <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $aiReminders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $reminder): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php $__currentLoopData = $aiReminders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $reminder): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <li class="flex gap-2 text-sm text-red-900 dark:text-red-200">
                         <span class="mt-1 flex-shrink-0 w-2 h-2 rounded-full bg-red-500"></span>
                         <span class="leading-relaxed"><?php echo e($reminder); ?></span>
                     </li>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
             </div>
-            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+            <?php endif; ?>
 
         </div>
 
@@ -776,11 +776,11 @@
             &nbsp;|&nbsp; Powered by Google Gemini AI
         </div>
     </div>
-    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+    <?php endif; ?>
 
     
 
-    <!--[if BLOCK]><![endif]--><?php if($record->expert_comments || $record->farmer_reply): ?>
+    <?php if($record->expert_comments || $record->farmer_reply): ?>
         <?php $isApproved = $record->validation_status === 'approved'; ?>
         <div id="conversation-thread" style="border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.13);border:1px solid #e2e8f0;">
             <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:linear-gradient(90deg,#1e293b 0%,#334155 100%);border-bottom:1px solid #475569;">
@@ -788,15 +788,15 @@
                     <path fill-rule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2H6z" clip-rule="evenodd"/>
                 </svg>
                 <span style="font-size:11px;font-weight:700;color:#f1f5f9;letter-spacing:0.5px;text-transform:uppercase;">Conversation Thread</span>
-                <!--[if BLOCK]><![endif]--><?php if($record->validation_status !== 'pending'): ?>
+                <?php if($record->validation_status !== 'pending'): ?>
                     <span style="margin-left:auto;display:inline-flex;align-items:center;padding:2px 10px;border-radius:999px;font-size:10px;font-weight:700;<?php echo e($isApproved ? 'background:#dcfce7;color:#15803d;' : 'background:#fee2e2;color:#b91c1c;'); ?>">
                         <?php echo e($isApproved ? '✓ Approved' : '✕ Disapproved'); ?>
 
                     </span>
-                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                <?php endif; ?>
             </div>
             <div style="max-height:280px;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:12px;background:#f1f5f9;">
-                <!--[if BLOCK]><![endif]--><?php if($record->expert_comments): ?>
+                <?php if($record->expert_comments): ?>
                     <div style="display:flex;justify-content:flex-start;align-items:flex-end;gap:8px;">
                         <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                             <svg style="width:14px;height:14px;color:white;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
@@ -805,24 +805,24 @@
                             <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
                                 <div>
                                     <span style="font-size:11px;font-weight:700;color:#1e40af;"><?php echo e($record->validator?->name ?? 'Expert'); ?></span>
-                                    <!--[if BLOCK]><![endif]--><?php if($record->validator?->agriculturalProfessional?->agency): ?>
+                                    <?php if($record->validator?->agriculturalProfessional?->agency): ?>
                                         <div style="font-size:10px;font-weight:600;color:#3b82f6;">Expert from <?php echo e($record->validator->agriculturalProfessional->agency); ?></div>
-                                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                    <?php endif; ?>
                                 </div>
                                 <span style="font-size:9px;font-weight:600;padding:1px 7px;border-radius:999px;background:#dbeafe;color:#1d4ed8;"><?php echo e($isApproved ? 'Recommendation' : 'Comments'); ?></span>
                             </div>
                             <div style="background:white;border-radius:0 12px 12px 12px;padding:10px 13px;box-shadow:0 1px 4px rgba(0,0,0,0.08);border-left:3px solid #3b82f6;">
                                 <p style="font-size:13px;color:#1e293b;line-height:1.55;margin:0;"><?php echo e($record->expert_comments); ?></p>
-                                <!--[if BLOCK]><![endif]--><?php if($record->validated_at): ?>
+                                <?php if($record->validated_at): ?>
                                     <span style="font-size:10px;color:#94a3b8;display:block;margin-top:6px;"><?php echo e($record->validated_at->format('M d, Y · h:i A')); ?></span>
-                                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
-                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                <?php endif; ?>
 
                 
-                <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $record->expertComments()->with('expert.agriculturalProfessional')->get(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $comment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php $__currentLoopData = $record->expertComments()->with('expert.agriculturalProfessional')->get(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $comment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <div style="display:flex;justify-content:flex-start;align-items:flex-end;gap:8px;">
                         <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                             <svg style="width:14px;height:14px;color:white;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
@@ -831,9 +831,9 @@
                             <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
                                 <div>
                                     <span style="font-size:11px;font-weight:700;color:#1e40af;"><?php echo e($comment->expert?->name ?? 'Expert'); ?></span>
-                                    <!--[if BLOCK]><![endif]--><?php if($comment->expert?->agriculturalProfessional?->agency): ?>
+                                    <?php if($comment->expert?->agriculturalProfessional?->agency): ?>
                                         <div style="font-size:10px;font-weight:600;color:#3b82f6;">Expert from <?php echo e($comment->expert->agriculturalProfessional->agency); ?></div>
-                                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                    <?php endif; ?>
                                 </div>
                                 <span style="font-size:9px;font-weight:600;padding:1px 7px;border-radius:999px;background:#dbeafe;color:#1d4ed8;">Recommendation</span>
                             </div>
@@ -843,9 +843,9 @@
                             </div>
                         </div>
                     </div>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-                <!--[if BLOCK]><![endif]--><?php if($record->farmer_reply): ?>
+                <?php if($record->farmer_reply): ?>
                     <div style="display:flex;justify-content:flex-end;align-items:flex-end;gap:8px;">
                         <div style="max-width:78%;">
                             <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:4px;">
@@ -857,11 +857,11 @@
                             </div>
                             <div style="background:linear-gradient(135deg,#fef9c3,#fde68a);border-radius:12px 0 12px 12px;padding:10px 13px;box-shadow:0 1px 4px rgba(0,0,0,0.08);border-right:3px solid #f59e0b;">
                                 <p style="font-size:13px;color:#1c1917;line-height:1.55;margin:0;"><?php echo e($record->farmer_reply); ?></p>
-                                <!--[if BLOCK]><![endif]--><?php if($record->farmer_reply_date): ?>
+                                <?php if($record->farmer_reply_date): ?>
                                     <span style="font-size:10px;color:#78716c;display:block;margin-top:6px;text-align:right;">
                                         <?php echo e($record->farmer_reply_date->format('M d, Y · h:i A')); ?> <em>via CofSys App</em>
                                     </span>
-                                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                <?php endif; ?>
                             </div>
                         </div>
                         <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -872,10 +872,10 @@
                     <div style="text-align:center;padding:6px 0;">
                         <span style="font-size:11px;color:#64748b;font-style:italic;background:#e2e8f0;padding:4px 14px;border-radius:999px;">⏳ Awaiting farmer's response via mobile app…</span>
                     </div>
-                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                <?php endif; ?>
             </div>
         </div>
-    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+    <?php endif; ?>
 
 </div>
 <?php /**PATH /var/www/html/CapstoneProject/resources/views/filament/resources/soil-analysis/view-modal.blade.php ENDPATH**/ ?>

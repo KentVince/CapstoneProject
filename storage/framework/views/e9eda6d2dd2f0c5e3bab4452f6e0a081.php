@@ -38,7 +38,7 @@
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['alignment' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($hasNotifications ? null : Alignment::Center),'close-button' => true,'description' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($hasNotifications ? null : __('filament-notifications::database.modal.empty.description')),'heading' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($hasNotifications ? null : __('filament-notifications::database.modal.empty.heading')),'icon' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($hasNotifications ? null : 'heroicon-o-bell-slash'),'icon-alias' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($hasNotifications ? null : 'notifications::database.modal.empty-state'),'icon-color' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($hasNotifications ? null : 'gray'),'id' => 'database-notifications','slide-over' => true,'sticky-header' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($hasNotifications),'width' => 'md']); ?>
-    <!--[if BLOCK]><![endif]--><?php if($hasNotifications): ?>
+    <?php if($hasNotifications): ?>
          <?php $__env->slot('header', null, []); ?> 
             <div>
                 <?php if (isset($component)) { $__componentOriginal29c6950974cc8bc0fb132203607bcdfe = $component; } ?>
@@ -92,7 +92,7 @@
                 'border-b border-gray-200 dark:border-white/10' => $isPaginated,
             ]); ?>"
         >
-            <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $notifications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $notification): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <?php $__currentLoopData = $notifications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $notification): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div
                     class="<?php echo \Illuminate\Support\Arr::toCssClasses([
                         'relative before:absolute before:start-0 before:h-full before:w-0.5 before:bg-primary-600 dark:before:bg-primary-500' => $notification->unread(),
@@ -101,10 +101,10 @@
                     <?php echo e($this->getNotification($notification)->inline()); ?>
 
                 </div>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </div>
 
-        <!--[if BLOCK]><![endif]--><?php if($isPaginated): ?>
+        <?php if($isPaginated): ?>
              <?php $__env->slot('footer', null, []); ?> 
                 <?php if (isset($component)) { $__componentOriginal0c287a00f29f01c8f977078ff96faed4 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal0c287a00f29f01c8f977078ff96faed4 = $attributes; } ?>
@@ -127,8 +127,8 @@
 <?php unset($__componentOriginal0c287a00f29f01c8f977078ff96faed4); ?>
 <?php endif; ?>
              <?php $__env->endSlot(); ?>
-        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
-    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+        <?php endif; ?>
+    <?php endif; ?>
  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal0942a211c37469064369f887ae8d1cef)): ?>

@@ -11,17 +11,17 @@ $scrollIntoViewJsSnippet = ($scrollTo !== false)
 ?>
 
 <div>
-    <!--[if BLOCK]><![endif]--><?php if($paginator->hasPages()): ?>
+    <?php if($paginator->hasPages()): ?>
         <nav role="navigation" aria-label="Pagination Navigation" class="flex justify-between">
             <span>
                 
-                <!--[if BLOCK]><![endif]--><?php if($paginator->onFirstPage()): ?>
+                <?php if($paginator->onFirstPage()): ?>
                     <span class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 cursor-default leading-5 rounded-md dark:text-gray-600 dark:bg-gray-800 dark:border-gray-600">
                         <?php echo __('pagination.previous'); ?>
 
                     </span>
                 <?php else: ?>
-                    <!--[if BLOCK]><![endif]--><?php if(method_exists($paginator,'getCursorName')): ?>
+                    <?php if(method_exists($paginator,'getCursorName')): ?>
                         <button type="button" dusk="previousPage" wire:key="cursor-<?php echo e($paginator->getCursorName()); ?>-<?php echo e($paginator->previousCursor()->encode()); ?>" wire:click="setPage('<?php echo e($paginator->previousCursor()->encode()); ?>','<?php echo e($paginator->getCursorName()); ?>')" x-on:click="<?php echo e($scrollIntoViewJsSnippet); ?>" wire:loading.attr="disabled" class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 leading-5 rounded-md hover:text-gray-500 focus:outline-none focus:ring ring-blue-300 focus:border-blue-300 active:bg-gray-100 active:text-gray-700 transition ease-in-out duration-150 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:focus:border-blue-700 dark:active:bg-gray-700 dark:active:text-gray-300">
                                 <?php echo __('pagination.previous'); ?>
 
@@ -32,14 +32,14 @@ $scrollIntoViewJsSnippet = ($scrollTo !== false)
                                 <?php echo __('pagination.previous'); ?>
 
                         </button>
-                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
-                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endif; ?>
+                <?php endif; ?>
             </span>
 
             <span>
                 
-                <!--[if BLOCK]><![endif]--><?php if($paginator->hasMorePages()): ?>
-                    <!--[if BLOCK]><![endif]--><?php if(method_exists($paginator,'getCursorName')): ?>
+                <?php if($paginator->hasMorePages()): ?>
+                    <?php if(method_exists($paginator,'getCursorName')): ?>
                         <button type="button" dusk="nextPage" wire:key="cursor-<?php echo e($paginator->getCursorName()); ?>-<?php echo e($paginator->nextCursor()->encode()); ?>" wire:click="setPage('<?php echo e($paginator->nextCursor()->encode()); ?>','<?php echo e($paginator->getCursorName()); ?>')" x-on:click="<?php echo e($scrollIntoViewJsSnippet); ?>" wire:loading.attr="disabled" class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 leading-5 rounded-md hover:text-gray-500 focus:outline-none focus:ring ring-blue-300 focus:border-blue-300 active:bg-gray-100 active:text-gray-700 transition ease-in-out duration-150 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:focus:border-blue-700 dark:active:bg-gray-700 dark:active:text-gray-300">
                                 <?php echo __('pagination.next'); ?>
 
@@ -49,15 +49,15 @@ $scrollIntoViewJsSnippet = ($scrollTo !== false)
                                 <?php echo __('pagination.next'); ?>
 
                         </button>
-                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endif; ?>
                 <?php else: ?>
                     <span class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 cursor-default leading-5 rounded-md dark:text-gray-600 dark:bg-gray-800 dark:border-gray-600">
                         <?php echo __('pagination.next'); ?>
 
                     </span>
-                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                <?php endif; ?>
             </span>
         </nav>
-    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+    <?php endif; ?>
 </div>
 <?php /**PATH /var/www/html/CapstoneProject/vendor/livewire/livewire/src/Features/SupportPagination/views/simple-tailwind.blade.php ENDPATH**/ ?>

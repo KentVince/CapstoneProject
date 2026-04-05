@@ -13,21 +13,21 @@
 <?php endif; ?>
 <?php $component->withAttributes(['id' => 'pest-disease-approval-modal','x-model' => 'isOpen','width' => '3xl','@close' => 'isOpen = false; $wire.closeModal()']); ?>
          <?php $__env->slot('heading', null, []); ?> 
-            <!--[if BLOCK]><![endif]--><?php if($record): ?>
+            <?php if($record): ?>
                 Detection: <?php echo e($record->pest); ?>
 
             <?php else: ?>
                 Pest/Disease Approval
-            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+            <?php endif; ?>
          <?php $__env->endSlot(); ?>
 
-        <!--[if BLOCK]><![endif]--><?php if($record): ?>
+        <?php if($record): ?>
             <div class="space-y-4 dark:bg-custom-color-darkmode">
                 
                 <div class="flex flex-col md:flex-row gap-6 pt-2">
                     
                     <div class="flex-shrink-0">
-                        <!--[if BLOCK]><![endif]--><?php if($record->image_path): ?>
+                        <?php if($record->image_path): ?>
                             <img
                                 src="<?php echo e(\Illuminate\Support\Facades\Storage::disk('public')->url($record->image_path)); ?>"
                                 alt="Detection Image"
@@ -39,7 +39,7 @@
                             <div class="flex items-center justify-center w-48 h-48 bg-gray-100 dark:bg-gray-800 rounded-lg">
                                 <span class="text-gray-400 text-sm">No image</span>
                             </div>
-                        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                        <?php endif; ?>
 
                         
                         <div class="mt-3 flex justify-center">
@@ -52,21 +52,21 @@
                                 $statusColor = $statusColors[$record->validation_status] ?? $statusColors['pending'];
                             ?>
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold <?php echo e($statusColor); ?>">
-                                <!--[if BLOCK]><![endif]--><?php if($record->validation_status === 'approved'): ?>
+                                <?php if($record->validation_status === 'approved'): ?>
                                     <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
                                 <?php elseif($record->validation_status === 'disapproved'): ?>
                                     <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                                 <?php else: ?>
                                     <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path></svg>
-                                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                <?php endif; ?>
                                 <?php echo e(ucfirst($record->validation_status)); ?>
 
                             </span>
                         </div>
 
-                        <!--[if BLOCK]><![endif]--><?php if($record->image_path): ?>
+                        <?php if($record->image_path): ?>
                             <p class="text-xs text-gray-400 text-center mt-1">Click image to enlarge</p>
-                        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                        <?php endif; ?>
                     </div>
 
                     
@@ -112,7 +112,7 @@
                 </div>
 
                 
-                <!--[if BLOCK]><![endif]--><?php if($record->validation_status === 'disapproved' && $record->expert_comments): ?>
+                <?php if($record->validation_status === 'disapproved' && $record->expert_comments): ?>
                     <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 rounded-lg">
                         <h4 class="text-xs font-medium text-red-800 dark:text-red-300 flex items-center">
                             <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -122,10 +122,10 @@
                         </h4>
                         <p class="text-sm text-red-700 dark:text-red-200 mt-2"><?php echo e($record->expert_comments); ?></p>
                     </div>
-                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                <?php endif; ?>
 
                 
-                <!--[if BLOCK]><![endif]--><?php if($record->image_path): ?>
+                <?php if($record->image_path): ?>
                     <div
                         x-show="showLightbox"
                         x-transition:enter="transition ease-out duration-200"
@@ -163,11 +163,11 @@
 
                         </div>
                     </div>
-                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                <?php endif; ?>
             </div>
 
             
-            <!--[if BLOCK]><![endif]--><?php if($record->validation_status === 'pending'): ?>
+            <?php if($record->validation_status === 'pending'): ?>
                 <div class="mt-6 space-y-4">
                     <?php echo e($this->form); ?>
 
@@ -264,10 +264,10 @@
 <?php unset($__componentOriginal6330f08526bbb3ce2a0da37da512a11f); ?>
 <?php endif; ?>
                 </div>
-            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+            <?php endif; ?>
         <?php else: ?>
             <p class="text-gray-500">No record found.</p>
-        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+        <?php endif; ?>
      <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal0942a211c37469064369f887ae8d1cef)): ?>

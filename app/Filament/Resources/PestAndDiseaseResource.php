@@ -46,8 +46,8 @@ class PestAndDiseaseResource extends Resource
     protected static ?string $model = PestAndDisease::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-bug-ant';
-    protected static ?string $navigationLabel = 'Records';
-    protected static ?string $pluralLabel = 'Records';
+    protected static ?string $navigationLabel = 'Detections';
+    protected static ?string $pluralLabel = 'Detections';
     protected static ?string $navigationGroup = 'Pest and Disease';
     protected static ?int $navigationSort = 1;
 
@@ -66,31 +66,35 @@ class PestAndDiseaseResource extends Resource
     }
 
     /**
-     * Get the navigation badge showing count of pending detections
+     * Get the navigation badge showing count of pending detections (cached 15s)
      */
     public static function getNavigationBadge(): ?string
     {
         $userId = auth()->id();
+        $user   = auth()->user();
 
-        $query = static::getModel()::where('validation_status', 'pending')
-            ->whereNotExists(function ($q) use ($userId) {
-                $q->from('admin_record_views')
-                    ->whereColumn('record_id', 'pest_and_disease.case_id')
-                    ->where('record_type', 'pest_disease')
-                    ->where('user_id', $userId);
-            });
+        $cacheKey = "pest_badge_{$userId}";
 
-        $user = auth()->user();
-        if ($user && $user->isAgriculturalProfessional()) {
-            $professional = $user->agriculturalProfessional;
-            if ($professional && $professional->agency === 'MAGRO' && $professional->municipality) {
-                $appNos = \App\Models\Farmer::where('farmer_address_mun', $professional->municipality)
-                    ->pluck('app_no');
-                $query->whereIn('app_no', $appNos);
+        $count = \Illuminate\Support\Facades\Cache::remember($cacheKey, 15, function () use ($userId, $user) {
+            $query = static::getModel()::where('validation_status', 'pending')
+                ->whereNotExists(function ($q) use ($userId) {
+                    $q->from('admin_record_views')
+                        ->whereColumn('record_id', 'pest_and_disease.case_id')
+                        ->where('record_type', 'pest_disease')
+                        ->where('user_id', $userId);
+                });
+
+            if ($user && $user->isAgriculturalProfessional()) {
+                $professional = $user->agriculturalProfessional;
+                if ($professional && $professional->agency === 'MAGRO' && $professional->municipality) {
+                    $appNos = \App\Models\Farmer::where('farmer_address_mun', $professional->municipality)
+                        ->pluck('app_no');
+                    $query->whereIn('app_no', $appNos);
+                }
             }
-        }
 
-        $count = $query->count();
+            return $query->count();
+        });
 
         return $count > 0 ? (string) $count : null;
     }

@@ -77,7 +77,7 @@
     <?php echo e($attributes->class(['fi-ta-col-wrp'])); ?>
 
 >
-    <!--[if BLOCK]><![endif]--><?php if(($url || ($recordUrl && $action === null)) && (! $isClickDisabled)): ?>
+    <?php if(($url || ($recordUrl && $action === null)) && (! $isClickDisabled)): ?>
         <a
             <?php echo e(\Filament\Support\generate_href_html($url ?: $recordUrl, $url ? $shouldOpenUrlInNewTab : $shouldOpenRecordUrlInNewTab)); ?>
 
@@ -116,6 +116,6 @@
             <?php echo e($slot); ?>
 
         </div>
-    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+    <?php endif; ?>
 </div>
 <?php /**PATH /var/www/html/CapstoneProject/vendor/filament/tables/resources/views/components/columns/column.blade.php ENDPATH**/ ?>

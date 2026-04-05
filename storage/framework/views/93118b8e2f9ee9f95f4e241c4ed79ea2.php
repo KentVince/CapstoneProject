@@ -10,7 +10,7 @@
     <?php endif; ?>
     class="flex"
 >
-    <!--[if BLOCK]><![endif]--><?php if($trigger = $this->getTrigger()): ?>
+    <?php if($trigger = $this->getTrigger()): ?>
         <?php if (isset($component)) { $__componentOriginala1a91060fadd74fb878e2f256cecda43 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala1a91060fadd74fb878e2f256cecda43 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament-notifications::components.database.trigger','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
@@ -33,7 +33,7 @@
 <?php $component = $__componentOriginala1a91060fadd74fb878e2f256cecda43; ?>
 <?php unset($__componentOriginala1a91060fadd74fb878e2f256cecda43); ?>
 <?php endif; ?>
-    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+    <?php endif; ?>
 
     <?php if (isset($component)) { $__componentOriginal1e32cd8671689eb44c5c643f889012d2 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal1e32cd8671689eb44c5c643f889012d2 = $attributes; } ?>
@@ -56,7 +56,7 @@
 <?php unset($__componentOriginal1e32cd8671689eb44c5c643f889012d2); ?>
 <?php endif; ?>
 
-    <!--[if BLOCK]><![endif]--><?php if($broadcastChannel = $this->getBroadcastChannel()): ?>
+    <?php if($broadcastChannel = $this->getBroadcastChannel()): ?>
         <?php if (isset($component)) { $__componentOriginal96a851ddbb0e30dc41386b42158028e7 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal96a851ddbb0e30dc41386b42158028e7 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament-notifications::components.database.echo','data' => ['channel' => $broadcastChannel]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
@@ -77,6 +77,6 @@
 <?php $component = $__componentOriginal96a851ddbb0e30dc41386b42158028e7; ?>
 <?php unset($__componentOriginal96a851ddbb0e30dc41386b42158028e7); ?>
 <?php endif; ?>
-    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+    <?php endif; ?>
 </div>
 <?php /**PATH /var/www/html/CapstoneProject/vendor/filament/notifications/resources/views/database-notifications.blade.php ENDPATH**/ ?>

@@ -22,9 +22,9 @@
     <?php echo e($attributes->class(['fi-no-notification-actions flex gap-x-3'])); ?>
 
 >
-    <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $actions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $action): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+    <?php $__currentLoopData = $actions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $action): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
         <?php echo e($action); ?>
 
-    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 </div>
 <?php /**PATH /var/www/html/CapstoneProject/vendor/filament/notifications/resources/views/components/actions.blade.php ENDPATH**/ ?>

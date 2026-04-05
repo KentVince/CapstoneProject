@@ -49,14 +49,18 @@ class SoilAnalysisResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         $userId = auth()->id();
-        $count = static::getModel()::where('validation_status', 'pending')
-            ->whereNotExists(function ($q) use ($userId) {
-                $q->from('admin_record_views')
-                    ->whereColumn('record_id', 'soil_analysis.id')
-                    ->where('record_type', 'soil_analysis')
-                    ->where('user_id', $userId);
-            })
-            ->count();
+
+        $count = \Illuminate\Support\Facades\Cache::remember("soil_badge_{$userId}", 15, function () use ($userId) {
+            return static::getModel()::where('validation_status', 'pending')
+                ->whereNotExists(function ($q) use ($userId) {
+                    $q->from('admin_record_views')
+                        ->whereColumn('record_id', 'soil_analysis.id')
+                        ->where('record_type', 'soil_analysis')
+                        ->where('user_id', $userId);
+                })
+                ->count();
+        });
+
         return $count > 0 ? (string) $count : null;
     }
 

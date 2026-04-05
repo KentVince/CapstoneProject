@@ -18,9 +18,9 @@ class PestAndDiseaseCategoryResource extends Resource
 {
     protected static ?string $model = PestAndDiseaseCategory::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-folder';
+    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
     protected static ?string $navigationGroup = 'Pest and Disease';
-    protected static ?string $navigationLabel = 'Categories';
+    protected static ?string $navigationLabel = 'List';
     protected static ?string $pluralLabel = 'Categories';
     protected static ?int $navigationSort = 1;
 

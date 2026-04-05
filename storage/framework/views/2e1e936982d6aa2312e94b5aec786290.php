@@ -3,7 +3,7 @@
     $hasQr = $farmer && $farmer->qr_code && Storage::disk('public')->exists($farmer->qr_code);
 ?>
 
-<!--[if BLOCK]><![endif]--><?php if($hasQr): ?>
+<?php if($hasQr): ?>
 
     <div class=" flex items-center justify-center" x-data="{ open: false }">
         
@@ -115,5 +115,5 @@
     </div>
 <?php else: ?>
     <span class="text-gray-400 text-xs italic">No QR</span>
-<?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+<?php endif; ?>
 <?php /**PATH /var/www/html/CapstoneProject/resources/views/components/qr-inline.blade.php ENDPATH**/ ?>

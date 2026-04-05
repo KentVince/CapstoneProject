@@ -34,21 +34,21 @@
     <?php echo e($attributes->class(['fi-ta-table w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5'])); ?>
 
 >
-    <!--[if BLOCK]><![endif]--><?php if($header): ?>
+    <?php if($header): ?>
         <thead class="divide-y divide-gray-200 dark:divide-white/5">
-            <!--[if BLOCK]><![endif]--><?php if($headerGroups): ?>
+            <?php if($headerGroups): ?>
                 <tr class="bg-gray-100 dark:bg-transparent">
                     <?php echo e($headerGroups); ?>
 
                 </tr>
-            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+            <?php endif; ?>
 
             <tr class="bg-gray-50 dark:bg-white/5">
                 <?php echo e($header); ?>
 
             </tr>
         </thead>
-    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+    <?php endif; ?>
 
     <tbody
         <?php if($reorderable): ?>
@@ -62,13 +62,13 @@
 
     </tbody>
 
-    <!--[if BLOCK]><![endif]--><?php if($footer): ?>
+    <?php if($footer): ?>
         <tfoot class="bg-gray-50 dark:bg-white/5">
             <tr>
                 <?php echo e($footer); ?>
 
             </tr>
         </tfoot>
-    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+    <?php endif; ?>
 </table>
 <?php /**PATH /var/www/html/CapstoneProject/vendor/filament/tables/resources/views/components/table.blade.php ENDPATH**/ ?>

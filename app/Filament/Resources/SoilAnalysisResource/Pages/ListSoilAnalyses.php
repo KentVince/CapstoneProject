@@ -13,16 +13,18 @@ class ListSoilAnalyses extends ListRecords
 {
     protected static string $resource = SoilAnalysisResource::class;
 
-    // Auto-refresh table every 3 seconds when Flutter syncs new data
+    // Auto-refresh table every 15 seconds when Flutter syncs new data
     protected function getTablePollingInterval(): ?string
     {
-        return '3s';
+        return '15s';
     }
 
     protected function getHeaderActions(): array
     {
         return [
             Actions\CreateAction::make()
+                ->color('gray')
+                ->icon('heroicon-o-plus')
                 ->modalWidth('7xl')
                 ->successRedirectUrl(fn ($record) => SoilAnalysisResource::getUrl('index') . '?viewRecord=' . $record->id),
         ];
