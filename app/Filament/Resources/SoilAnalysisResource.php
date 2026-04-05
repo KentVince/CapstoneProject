@@ -197,14 +197,18 @@ class SoilAnalysisResource extends Resource
                             ]),
 
                             Forms\Components\FileUpload::make('lab_file')
-                                ->label('Laboratory Analysis File')
-                                ->helperText('Upload the laboratory analysis result (image or PDF).')
+                                ->label('Laboratory Analysis Images')
+                                ->helperText('Upload one or more images of the laboratory analysis result. Drag to reorder.')
                                 ->disk('public')
                                 ->directory('soil-lab-files')
-                                ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'application/pdf'])
+                                ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
                                 ->maxSize(10240)
+                                ->multiple()
+                                ->reorderable()
                                 ->downloadable()
                                 ->previewable()
+                                ->imagePreviewHeight('150')
+                                ->panelLayout('grid')
                                 ->columnSpanFull()
                                 ->visible(fn (Forms\Get $get) => $get('analysis_type') === 'with_lab'),
                         ]),
@@ -491,7 +495,7 @@ class SoilAnalysisResource extends Resource
                                             return;
                                         }
 
-                                        $draft = app(GeminiService::class)->generateSoilRecommendation([
+                                        $soilData = [
                                             'soil_type'      => $record->soil_type,
                                             'crop_variety'   => $record->crop_variety,
                                             'ph_level'       => $record->ph_level,
@@ -502,17 +506,30 @@ class SoilAnalysisResource extends Resource
                                             'farm_name'      => $record->farm_name,
                                             'location'       => $record->location,
                                             'analysis_type'  => $record->analysis_type,
+                                        ];
+
+                                        $fields = app(GeminiService::class)->generateSoilFields($soilData);
+
+                                        $record->update([
+                                            'ai_diagnosis'            => $fields['diagnosis'],
+                                            'ai_farmer_summary'       => $fields['farmer_summary'],
+                                            'ai_key_concerns'         => $fields['key_concerns'],
+                                            'ai_priority_actions'     => $fields['priority_actions'],
+                                            'ai_soil_remarks'         => $fields['soil_remarks'],
+                                            'ai_organic_alternatives' => $fields['organic_alternatives'],
+                                            'ai_practices'            => $fields['practices'],
+                                            'ai_monitoring_plan'      => $fields['monitoring_plan'],
+                                            'ai_expected_outcomes'    => $fields['expected_outcomes'],
+                                            'ai_reminders'            => $fields['reminders'],
                                         ]);
 
-                                        $record->update(['recommendation' => $draft]);
-
                                         Notification::make()
-                                            ->title('AI Draft Generated')
-                                            ->body('The AI recommendation is now displayed in the Soil Analysis Report PDF viewer.')
+                                            ->title('AI Recommendation Generated')
+                                            ->body('The AI recommendation is now displayed in the modal.')
                                             ->success()
                                             ->send();
                                     })
-                                    ->visible(fn () => $record->validation_status === 'pending'),
+                                    ->visible(fn () => $record->analysis_type !== 'without_lab'),
 
                             ])
                             ->modalFooterActionsAlignment(\Filament\Support\Enums\Alignment::Center),

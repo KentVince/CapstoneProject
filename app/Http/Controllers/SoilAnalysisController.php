@@ -146,11 +146,19 @@ class SoilAnalysisController extends Controller
                         'phosphorus' => $analysis->phosphorus,
                         'potassium' => $analysis->potassium,
                         'organic_matter' => $analysis->organic_matter,
-                        'lab_file_url' => $analysis->lab_file
-                            ? url('storage/' . $analysis->lab_file)
+                        // lab_file is now an array of paths; expose both array and
+                        // single (first) for backward-compat with older Flutter builds
+                        'lab_file_urls' => collect($analysis->lab_file ?? [])
+                            ->map(fn($p) => url('storage/' . $p))
+                            ->values()->all(),
+                        'lab_file_relatives' => collect($analysis->lab_file ?? [])
+                            ->map(fn($p) => 'storage/' . $p)
+                            ->values()->all(),
+                        'lab_file_url' => !empty($analysis->lab_file)
+                            ? url('storage/' . $analysis->lab_file[0])
                             : null,
-                        'lab_file_relative' => $analysis->lab_file
-                            ? 'storage/' . $analysis->lab_file
+                        'lab_file_relative' => !empty($analysis->lab_file)
+                            ? 'storage/' . $analysis->lab_file[0]
                             : null,
                         'recommendation' => $analysis->recommendation,
                         'validation_status' => $analysis->validation_status,
@@ -499,8 +507,11 @@ class SoilAnalysisController extends Controller
             'phosphorus' => $analysis->phosphorus,
             'potassium' => $analysis->potassium,
             'organic_matter' => $analysis->organic_matter,
-            'lab_file_url' => $analysis->lab_file
-                ? url('storage/' . $analysis->lab_file)
+            'lab_file_urls' => collect($analysis->lab_file ?? [])
+                ->map(fn($p) => url('storage/' . $p))
+                ->values()->all(),
+            'lab_file_url' => !empty($analysis->lab_file)
+                ? url('storage/' . $analysis->lab_file[0])
                 : null,
             'recommendation' => $analysis->recommendation,
             'validation_status' => $analysis->validation_status,

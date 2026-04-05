@@ -250,7 +250,7 @@ class PestAndDiseaseResource extends Resource
                                         return;
                                     }
 
-                                    $recommendation = app(GeminiService::class)->generatePestRecommendation([
+                                    $fields = app(GeminiService::class)->generatePestFields([
                                         'pest'       => $record->pest,
                                         'type'       => $record->type,
                                         'severity'   => $record->severity,
@@ -261,7 +261,15 @@ class PestAndDiseaseResource extends Resource
                                             : now()->format('Y-m-d'),
                                     ]);
 
-                                    $record->update(['ai_recommendation' => $recommendation]);
+                                    $record->update([
+                                        'ai_description'        => $fields['description'],
+                                        'ai_symptoms'           => $fields['symptoms'],
+                                        'ai_causes'             => $fields['causes'],
+                                        'ai_impact'             => $fields['impact'],
+                                        'ai_action_plan'        => $fields['action_plan'],
+                                        'ai_immediate_response' => $fields['immediate_response'],
+                                        'ai_long_term_strategy' => $fields['long_term_strategy'],
+                                    ]);
 
                                     Notification::make()
                                         ->title('AI Recommendation Generated')

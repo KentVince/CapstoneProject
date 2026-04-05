@@ -22,11 +22,13 @@ class Bulletin extends Model
         'category',
         'title',
         'content',
+        'attachments',
         'notification_sent',
     ];
 
     protected $casts = [
         'notification_sent' => 'boolean',
         'date_posted'       => 'date',
+        'attachments'       => 'array',
     ];
 }

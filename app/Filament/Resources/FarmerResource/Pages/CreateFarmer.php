@@ -116,7 +116,7 @@ class CreateFarmer extends CreateRecord
         $qrPath = "farmers_qr/{$farmer->app_no}.png";
 
         $saved = QrCodeService::generate(
-            "CAFARM Farmer: {$farmer->app_no}\nName: {$farmer->first_name} {$farmer->last_name}",
+            "CofSys Farmer: {$farmer->app_no}\nName: {$farmer->first_name} {$farmer->last_name}",
             $qrPath
         );
 

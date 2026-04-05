@@ -559,66 +559,218 @@
         </div>
     </div>
 
-    {{-- ── Soil Analysis Report PDF Viewer (always visible) ────────────────── --}}
-    @if($record->recommendation)
-        <div class="rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 shadow-md">
+    {{-- ── AI Recommendation (structured) ───────────────────────────────── --}}
+    @php
+        // If ai_diagnosis looks like raw JSON (parse fallback), re-parse it now for display
+        $aiDiagnosis       = $record->ai_diagnosis ?? '';
+        $aiFarmerSummary   = $record->ai_farmer_summary ?? '';
+        $aiKeyConcerns     = is_array($record->ai_key_concerns) ? $record->ai_key_concerns : [];
+        $aiPriorityActions = is_array($record->ai_priority_actions) ? $record->ai_priority_actions : [];
+        $aiSoilRemarks     = is_array($record->ai_soil_remarks) ? $record->ai_soil_remarks : [];
+        $aiOrganicAlts     = is_array($record->ai_organic_alternatives) ? $record->ai_organic_alternatives : [];
+        $aiPractices       = is_array($record->ai_practices) ? $record->ai_practices : [];
+        $aiMonitoring      = is_array($record->ai_monitoring_plan) ? $record->ai_monitoring_plan : [];
+        $aiOutcomes        = $record->ai_expected_outcomes ?? '';
+        $aiReminders       = is_array($record->ai_reminders) ? $record->ai_reminders : [];
 
-            {{-- Toolbar --}}
-            <div class="flex items-center justify-between bg-gray-700 dark:bg-gray-900 px-4 py-2">
-                <div class="flex items-center gap-2 text-white text-xs font-medium">
-                    <svg class="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
-                    </svg>
-                    <span>AI Recommendation — {{ $record->farm_name ?? 'Farm' }}</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button type="button"
-                        onclick="(function(){
-                            var v=document.getElementById('rec-viewer-{{ $record->id }}'),b=document.getElementById('rec-expand-btn-{{ $record->id }}');
-                            if(v.style.maxHeight==='none'){v.style.maxHeight='520px';b.textContent='Expand';}
-                            else{v.style.maxHeight='none';b.textContent='Collapse';}
-                        })()"
-                        id="rec-expand-btn-{{ $record->id }}"
-                        class="text-xs text-gray-300 hover:text-white bg-gray-600 hover:bg-gray-500 px-2 py-1 rounded transition">
-                        Expand
-                    </button>
-                    <button type="button"
-                        onclick="(function(){
-                            var c=document.getElementById('rec-viewer-{{ $record->id }}').innerText,w=window.open('','_blank');
-                            w.document.write('<html><head><title>Soil Analysis Report</title><style>body{font-family:monospace;font-size:13px;padding:24px;white-space:pre;}</style></head><body>'+c+'</body></html>');
-                            w.document.close();w.print();
-                        })()"
-                        class="text-xs text-gray-300 hover:text-white bg-gray-600 hover:bg-gray-500 px-2 py-1 rounded transition flex items-center gap-1">
-                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd"/></svg>
-                        Print
-                    </button>
-                </div>
-            </div>
+        // Detect if ai_diagnosis contains raw JSON and re-parse
+        if (!empty($aiDiagnosis) && str_starts_with(ltrim($aiDiagnosis), '{')) {
+            $reparsed = json_decode($aiDiagnosis, true, 512, JSON_INVALID_UTF8_IGNORE);
+            if (is_array($reparsed)) {
+                $aiDiagnosis       = $reparsed['diagnosis']            ?? $aiDiagnosis;
+                $aiFarmerSummary   = $reparsed['farmer_summary']       ?? $aiFarmerSummary;
+                $aiKeyConcerns     = $reparsed['key_concerns']         ?? $aiKeyConcerns;
+                $aiPriorityActions = $reparsed['priority_actions']     ?? $aiPriorityActions;
+                $aiSoilRemarks     = $reparsed['soil_remarks']         ?? $aiSoilRemarks;
+                $aiOrganicAlts     = $reparsed['organic_alternatives'] ?? $aiOrganicAlts;
+                $aiPractices       = $reparsed['practices']            ?? $aiPractices;
+                $aiMonitoring      = $reparsed['monitoring_plan']      ?? $aiMonitoring;
+                $aiOutcomes        = $reparsed['expected_outcomes']    ?? $aiOutcomes;
+                $aiReminders       = $reparsed['reminders']            ?? $aiReminders;
+            }
+        }
 
-            {{-- Page area --}}
-            <div class="bg-gray-200 dark:bg-gray-700 px-4 py-3 overflow-y-auto"
-                 style="max-height: 520px;"
-                 id="rec-viewer-{{ $record->id }}">
-                <div class="bg-white dark:bg-gray-900 shadow-lg rounded mx-auto px-6 py-6"
-                     style="max-width: 860px; min-height: 400px;">
-                    <pre class="text-xs leading-relaxed text-gray-800 dark:text-gray-200 whitespace-pre overflow-x-auto"
-                         style="font-family: 'Courier New', Courier, monospace;">{{ $record->recommendation }}</pre>
-                </div>
-            </div>
+        $hasAi = !empty($aiDiagnosis) || !empty($aiFarmerSummary)
+               || !empty($aiKeyConcerns) || !empty($aiPriorityActions) || !empty($aiPractices);
+        $soilRemarks = is_array($aiSoilRemarks) ? $aiSoilRemarks : [];
+        $paramLabels = ['ph' => 'Soil pH', 'om' => 'Organic Matter', 'n' => 'Nitrogen (N)', 'p' => 'Phosphorus (P)', 'k' => 'Potassium (K)'];
+    @endphp
 
-            {{-- Footer bar --}}
-            <div class="bg-gray-700 dark:bg-gray-900 px-4 py-1 text-center text-xs text-gray-400">
-                <span class="inline-flex items-center gap-1">
-                    <svg class="w-3 h-3 text-purple-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg>
-                    <span class="font-medium text-purple-300">Powered by Google Gemini AI</span>
-                </span>
-                &nbsp;|&nbsp; Generated on:
-                <span class="font-medium text-gray-200">{{ $record->updated_at?->format('M d, Y · h:i A') ?? 'N/A' }}</span>
+    @if($hasAi)
+    <div class="rounded-xl overflow-hidden border border-purple-200 dark:border-purple-800 shadow-md mt-2">
+
+        {{-- Header --}}
+        <div class="flex items-center justify-between px-5 py-3 bg-gradient-to-r from-purple-700 to-purple-900">
+            <div class="flex items-center gap-2 text-white text-sm font-semibold">
+                <svg class="w-4 h-4 text-purple-300" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+                </svg>
+                AI Soil Analysis Recommendation — {{ $record->farm_name ?? 'Farm' }}
             </div>
+            <span class="text-xs text-purple-300">Powered by Google Gemini AI</span>
         </div>
+
+        <div class="bg-white dark:bg-gray-900 px-6 py-5 space-y-6">
+
+            {{-- 1. Farmer Summary --}}
+            @if(!empty($record->ai_farmer_summary))
+            <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4">
+                <h2 class="text-sm font-bold text-yellow-800 dark:text-yellow-300 uppercase tracking-wide mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                    Summary for the Farmer
+                </h2>
+                <p class="text-sm text-yellow-900 dark:text-yellow-200 leading-relaxed">{{ $aiFarmerSummary }}</p>
+            </div>
+            @endif
+
+            {{-- 2. Diagnosis --}}
+            @if(!empty($record->ai_diagnosis))
+            <div>
+                <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Soil Diagnosis</h2>
+                <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{{ $aiDiagnosis }}</p>
+            </div>
+            @endif
+
+            {{-- 3. Key Concerns --}}
+            @if(!empty($aiKeyConcerns))
+            <div>
+                <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Key Concerns</h2>
+                <ul class="space-y-2">
+                    @foreach($aiKeyConcerns as $concern)
+                    <li class="flex gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <span class="mt-1 flex-shrink-0 w-2 h-2 rounded-full bg-red-400"></span>
+                        <span class="leading-relaxed">{{ $concern }}</span>
+                    </li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+
+            {{-- 4. Priority Actions --}}
+            @if(!empty($aiPriorityActions))
+            <div>
+                <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Priority Actions</h2>
+                <ol class="space-y-2 list-none">
+                    @foreach($aiPriorityActions as $idx => $action)
+                    <li class="flex gap-3 text-sm text-gray-700 dark:text-gray-300">
+                        <span class="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">{{ $idx + 1 }}</span>
+                        <span class="leading-relaxed pt-0.5">{{ $action }}</span>
+                    </li>
+                    @endforeach
+                </ol>
+            </div>
+            @endif
+
+            {{-- 5. Soil Parameter Remarks --}}
+            @if(!empty($soilRemarks))
+            <div>
+                <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Soil Parameter Analysis</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-purple-700 text-white">
+                                <th class="text-left px-3 py-2 font-semibold text-xs w-32">Parameter</th>
+                                <th class="text-left px-3 py-2 font-semibold text-xs">Remarks &amp; Recommendation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($paramLabels as $key => $label)
+                            @if(!empty($soilRemarks[$key]))
+                            <tr class="border-b border-gray-100 dark:border-gray-700 {{ $loop->even ? 'bg-gray-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-900' }}">
+                                <td class="px-3 py-3 font-semibold text-purple-700 dark:text-purple-400 text-xs align-top">{{ $label }}</td>
+                                <td class="px-3 py-3 text-gray-700 dark:text-gray-300 leading-relaxed text-xs">{{ $soilRemarks[$key] }}</td>
+                            </tr>
+                            @endif
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @endif
+
+            {{-- 6. Organic Alternatives --}}
+            @if(!empty($aiOrganicAlts))
+            <div>
+                <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Organic &amp; Low-Cost Alternatives</h2>
+                <ul class="space-y-2">
+                    @foreach($aiOrganicAlts as $idx => $alt)
+                    <li class="flex gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <span class="flex-shrink-0 text-green-500 font-bold text-xs mt-0.5">{{ $idx + 1 }}.</span>
+                        <span class="leading-relaxed">{{ $alt }}</span>
+                    </li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+
+            {{-- 7. Good Farming Practices --}}
+            @if(!empty($aiPractices))
+            <div>
+                <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Good Farming Practices</h2>
+                <ol class="space-y-2 list-none">
+                    @foreach($aiPractices as $idx => $practice)
+                    <li class="flex gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <span class="flex-shrink-0 text-purple-500 font-bold text-xs mt-0.5">{{ $idx + 1 }}.</span>
+                        <span class="leading-relaxed">{{ $practice }}</span>
+                    </li>
+                    @endforeach
+                </ol>
+            </div>
+            @endif
+
+            {{-- 8. Monitoring Plan --}}
+            @if(!empty($aiMonitoring))
+            <div>
+                <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Monitoring Plan</h2>
+                <ul class="space-y-2">
+                    @foreach($aiMonitoring as $item)
+                    <li class="flex gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <span class="mt-1.5 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                        <span class="leading-relaxed">{{ $item }}</span>
+                    </li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+
+            {{-- 9. Expected Outcomes --}}
+            @if(!empty($record->ai_expected_outcomes))
+            <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
+                <h2 class="text-xs font-bold text-green-800 dark:text-green-400 uppercase tracking-wide mb-2">Expected Outcomes</h2>
+                <p class="text-sm text-green-900 dark:text-green-200 leading-relaxed">{{ $aiOutcomes }}</p>
+            </div>
+            @endif
+
+            {{-- 10. Reminders --}}
+            @if(!empty($aiReminders))
+            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4">
+                <h2 class="text-xs font-bold text-red-800 dark:text-red-400 uppercase tracking-wide mb-2 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                    Important Reminders
+                </h2>
+                <ul class="space-y-2 mt-1">
+                    @foreach($aiReminders as $reminder)
+                    <li class="flex gap-2 text-sm text-red-900 dark:text-red-200">
+                        <span class="mt-1 flex-shrink-0 w-2 h-2 rounded-full bg-red-500"></span>
+                        <span class="leading-relaxed">{{ $reminder }}</span>
+                    </li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+
+        </div>
+
+        {{-- Footer --}}
+        <div class="bg-purple-900 px-5 py-2 text-center text-xs text-purple-300">
+            Generated on: <span class="font-medium text-white">{{ $record->updated_at?->format('M d, Y · h:i A') ?? 'N/A' }}</span>
+            &nbsp;|&nbsp; Powered by Google Gemini AI
+        </div>
+    </div>
     @endif
 
     {{-- ── Conversation Thread (Expert ↔ Farmer) ───────────────────────────── --}}
+
     @if($record->expert_comments || $record->farmer_reply)
         @php $isApproved = $record->validation_status === 'approved'; @endphp
         <div id="conversation-thread" style="border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.13);border:1px solid #e2e8f0;">
@@ -697,7 +849,7 @@
                                 <p style="font-size:13px;color:#1c1917;line-height:1.55;margin:0;">{{ $record->farmer_reply }}</p>
                                 @if($record->farmer_reply_date)
                                     <span style="font-size:10px;color:#78716c;display:block;margin-top:6px;text-align:right;">
-                                        {{ $record->farmer_reply_date->format('M d, Y · h:i A') }} <em>via CAFARM App</em>
+                                        {{ $record->farmer_reply_date->format('M d, Y · h:i A') }} <em>via CofSys App</em>
                                     </span>
                                 @endif
                             </div>

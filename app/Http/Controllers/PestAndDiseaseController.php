@@ -525,6 +525,8 @@ public function store(Request $request)
             'id'     => $detection->case_id,
             'case_id' => $detection->case_id,
             'app_no' => $detection->app_no,
+            'farm_id' => $detection->farm_id,
+            'farmer_id' => $detection->farmer_id,
             'expert_id' => $detection->expert_id,
             'pest' => $detection->pest,
             'type' => $detection->type,

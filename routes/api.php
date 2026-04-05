@@ -107,12 +107,26 @@ Route::post('/test-upload', function (Request $request) {
 
 
 Route::get('/mobile/announcements', function () {
-    return response()->json([
-        'success' => true,
-        'data' => Bulletin::orderBy('created_at', 'desc')
-            ->where('notification_sent', true) // only published ones
-            ->get(['bulletin_id as id', 'category', 'title', 'content', 'date_posted']),
-    ]);
+    $items = Bulletin::orderBy('created_at', 'desc')
+        ->where('notification_sent', true)
+        ->get(['bulletin_id', 'category', 'title', 'content', 'date_posted', 'attachments'])
+        ->map(function ($item) {
+            $attachments = collect($item->attachments ?? [])
+                ->map(fn($path) => [
+                    'url'      => url('storage/' . $path),
+                    'path'     => $path,
+                    'is_image' => preg_match('/\.(jpg|jpeg|png|webp|gif)$/i', $path) === 1,
+                ])->values()->all();
+            return [
+                'id'          => $item->bulletin_id,
+                'category'    => $item->category,
+                'title'       => $item->title,
+                'content'     => $item->content,
+                'date_posted' => $item->date_posted,
+                'attachments' => $attachments,
+            ];
+        });
+    return response()->json(['success' => true, 'data' => $items]);
 });
 
 // 📱 ========================
@@ -343,6 +357,21 @@ Route::post('/mobile/login', function (Request $request) {
     // Farmer login
     $farmer = Farmer::with('farm')->find($user->farmer_id);
 
+    // Resolve barangay and municipality codes → human-readable names
+    $farmerBrgyName = Barangay::where('code', $farmer->farmer_address_bgy)->value('barangay')
+        ?? $farmer->farmer_address_bgy;
+    $farmerMunName = Municipality::where('code', $farmer->farmer_address_mun)->value('municipality')
+        ?? $farmer->farmer_address_mun;
+
+    $farmBrgyName = optional($farmer->farm)->farmer_address_bgy
+        ? (Barangay::where('code', $farmer->farm->farmer_address_bgy)->value('barangay')
+            ?? $farmer->farm->farmer_address_bgy)
+        : null;
+    $farmMunName = optional($farmer->farm)->farmer_address_mun
+        ? (Municipality::where('code', $farmer->farm->farmer_address_mun)->value('municipality')
+            ?? $farmer->farm->farmer_address_mun)
+        : null;
+
     return response()->json([
         'message' => 'Login successful',
         'user_type' => 'farmer',
@@ -359,13 +388,16 @@ Route::post('/mobile/login', function (Request $request) {
             'name' => trim("{$farmer->last_name}, {$farmer->first_name} {$farmer->middle_name}"),
             'last_name' => $farmer->last_name ?? '',
             'first_name' => $farmer->first_name ?? '',
-            'barangay' => $farmer->farmer_address_bgy,
+            'barangay' => $farmerBrgyName,
+            'municipality' => $farmerMunName,
             'farm' => [
                 'id' => optional($farmer->farm)->id ?? '',
                 'farm_name' => optional($farmer->farm)->farm_name ?? 'N/A',
                 'crop_area' => optional($farmer->farm)->crop_area ?? '',
                 'latitude' => optional($farmer->farm)->latitude ?? null,
                 'longitude' => optional($farmer->farm)->longtitude ?? null,
+                'barangay' => $farmBrgyName,
+                'municipality' => $farmMunName,
             ],
         ],
     ]);

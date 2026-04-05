@@ -47,7 +47,7 @@ class EditFarmer extends EditRecord
         if (empty($farmer->qr_code) || !Storage::disk('public')->exists($farmer->qr_code)) {
             try {
                 $qrPath = "farmers_qr/{$farmer->app_no}.png";
-                $data = "CAFARM Farmer: {$farmer->app_no}\nName: {$farmer->first_name} {$farmer->last_name}";
+                $data = "CofSys Farmer: {$farmer->app_no}\nName: {$farmer->first_name} {$farmer->last_name}";
 
                 $result = QrCodeService::generate($data, $qrPath);
 

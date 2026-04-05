@@ -41,7 +41,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->favicon(asset('images/CAFARM_LOGO.png'))
+            ->favicon(asset('images/CofSys_LOGO.png'))
             ->brandLogo(asset('images/favicon.png'))
             ->brandLogoHeight('80px')
             ->sidebarCollapsibleOnDesktop()

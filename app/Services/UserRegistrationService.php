@@ -173,7 +173,7 @@ class UserRegistrationService
                 ->margin(1)
                 ->errorCorrection('H')
                 ->generate(
-                    "CAFARM Professional: {$professional->app_no}\nName: {$professional->firstname} {$professional->lastname}",
+                    "CofSys Professional: {$professional->app_no}\nName: {$professional->firstname} {$professional->lastname}",
                     $fullPath
                 );
 

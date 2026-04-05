@@ -49,7 +49,15 @@ class GeminiService
                 if ($json) {
                     return json_encode($json, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
                 }
-                return $result['text'];
+                // Gemini responded but JSON parsing failed — wrap in minimal valid JSON
+                // so the blade view can always display something meaningful.
+                return json_encode([
+                    'farmer_summary'     => $result['text'],
+                    'description'        => '',
+                    'symptoms'           => [],
+                    'causes'             => [],
+                    'treatment_protocol' => [],
+                ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             }
 
             if (in_array($result['code'], [429, 404])) {
@@ -58,10 +66,137 @@ class GeminiService
                 continue;
             }
 
-            return $result['text'];
+            return json_encode([
+                'farmer_summary'     => $result['text'],
+                'description'        => '',
+                'symptoms'           => [],
+                'causes'             => [],
+                'treatment_protocol' => [],
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
 
-        return 'All available Gemini models are currently rate-limited. Please wait a minute and try again.';
+        return json_encode([
+            'farmer_summary'     => 'All available Gemini models are currently rate-limited. Please wait a minute and try again.',
+            'description'        => '',
+            'symptoms'           => [],
+            'causes'             => [],
+            'treatment_protocol' => [],
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
+    /**
+     * Generate structured AI fields saved as separate DB columns.
+     * Returns an array with keys: description, symptoms, causes, impact,
+     * action_plan, immediate_response, long_term_strategy.
+     */
+    public function generatePestFields(array $pestData): array
+    {
+        $empty = [
+            'description'        => '',
+            'symptoms'           => [],
+            'causes'             => [],
+            'impact'             => '',
+            'action_plan'        => [],
+            'immediate_response' => [],
+            'long_term_strategy' => [],
+        ];
+
+        if (empty($this->apiKey)) {
+            return $empty;
+        }
+
+        $prompt  = $this->buildPestFieldsPrompt($pestData);
+        $payload = $this->buildPestPayload($prompt);
+
+        $modelsToTry = array_unique(array_merge([$this->model], $this->fallbackModels));
+
+        foreach ($modelsToTry as $model) {
+            $result = $this->callApi($model, $payload);
+
+            if ($result['success']) {
+                $json = $this->parseJson($result['text']);
+                if ($json && is_array($json)) {
+                    return [
+                        'description'        => $json['description']        ?? '',
+                        'symptoms'           => $json['symptoms']           ?? [],
+                        'causes'             => $json['causes']             ?? [],
+                        'impact'             => $json['impact']             ?? '',
+                        'action_plan'        => $json['action_plan']        ?? [],
+                        'immediate_response' => $json['immediate_response'] ?? [],
+                        'long_term_strategy' => $json['long_term_strategy'] ?? [],
+                    ];
+                }
+                // Parse failed — put raw text in impact so something shows
+                return array_merge($empty, ['impact' => $result['text']]);
+            }
+
+            if (in_array($result['code'], [429, 404])) {
+                Log::warning("GeminiService (fields): {$result['code']} on {$model}, trying next...");
+                if ($result['code'] === 429) sleep(3);
+                continue;
+            }
+
+            return array_merge($empty, ['impact' => $result['text']]);
+        }
+
+        return array_merge($empty, [
+            'impact' => 'All available Gemini models are currently rate-limited. Please wait a minute and try again.',
+        ]);
+    }
+
+    protected function buildPestFieldsPrompt(array $data): string
+    {
+        $pest     = $data['pest']     ?? 'Unknown';
+        $type     = $data['type']     ?? 'Unknown';
+        $severity = $data['severity'] ?? 'Unknown';
+        $area     = $data['area']     ?? 'Unknown location';
+        $date     = $data['date']     ?? date('Y-m-d');
+        $conf     = isset($data['confidence']) ? $data['confidence'] . '%' : 'N/A';
+
+        return <<<PROMPT
+A Philippine coffee farmer detected the following pest or disease. Generate a structured management guide.
+
+Detection:
+- Pest / Disease: {$pest} ({$type})
+- Severity: {$severity}
+- Farm Location: {$area}
+- Date Detected: {$date}
+- Detection Confidence: {$conf}
+
+Return ONLY valid raw JSON with exactly these 7 keys — no markdown, no extra text:
+{
+  "description": "2-3 sentences describing what {$pest} is: its nature (insect/fungus/bacteria/virus), how it attacks Philippine coffee plants, and its economic importance to Filipino farmers.",
+  "symptoms": [
+    "Visible symptom 1 — specific part of the plant affected and what it looks like",
+    "Visible symptom 2",
+    "Visible symptom 3",
+    "Visible symptom 4"
+  ],
+  "causes": [
+    "Primary cause or pathogen (scientific name if applicable)",
+    "Environmental condition that triggers or worsens the problem",
+    "Farm management factor that contributes to infestation"
+  ],
+  "impact": "2-3 sentences explaining the current impact of {$severity} severity {$pest} on the coffee plants, what will happen if left untreated, and the potential crop and economic loss for the farmer.",
+  "action_plan": [
+    "Action 1 — something the farmer can do immediately within the next few hours using items already on the farm",
+    "Action 2 — first product or home remedy to buy or prepare, with how to apply it",
+    "Action 3 — how to isolate or protect unaffected coffee trees"
+  ],
+  "immediate_response": [
+    "Step 1: Specific treatment step with product name, application rate, and method. Give both a chemical and an organic option where possible.",
+    "Step 2: Follow-up treatment or monitoring step",
+    "Step 3: Sanitation or cultural practice to stop spread",
+    "Step 4: Safety precaution when applying treatment"
+  ],
+  "long_term_strategy": [
+    "Long-term cultural practice to prevent {$pest} recurrence on Philippine coffee farms — specific and seasonal",
+    "Monitoring schedule or early warning sign to watch for each season",
+    "Companion crop, pruning, or soil health practice to build farm resilience",
+    "When to contact the Municipal Agricultural Officer or DA extension worker"
+  ]
+}
+PROMPT;
     }
 
     protected function buildPestPayload(string $prompt): array
@@ -118,6 +253,18 @@ Write a comprehensive, farmer-friendly recommendation. The farmer may have limit
 
 Return ONLY valid raw JSON — no markdown, no extra text:
 {
+  "description": "2-3 sentences describing what {$pest} is — its nature (insect/fungus/bacteria), how it attacks Philippine coffee plants, and its general economic importance.",
+  "symptoms": [
+    "Visible symptom 1 observable on the coffee plant — be specific (which part of the plant, what it looks like)",
+    "Visible symptom 2",
+    "Visible symptom 3",
+    "Visible symptom 4"
+  ],
+  "causes": [
+    "Primary cause or pathogen responsible for {$pest} — scientific name if applicable",
+    "Environmental or cultural condition that triggers or worsens the infestation",
+    "Secondary contributing factor (e.g. farm management practice, weather, soil)"
+  ],
   "diagnosis": "2-3 sentences: what is happening, the severity level's impact on the coffee plants, and what will occur if untreated. Be specific to {$pest} on Philippine coffee.",
   "urgency": "Low|Moderate|High|Critical",
   "urgency_reason": "One sentence explaining the urgency level based on the {$severity} severity of {$pest}.",
@@ -375,6 +522,101 @@ REPORT;
         return 'All available Gemini models are currently rate-limited. Please wait a minute and try again.';
     }
 
+
+    public function generateSoilFields(array $soilData): array
+    {
+        $empty = [
+            'diagnosis'             => '',
+            'farmer_summary'        => '',
+            'key_concerns'          => [],
+            'priority_actions'      => [],
+            'soil_remarks'          => [],
+            'organic_alternatives'  => [],
+            'practices'             => [],
+            'monitoring_plan'       => [],
+            'expected_outcomes'     => '',
+            'reminders'             => [],
+        ];
+
+        if (empty($this->apiKey)) {
+            return $empty;
+        }
+
+        // Pre-calculate ratings same as generateSoilRecommendation
+        $ph = is_numeric($soilData['ph_level']       ?? null) ? (float) $soilData['ph_level']       : null;
+        $om = is_numeric($soilData['organic_matter'] ?? null) ? (float) $soilData['organic_matter'] : null;
+        $n  = is_numeric($soilData['nitrogen']       ?? null) ? (float) $soilData['nitrogen']       : null;
+        $p  = is_numeric($soilData['phosphorus']     ?? null) ? (float) $soilData['phosphorus']     : null;
+        $k  = is_numeric($soilData['potassium']      ?? null) ? (float) $soilData['potassium']      : null;
+
+        $ratings = [
+            'ph' => $this->rateSoilPh($ph),
+            'om' => $this->rateSoilOm($om),
+            'n'  => $this->rateSoilN($n),
+            'p'  => $this->rateSoilP($p),
+            'k'  => $this->rateSoilK($k),
+        ];
+        $nums = compact('ph', 'om', 'n', 'p', 'k');
+
+        $prompt  = $this->buildPrompt($soilData, $ratings, $nums);
+        $payload = $this->buildPayload($prompt);
+
+        $modelsToTry = array_unique(array_merge([$this->model], $this->fallbackModels));
+
+        foreach ($modelsToTry as $model) {
+            $result = $this->callApi($model, $payload);
+
+            if ($result['success']) {
+                $json = $this->parseJson($result['text']);
+                if ($json && is_array($json)) {
+                    return [
+                        'diagnosis'            => $json['diagnosis']            ?? '',
+                        'farmer_summary'       => $json['farmer_summary']       ?? '',
+                        'key_concerns'         => $json['key_concerns']         ?? [],
+                        'priority_actions'     => $json['priority_actions']     ?? [],
+                        'soil_remarks'         => $json['soil_remarks']         ?? [],
+                        'organic_alternatives' => $json['organic_alternatives'] ?? [],
+                        'practices'            => $json['practices']            ?? [],
+                        'monitoring_plan'      => $json['monitoring_plan']      ?? [],
+                        'expected_outcomes'    => $json['expected_outcomes']    ?? '',
+                        'reminders'            => $json['reminders']            ?? [],
+                    ];
+                }
+                // Last resort: extract individual scalar fields via regex
+                $raw = $result['text'];
+                $extracted = $empty;
+                foreach (['diagnosis', 'farmer_summary', 'expected_outcomes'] as $key) {
+                    if (preg_match('/"' . $key . '"\s*:\s*"((?:[^"\\\n]|\\.)*)"/s', $raw, $m)) {
+                        $extracted[$key] = stripslashes($m[1]);
+                    }
+                }
+                foreach (['key_concerns', 'priority_actions', 'organic_alternatives', 'practices', 'monitoring_plan', 'reminders'] as $key) {
+                    if (preg_match('/"' . $key . '"\s*:\s*(\[[\s\S]*?\])/s', $raw, $m)) {
+                        $arr = json_decode($m[1], true, 512, JSON_INVALID_UTF8_IGNORE);
+                        if (is_array($arr)) $extracted[$key] = $arr;
+                    }
+                }
+                if (preg_match('/"soil_remarks"\s*:\s*(\{[\s\S]*?\})/s', $raw, $m)) {
+                    $obj = json_decode($m[1], true, 512, JSON_INVALID_UTF8_IGNORE);
+                    if (is_array($obj)) $extracted['soil_remarks'] = $obj;
+                }
+                return $extracted;
+            }
+
+            if (in_array($result['code'], [429, 404])) {
+                Log::warning("GeminiService (soilFields): {$result['code']} on {$model}, trying next...");
+                if ($result['code'] === 429) sleep(3);
+                continue;
+            }
+
+            return array_merge($empty, ['diagnosis' => $result['text']]);
+        }
+
+        return array_merge($empty, [
+            'diagnosis' => 'All available Gemini models are currently rate-limited. Please wait a minute and try again.',
+        ]);
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     //  API CALL
     // ─────────────────────────────────────────────────────────────────────────
@@ -428,7 +670,7 @@ REPORT;
             ]],
             'generationConfig' => [
                 'temperature'     => 0.15,
-                'maxOutputTokens' => 4000,
+                'maxOutputTokens' => 6000,
             ],
         ];
     }
@@ -550,15 +792,42 @@ PROMPT;
         $text = preg_replace('/\s*```$/m', '', $text);
         $text = trim($text);
 
+
+        // 1) Direct decode
         $decoded = json_decode($text, true);
         if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
             return $decoded;
         }
 
-        // Try to extract a JSON object if surrounded by extra text
+        // 1b) Try with invalid UTF-8 handling
+        $decoded = json_decode($text, true, 512, JSON_INVALID_UTF8_IGNORE);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return $decoded;
+        }
+
+        // 2) Fix trailing commas then decode
+        $fixed = preg_replace('/,\s*([\}\]])/m', '$1', $text);
+        $decoded = json_decode($fixed, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return $decoded;
+        }
+
+        // 2b) Fix trailing commas + UTF-8
+        $decoded = json_decode($fixed, true, 512, JSON_INVALID_UTF8_IGNORE);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return $decoded;
+        }
+
+        // 3) Extract outermost JSON object, then try decode + trailing-comma fix
         if (preg_match('/\{[\s\S]+\}/s', $text, $matches)) {
-            $decoded = json_decode($matches[0], true);
-            if (json_last_error() === JSON_ERROR_NONE) {
+            $extracted = $matches[0];
+            $decoded = json_decode($extracted, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return $decoded;
+            }
+            $fixed = preg_replace('/,\s*([\}\]])/m', '$1', $extracted);
+            $decoded = json_decode($fixed, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                 return $decoded;
             }
         }

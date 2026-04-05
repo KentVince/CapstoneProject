@@ -61,6 +61,13 @@ class PestAndDisease extends Model
         'validation_status',
         'expert_comments',
         'ai_recommendation',
+        'ai_description',
+        'ai_symptoms',
+        'ai_causes',
+        'ai_impact',
+        'ai_action_plan',
+        'ai_immediate_response',
+        'ai_long_term_strategy',
         'validated_by',
         'validated_at',
         'farmer_action',
@@ -77,10 +84,15 @@ class PestAndDisease extends Model
     ];
 
     protected $casts = [
-        'options' => 'array',
-        'validated_at' => 'datetime',
-        'farmer_action_date' => 'datetime',
-        'admin_viewed_at' => 'datetime',
+        'options'               => 'array',
+        'ai_symptoms'           => 'array',
+        'ai_causes'             => 'array',
+        'ai_action_plan'        => 'array',
+        'ai_immediate_response' => 'array',
+        'ai_long_term_strategy' => 'array',
+        'validated_at'          => 'datetime',
+        'farmer_action_date'    => 'datetime',
+        'admin_viewed_at'       => 'datetime',
     ];
 
     /**

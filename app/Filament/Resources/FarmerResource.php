@@ -204,7 +204,7 @@ public static function table(Table $table): Table
                                 if (empty($record->qr_code) || !Storage::disk('public')->exists($record->qr_code)) {
                                     try {
                                         $filePath = "farmers_qr/{$record->app_no}.png";
-                                        $data = "CAFARM Farmer: {$record->app_no}\nName: {$record->first_name} {$record->last_name}";
+                                        $data = "CofSys Farmer: {$record->app_no}\nName: {$record->first_name} {$record->last_name}";
 
                                         $result = QrCodeService::generate($data, $filePath);
 

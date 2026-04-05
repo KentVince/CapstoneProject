@@ -439,7 +439,7 @@ $printData = [
                 +'.ft{margin-top:20px;border-top:1px solid #e5e7eb;padding-top:6px;font-size:9px;color:#9ca3af;text-align:center}'
                 +'@media print{body{margin:8px 16px}}';
             var h='\x3C!DOCTYPE html\x3E\x3Chtml\x3E\x3Chead\x3E\x3Cmeta charset=\x22utf-8\x22\x3E\x3Ctitle\x3EPest Report\x3C\/title\x3E\x3Cstyle\x3E'+css+'\x3C\/style\x3E\x3C\/head\x3E\x3Cbody\x3E';
-            h+='\x3Ch1\x3E&#9749; CAFARM \u2014 Pest &amp; Disease Detection Report\x3C\/h1\x3E';
+            h+='\x3Ch1\x3E&#9749; CofSys \u2014 Pest &amp; Disease Detection Report\x3C\/h1\x3E';
             h+='\x3Ch2\x3ECase Information\x3C\/h2\x3E\x3Cdiv class=\x22ig\x22\x3E';
             var flds=[
                 ['Pest \/ Disease',e(d.pest)+(d.scientificName?'\x3Cbr\x3E\x3Cem style=\x22font-size:10px;font-weight:400;color:#6b7280\x22\x3E'+e(d.scientificName)+'\x3C\/em\x3E':'')],
@@ -511,7 +511,7 @@ $printData = [
                 h+='\x3Cdiv class=\x22fb\x22\x3E'+e(d.farmerAction)+'\x3C\/div\x3E';
                 if(d.farmerActionDate)h+='\x3Cp style=\x22font-size:10px;color:#6b7280\x22\x3ESubmitted on '+e(d.farmerActionDate)+'\x3C\/p\x3E';
             }
-            h+='\x3Cdiv class=\x22ft\x22\x3ECAFARM \u2014 Coffee Agri-Farming Management System &nbsp;|&nbsp; Generated on '+e(d.generatedAt)+'\x3C\/div\x3E';
+            h+='\x3Cdiv class=\x22ft\x22\x3ECofSys \u2014 Coffee Agri-Farming Management System &nbsp;|&nbsp; Generated on '+e(d.generatedAt)+'\x3C\/div\x3E';
             h+='\x3C\/body\x3E\x3C\/html\x3E';
             var w=window.open('','_blank');
             w.document.write(h);
@@ -569,27 +569,16 @@ $printData = [
         {{-- Right: Details Grid --}}
         <div class="flex-1 grid grid-cols-3 gap-3">
             <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Pest / Disease</h4>
-                <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{{ $record->pest }}</p>
-                @if($info)
-                    <p class="mt-0.5 text-xs text-gray-400 italic">{{ $info['scientific_name'] }}</p>
-                @endif
-            </div>
-
-            <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Type</h4>
-                <p class="mt-1">
-                    @php
-                        $typeColors = [
-                            'pest'    => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-                            'disease' => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
-                        ];
-                        $typeColor = $typeColors[$record->type] ?? 'bg-gray-100 text-gray-800';
-                    @endphp
-                    <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium {{ $typeColor }}">
-                        {{ ucfirst($record->type ?? 'N/A') }}
-                    </span>
+                <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Pest Incidence</h4>
+                <p class="mt-1 text-sm font-bold text-gray-900 dark:text-white">
+                    {{ $pestIncidence !== null ? number_format($pestIncidence, 1) . '%' : '—' }}
                 </p>
+                @if($incidenceRating && $incidenceColors)
+                    <span class="inline-flex px-2 py-0.5 rounded text-xs font-semibold mt-0.5"
+                          style="background:{{ $incidenceColors['badge_bg'] }};color:{{ $incidenceColors['badge_txt'] }};">
+                        {{ $incidenceColors['icon'] }} {{ $incidenceRating }}
+                    </span>
+                @endif
             </div>
 
             <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
@@ -608,6 +597,22 @@ $printData = [
                     @endphp
                     <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium {{ $severityColor }}">
                         {{ $record->severity }}
+                    </span>
+                </p>
+            </div>
+
+            <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Type</h4>
+                <p class="mt-1">
+                    @php
+                        $typeColors = [
+                            'pest'    => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                            'disease' => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+                        ];
+                        $typeColor = $typeColors[$record->type] ?? 'bg-gray-100 text-gray-800';
+                    @endphp
+                    <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium {{ $typeColor }}">
+                        {{ ucfirst($record->type ?? 'N/A') }}
                     </span>
                 </p>
             </div>
@@ -897,307 +902,182 @@ $printData = [
         </div>
     @endif
 
-    {{-- ── AI Recommendation (Tabbed) ──────────────────────────────────────── --}}
+    {{-- ── AI Recommendation ──────────────────────────────────────────────── --}}
     @php
-        $aiJson = null;
-        if ($record->ai_recommendation) {
-            $raw = $record->ai_recommendation;
-            // Strip markdown code fences Gemini may include
-            $raw = preg_replace('/^```(?:json)?\s*/m', '', $raw);
-            $raw = preg_replace('/\s*```$/m', '', $raw);
-            $raw = trim($raw);
-            // Extract JSON object if surrounded by extra text
-            if (preg_match('/\{[\s\S]+\}/s', $raw, $m)) {
-                $raw = $m[0];
-            }
-            $decoded = json_decode($raw, true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                $aiJson = $decoded;
-            }
-        }
-        $aiTabs = ['Diagnosis', 'Immediate Actions', 'Treatment Protocol', 'Schedule', 'Products Needed', 'Prevention', 'Warnings'];
+        $hasAi = !empty($record->ai_description)
+               || !empty($record->ai_symptoms)
+               || !empty($record->ai_causes)
+               || !empty($record->ai_impact)
+               || !empty($record->ai_action_plan)
+               || !empty($record->ai_immediate_response)
+               || !empty($record->ai_long_term_strategy);
     @endphp
 
-    @if($aiJson || $record->ai_recommendation)
-        @php
-            $urgency   = $aiJson['urgency'] ?? null;
-            $urgBgMap  = ['Low' => '#dcfce7', 'Moderate' => '#fef9c3', 'High' => '#ffedd5', 'Critical' => '#fee2e2'];
-            $urgTxtMap = ['Low' => '#166534', 'Moderate' => '#854d0e', 'High' => '#9a3412', 'Critical' => '#991b1b'];
-            $urgBg     = $urgBgMap[$urgency]  ?? '#ede9fe';
-            $urgTxt    = $urgTxtMap[$urgency] ?? '#5b21b6';
-        @endphp
+    @if($hasAi)
 
-        {{-- PDF-style document viewer --}}
+        {{-- Document viewer --}}
         <div class="rounded-xl overflow-hidden border border-gray-300 dark:border-gray-600 shadow-md">
 
             {{-- Toolbar --}}
             <div class="flex items-center justify-between bg-gray-700 dark:bg-gray-900 px-4 py-2">
                 <div class="flex items-center gap-2 text-white text-xs font-medium">
-                    <svg class="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                    <svg class="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
                     </svg>
                     <span>AI Recommendation — {{ $record->pest ?? 'Pest & Disease' }}</span>
-                    @if($urgency)
-                        <span class="px-2 py-0.5 rounded-full text-xs font-bold"
-                              style="background:{{ $urgBg }}; color:{{ $urgTxt }}">
-                            {{ $urgency }} Urgency
-                        </span>
-                    @endif
                 </div>
                 <div class="flex items-center gap-2">
-                    {{-- Expand / Collapse --}}
-                    <button
-                        type="button"
-                        onclick="
-                            var v = document.getElementById('ai-pdf-viewer-{{ $record->id }}');
-                            var b = document.getElementById('ai-pdf-expand-btn-{{ $record->id }}');
-                            if (v.style.maxHeight === 'none') {
-                                v.style.maxHeight = '540px';
-                                b.textContent = 'Expand';
-                            } else {
-                                v.style.maxHeight = 'none';
-                                b.textContent = 'Collapse';
-                            }"
-                        id="ai-pdf-expand-btn-{{ $record->id }}"
+                    <button type="button"
+                        onclick="var v=document.getElementById('ai-doc-{{ $record->id }}'),b=document.getElementById('ai-exp-{{ $record->id }}');if(v.style.maxHeight==='none'){v.style.maxHeight='600px';b.textContent='Expand';}else{v.style.maxHeight='none';b.textContent='Collapse';}"
+                        id="ai-exp-{{ $record->id }}"
                         class="text-xs text-gray-300 hover:text-white bg-gray-600 hover:bg-gray-500 px-2 py-1 rounded transition">
                         Expand
                     </button>
-                    {{-- Print button --}}
-                    <button
-                        type="button"
-                        @click.stop.prevent="printReport()"
+                    <button type="button" @click.stop.prevent="printReport()"
                         class="text-xs text-gray-300 hover:text-white bg-gray-600 hover:bg-gray-500 px-2 py-1 rounded transition flex items-center gap-1">
-                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd"/>
-                        </svg>
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd"/></svg>
                         Print
                     </button>
                 </div>
             </div>
 
-            {{-- Paper viewer --}}
+            {{-- Paper --}}
             <div class="bg-gray-200 dark:bg-gray-700 px-4 py-4 overflow-y-auto"
-                 style="max-height: 540px;"
-                 id="ai-pdf-viewer-{{ $record->id }}">
+                 style="max-height:600px;" id="ai-doc-{{ $record->id }}">
                 <div class="bg-white shadow-lg rounded mx-auto"
-                     style="max-width: 720px; min-height: 420px; padding: 28px 32px; font-family: 'Segoe UI', Arial, sans-serif;">
+                     style="max-width:720px; min-height:420px; padding:32px 36px; font-family:'Segoe UI',Arial,sans-serif;">
 
-                    @if($aiJson)
-                        {{-- Document header --}}
-                        <div style="border-bottom: 2px solid #7c3aed; padding-bottom: 12px; margin-bottom: 18px;">
-                            <div style="font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #9ca3af; margin-bottom: 4px;">
-                                CAFARM — AI-Generated Pest &amp; Disease Recommendation
-                            </div>
-                            <div style="font-size: 17px; font-weight: 800; color: #4c1d95;">
-                                {{ $record->pest ?? 'Pest & Disease' }}
-                                @if(!empty($aiJson['urgency']))
-                                    <span style="font-size: 11px; font-weight: 600; background: {{ $urgBg }}; color: {{ $urgTxt }}; padding: 2px 10px; border-radius: 20px; margin-left: 8px; vertical-align: middle;">
-                                        {{ $aiJson['urgency'] }} Urgency
-                                    </span>
+                    @php
+                        $hs = "font-size:13px; font-weight:800; color:#1e5631; margin:0 0 8px 0; padding-bottom:5px; border-bottom:2px solid #1e5631; text-transform:uppercase; letter-spacing:0.5px;";
+                    @endphp
+
+                        {{-- Document Title --}}
+                        <div style="text-align:center; border-bottom:3px solid #1e5631; padding-bottom:16px; margin-bottom:26px;">
+                            <p style="font-size:9px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#9ca3af; margin:0 0 4px 0;">
+                                CofSys &mdash; Coffee Agri-Farming Management System
+                            </p>
+                            <h1 style="font-size:18px; font-weight:900; color:#1e5631; margin:0 0 4px 0;">
+                                Pest &amp; Disease Management Recommendation
+                            </h1>
+                            <p style="font-size:14px; font-weight:700; color:#374151; margin:0 0 10px 0;">
+                                {{ $record->pest ?? "Unknown Pest" }}
+                                @if($record->type)
+                                    <span style="font-weight:400; color:#6b7280;">({{ ucfirst($record->type) }})</span>
                                 @endif
-                            </div>
-                            <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">
-                                Powered by Google Gemini AI &nbsp;·&nbsp; Generated: {{ now()->format('F d, Y') }}
-                            </div>
+                            </p>
+                            <p style="font-size:10px; color:#9ca3af; margin:8px 0 0 0;">
+                                Severity: <strong style="color:#374151;">{{ $record->severity ?? "&mdash;" }}</strong>
+                                &nbsp;&bull;&nbsp;
+                                Location: <strong style="color:#374151;">{{ $record->area ?? "&mdash;" }}</strong>
+                                &nbsp;&bull;&nbsp;
+                                Date Detected: <strong style="color:#374151;">{{ $record->date_detected ? \Carbon\Carbon::parse($record->date_detected)->format("F d, Y") : "&mdash;" }}</strong>
+                                &nbsp;&bull;&nbsp;
+                                Generated: <strong style="color:#374151;">{{ now()->format("F d, Y") }}</strong>
+                            </p>
                         </div>
 
-                        {{-- Diagnosis --}}
-                        @if(!empty($aiJson['diagnosis']))
-                            <div style="margin-bottom: 16px;">
-                                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #7c3aed; border-bottom: 1px solid #ede9fe; padding-bottom: 4px; margin-bottom: 8px;">
-                                    Diagnosis
-                                </div>
-                                <div style="font-size: 12px; line-height: 1.7; color: #374151; background: #faf5ff; border-left: 3px solid #8b5cf6; padding: 10px 14px; border-radius: 0 6px 6px 0;">
-                                    {{ $aiJson['diagnosis'] }}
-                                </div>
-                                @if(!empty($aiJson['urgency_reason']))
-                                    <div style="margin-top: 8px; font-size: 11px; color: {{ $urgTxt }}; background: {{ $urgBg }}; padding: 6px 12px; border-radius: 5px;">
-                                        ⚠ {{ $aiJson['urgency_reason'] }}
-                                    </div>
-                                @endif
-                            </div>
+                        {{-- 1. DESCRIPTION --}}
+                        @if(!empty($record->ai_description))
+                        <div style="margin-bottom:24px;">
+                            <h2 style="{{ $hs }}">Description</h2>
+                            <p style="font-size:12.5px; line-height:1.85; color:#1f2937; margin:0; text-align:justify;">
+                                {{ $record->ai_description }}
+                            </p>
+                        </div>
                         @endif
 
-                        {{-- Farmer Summary --}}
-                        @if(!empty($aiJson['farmer_summary']))
-                            <div style="margin-bottom: 16px;">
-                                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #0369a1; border-bottom: 1px solid #e0f2fe; padding-bottom: 4px; margin-bottom: 8px;">
-                                    💬 What This Means For You
-                                </div>
-                                <div style="font-size: 12px; line-height: 1.7; color: #0c4a6e; background: #f0f9ff; border-left: 3px solid #0ea5e9; padding: 10px 14px; border-radius: 0 6px 6px 0;">
-                                    {{ $aiJson['farmer_summary'] }}
-                                </div>
-                            </div>
-                        @endif
-
-                        {{-- Immediate Actions --}}
-                        @if(!empty($aiJson['immediate_actions']))
-                            <div style="margin-bottom: 16px;">
-                                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #dc2626; border-bottom: 1px solid #fee2e2; padding-bottom: 4px; margin-bottom: 8px;">
-                                    ⚡ Immediate Actions <span style="font-weight:400; text-transform:none; font-size:10px;">(within 24 hours)</span>
-                                </div>
-                                @foreach($aiJson['immediate_actions'] as $idx => $item)
-                                    <div style="display: flex; gap: 10px; align-items: flex-start; margin: 6px 0;">
-                                        <span style="flex-shrink:0; background:#fee2e2; color:#991b1b; font-size:9px; font-weight:800; padding:2px 7px; border-radius:4px; min-width:50px; text-align:center;">
-                                            Step {{ $idx + 1 }}
-                                        </span>
-                                        <span style="font-size: 12px; color: #374151; line-height: 1.5;">{{ $item }}</span>
-                                    </div>
+                        {{-- 2. SYMPTOMS --}}
+                        @if(!empty($record->ai_symptoms))
+                        <div style="margin-bottom:24px;">
+                            <h2 style="{{ $hs }}">Symptoms</h2>
+                            <p style="font-size:12px; color:#6b7280; margin:0 0 6px 0; font-style:italic;">Observable signs on the coffee plant:</p>
+                            <ul style="margin:0; padding-left:22px; font-size:12.5px; color:#1f2937; line-height:1.85;">
+                                @foreach($record->ai_symptoms as $item)
+                                    <li style="margin-bottom:5px; text-align:justify;">{{ $item }}</li>
                                 @endforeach
-                            </div>
+                            </ul>
+                        </div>
                         @endif
 
-                        {{-- Treatment Protocol --}}
-                        @if(!empty($aiJson['treatment_protocol']))
-                            <div style="margin-bottom: 16px;">
-                                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #7c3aed; border-bottom: 1px solid #ede9fe; padding-bottom: 4px; margin-bottom: 8px;">
-                                    Treatment Protocol
-                                </div>
-                                @foreach($aiJson['treatment_protocol'] as $step)
-                                    <div style="display: flex; gap: 10px; align-items: flex-start; margin: 6px 0;">
-                                        <span style="flex-shrink:0; background:#ede9fe; color:#5b21b6; font-size:9px; font-weight:800; padding:2px 7px; border-radius:4px; min-width:80px; text-align:center;">
-                                            {{ $step['step'] ?? '' }}
-                                        </span>
-                                        <span style="font-size: 12px; color: #374151; line-height: 1.5;">{{ $step['detail'] ?? '' }}</span>
-                                    </div>
+                        {{-- 3. CAUSES --}}
+                        @if(!empty($record->ai_causes))
+                        <div style="margin-bottom:24px;">
+                            <h2 style="{{ $hs }}">Causes</h2>
+                            <p style="font-size:12px; color:#6b7280; margin:0 0 6px 0; font-style:italic;">Primary factors that lead to this pest or disease:</p>
+                            <ul style="margin:0; padding-left:22px; font-size:12.5px; color:#1f2937; line-height:1.85;">
+                                @foreach($record->ai_causes as $item)
+                                    <li style="margin-bottom:5px; text-align:justify;">{{ $item }}</li>
                                 @endforeach
-                            </div>
+                            </ul>
+                        </div>
                         @endif
 
-                        {{-- Organic Alternatives --}}
-                        @if(!empty($aiJson['organic_alternatives']))
-                            <div style="margin-bottom: 16px;">
-                                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #15803d; border-bottom: 1px solid #dcfce7; padding-bottom: 4px; margin-bottom: 8px;">
-                                    🌿 Organic / Natural Alternatives
-                                </div>
-                                @foreach($aiJson['organic_alternatives'] as $idx => $item)
-                                    <div style="display: flex; gap: 10px; align-items: flex-start; margin: 6px 0;">
-                                        <span style="flex-shrink:0; background:#dcfce7; color:#166534; font-size:9px; font-weight:800; padding:2px 7px; border-radius:4px; min-width:50px; text-align:center;">
-                                            Option {{ $idx + 1 }}
-                                        </span>
-                                        <span style="font-size: 12px; color: #374151; line-height: 1.5;">{{ $item }}</span>
-                                    </div>
+                        {{-- 4. IMPACT --}}
+                        @if(!empty($record->ai_impact))
+                        <div style="margin-bottom:24px;">
+                            <h2 style="{{ $hs }}">Impact</h2>
+                            <p style="font-size:12.5px; line-height:1.85; color:#1f2937; margin:0; text-align:justify;">
+                                {{ $record->ai_impact }}
+                            </p>
+                        </div>
+                        @endif
+
+                        {{-- 5. ACTION PLAN --}}
+                        @if(!empty($record->ai_action_plan))
+                        <div style="margin-bottom:24px;">
+                            <h2 style="{{ $hs }}">Action Plan
+                                <span style="font-size:10px; font-weight:400; text-transform:none; color:#6b7280; margin-left:6px;">(Do within 24 hours)</span>
+                            </h2>
+                            <ol style="margin:0; padding-left:22px; font-size:12.5px; color:#1f2937; line-height:1.85;">
+                                @foreach($record->ai_action_plan as $item)
+                                    <li style="margin-bottom:7px; text-align:justify;">{{ $item }}</li>
                                 @endforeach
-                            </div>
+                            </ol>
+                        </div>
                         @endif
 
-                        {{-- Schedule --}}
-                        @if(!empty($aiJson['schedule']))
-                            <div style="margin-bottom: 16px;">
-                                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #166534; border-bottom: 1px solid #dcfce7; padding-bottom: 4px; margin-bottom: 8px;">
-                                    📅 Schedule
-                                </div>
-                                @foreach($aiJson['schedule'] as $entry)
-                                    <div style="display: flex; gap: 10px; align-items: flex-start; margin: 6px 0;">
-                                        <span style="flex-shrink:0; background:#dcfce7; color:#166534; font-size:9px; font-weight:800; padding:2px 7px; border-radius:4px; min-width:60px; text-align:center; white-space:nowrap;">
-                                            {{ $entry['day'] ?? '' }}
-                                        </span>
-                                        <span style="font-size: 12px; color: #374151; line-height: 1.5;">{{ $entry['task'] ?? '' }}</span>
-                                    </div>
+                        {{-- 6. IMMEDIATE RESPONSE --}}
+                        @if(!empty($record->ai_immediate_response))
+                        <div style="margin-bottom:24px;">
+                            <h2 style="{{ $hs }}">Immediate Response</h2>
+                            <p style="font-size:12px; color:#6b7280; margin:0 0 8px 0; font-style:italic;">
+                                Step-by-step treatment. Apply both chemical and organic options where possible.
+                            </p>
+                            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                                <thead>
+                                    <tr>
+                                        <th style="background:#1e5631; color:#fff; padding:9px 12px; text-align:center; font-size:11px; font-weight:700; width:8%; border:1px solid #1e5631;">#</th>
+                                        <th style="background:#1e5631; color:#fff; padding:9px 12px; text-align:left; font-size:11px; font-weight:700; width:92%; border:1px solid #1e5631;">Instructions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($record->ai_immediate_response as $idx => $step)
+                                        <tr style="background:{{ $idx % 2 === 0 ? '#f9fafb' : '#ffffff' }};">
+                                            <td style="padding:9px 12px; vertical-align:top; border:1px solid #e5e7eb; font-weight:700; color:#1e5631; font-size:13px; text-align:center;">{{ $idx + 1 }}</td>
+                                            <td style="padding:9px 12px; vertical-align:top; border:1px solid #e5e7eb; color:#1f2937; line-height:1.75; text-align:justify; font-size:12px;">{{ $step }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        @endif
+
+                        {{-- 7. LONG-TERM STRATEGY --}}
+                        @if(!empty($record->ai_long_term_strategy))
+                        <div style="margin-bottom:8px;">
+                            <h2 style="{{ $hs }}">Long-Term Strategy</h2>
+                            <p style="font-size:12px; color:#6b7280; margin:0 0 6px 0; font-style:italic;">Farm management practices to prevent future outbreaks:</p>
+                            <ul style="margin:0; padding-left:22px; font-size:12.5px; color:#1f2937; line-height:1.85;">
+                                @foreach($record->ai_long_term_strategy as $item)
+                                    <li style="margin-bottom:6px; text-align:justify;">{{ $item }}</li>
                                 @endforeach
-                            </div>
+                            </ul>
+                        </div>
                         @endif
-
-                        {{-- Products Needed --}}
-                        @if(!empty($aiJson['products_needed']))
-                            <div style="margin-bottom: 16px;">
-                                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #7c3aed; border-bottom: 1px solid #ede9fe; padding-bottom: 4px; margin-bottom: 8px;">
-                                    ⚗ Products Needed
-                                </div>
-                                @foreach($aiJson['products_needed'] as $prod)
-                                    @php
-                                        $ptBg  = ['Biological' => '#dcfce7', 'Chemical' => '#fee2e2', 'Organic' => '#fef3c7'][$prod['type'] ?? ''] ?? '#f3f4f6';
-                                        $ptTxt = ['Biological' => '#166534', 'Chemical' => '#991b1b', 'Organic' => '#92400e'][$prod['type'] ?? ''] ?? '#374151';
-                                    @endphp
-                                    <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; padding:8px 12px; margin:5px 0;">
-                                        <div style="font-size:12px; font-weight:600; color:#111827;">
-                                            {{ $prod['product'] ?? '' }}
-                                            <span style="font-size:9px; font-weight:700; background:{{ $ptBg }}; color:{{ $ptTxt }}; padding:1px 6px; border-radius:10px; margin-left:6px;">
-                                                {{ $prod['type'] ?? '' }}
-                                            </span>
-                                        </div>
-                                        <div style="font-size:11px; color:#6b7280; margin-top:3px;">
-                                            Rate: {{ $prod['rate'] ?? '—' }}
-                                            @if(!empty($prod['notes'])) &bull; {{ $prod['notes'] }} @endif
-                                        </div>
-                                        @if(!empty($prod['price_range']) || !empty($prod['where_to_buy']))
-                                            <div style="font-size:11px; color:#4b5563; margin-top:3px;">
-                                                @if(!empty($prod['price_range']))<span style="background:#f3f4f6; padding:1px 6px; border-radius:4px; margin-right:4px;">{{ $prod['price_range'] }}</span>@endif
-                                                @if(!empty($prod['where_to_buy']))<span style="color:#6b7280;">📍 {{ $prod['where_to_buy'] }}</span>@endif
-                                            </div>
-                                        @endif
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-
-                        {{-- Safety Precautions --}}
-                        @if(!empty($aiJson['safety_precautions']))
-                            <div style="margin-bottom: 16px;">
-                                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #b45309; border-bottom: 1px solid #fef3c7; padding-bottom: 4px; margin-bottom: 8px;">
-                                    🧤 Safety Precautions
-                                </div>
-                                @foreach($aiJson['safety_precautions'] as $idx => $item)
-                                    <div style="display: flex; gap: 10px; align-items: flex-start; margin: 6px 0;">
-                                        <span style="flex-shrink:0; background:#fef3c7; color:#92400e; font-size:9px; font-weight:800; padding:2px 7px; border-radius:4px; min-width:50px; text-align:center;">
-                                            Note {{ $idx + 1 }}
-                                        </span>
-                                        <span style="font-size: 12px; color: #374151; line-height: 1.5;">{{ $item }}</span>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-
-                        {{-- When to Call Expert --}}
-                        @if(!empty($aiJson['when_to_call_expert']))
-                            <div style="margin-bottom: 16px;">
-                                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #dc2626; border-bottom: 1px solid #fee2e2; padding-bottom: 4px; margin-bottom: 8px;">
-                                    📞 When to Contact Your Agricultural Officer
-                                </div>
-                                <div style="font-size: 12px; line-height: 1.7; color: #7f1d1d; background: #fff1f2; border-left: 3px solid #ef4444; padding: 10px 14px; border-radius: 0 6px 6px 0;">
-                                    {{ $aiJson['when_to_call_expert'] }}
-                                </div>
-                            </div>
-                        @endif
-
-                        {{-- Prevention --}}
-                        @if(!empty($aiJson['prevention']))
-                            <div style="margin-bottom: 16px;">
-                                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #166534; border-bottom: 1px solid #dcfce7; padding-bottom: 4px; margin-bottom: 8px;">
-                                    🛡 Prevention Strategies
-                                </div>
-                                @foreach($aiJson['prevention'] as $item)
-                                    <div style="display:flex; gap:8px; align-items:flex-start; margin:5px 0; font-size:12px; color:#374151; line-height:1.5;">
-                                        <span style="color:#7c3aed; font-weight:700; flex-shrink:0;">✔</span>
-                                        {{ $item }}
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-
-                        {{-- Warnings --}}
-                        @if(!empty($aiJson['warnings']))
-                            <div style="margin-bottom: 8px;">
-                                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #dc2626; border-bottom: 1px solid #fee2e2; padding-bottom: 4px; margin-bottom: 8px;">
-                                    ⚠ Warnings
-                                </div>
-                                @foreach($aiJson['warnings'] as $item)
-                                    <div style="display:flex; gap:8px; align-items:flex-start; margin:5px 0; font-size:12px; color:#374151; line-height:1.5;">
-                                        <span style="color:#dc2626; font-weight:700; flex-shrink:0;">⚠</span>
-                                        {{ $item }}
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-
-                    @else
-                        {{-- Fallback for old plain-text format --}}
-                        <pre style="font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.6; color: #374151; white-space: pre-wrap; overflow-x: auto;">{{ $record->ai_recommendation }}</pre>
-                    @endif
 
                     {{-- Document footer --}}
-                    <div style="margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 8px; font-size: 10px; color: #9ca3af; text-align: center;">
-                        CAFARM — Coffee Agri-Farming Management System &nbsp;·&nbsp; AI-Assisted Recommendation
+                    <div style="margin-top:28px; border-top:1px solid #e5e7eb; padding-top:8px; font-size:10px; color:#9ca3af; text-align:center;">
+                        CofSys — Coffee Agri-Farming Management System &nbsp;·&nbsp; AI-Assisted Recommendation
                     </div>
                 </div>
             </div>
@@ -1310,7 +1190,7 @@ $printData = [
                                 <p style="font-size:13px;color:#1c1917;line-height:1.55;margin:0;">{{ $record->farmer_action }}</p>
                                 @if($record->farmer_action_date)
                                     <span style="font-size:10px;color:#78716c;display:block;margin-top:6px;text-align:right;">
-                                        {{ $record->farmer_action_date->format('M d, Y · h:i A') }} <em>via CAFARM App</em>
+                                        {{ $record->farmer_action_date->format('M d, Y · h:i A') }} <em>via CofSys App</em>
                                     </span>
                                 @endif
                             </div>

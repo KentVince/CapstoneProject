@@ -383,7 +383,7 @@
         <div class="login-content-wrapper">
             <div class="login-container">
                 <div class="login-image">
-                    <img src="<?php echo e(asset('images/cafarm_wg.png')); ?>" alt="CAFARM Logo">
+                    <img src="<?php echo e(asset('images/cafarm_wg.png')); ?>" alt="CofSys Logo">
                 <h1 style="color:#ffffff;">CofSys</h1>
                     <p style="color:#ffffff;">COFFEE FARM MANAGEMENT SYSTEM WITH SMART DISEASE DETECTION AND GEOANALYTICS</p>
                 </div>

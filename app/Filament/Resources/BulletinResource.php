@@ -22,7 +22,7 @@ class BulletinResource extends Resource
 {
     protected static ?string $model = Bulletin::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-megaphone';
+    protected static ?string $navigationIcon = 'heroicon-o-newspaper';
     protected static ?string $navigationLabel = 'Bulletins';
     protected static ?string $pluralModelLabel = 'Bulletins';
     protected static ?string $navigationGroup = 'Information Center';
@@ -75,7 +75,23 @@ class BulletinResource extends Resource
                         ->toolbarButtons([
                             'bold', 'italic', 'underline', 'bulletList',
                             'orderedList', 'link', 'undo', 'redo',
-                        ]),
+                        ])
+                        ->columnSpanFull(),
+
+                    Forms\Components\FileUpload::make('attachments')
+                        ->label('Attachments (Images / PDF)')
+                        ->helperText('Upload images or PDF documents to attach to this bulletin. Farmers can view and download them.')
+                        ->disk('public')
+                        ->directory('bulletin-attachments')
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'])
+                        ->maxSize(10240)
+                        ->multiple()
+                        ->reorderable()
+                        ->downloadable()
+                        ->previewable()
+                        ->imagePreviewHeight('120')
+                        ->panelLayout('grid')
+                        ->columnSpanFull(),
                 ])
                 ->columns(2),
         ]);

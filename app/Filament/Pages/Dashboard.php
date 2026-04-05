@@ -27,7 +27,7 @@ class Dashboard extends \Filament\Pages\Dashboard
 {
     use HasFilters;
 
-    protected static ?string $navigationIcon = 'heroicon-o-home';
+    protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-bar';
     protected static string $view = 'filament.pages.dashboard';
     // protected static ?string $navigationLabel = 'Dashboard';
 
