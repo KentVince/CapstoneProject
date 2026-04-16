@@ -18,6 +18,7 @@ class SoilAnalysis extends Model
         'farm_id',
         'crop_variety',
         'soil_type',
+        'topography',
         'analysis_type',
         'date_collected',
         'location',

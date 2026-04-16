@@ -68,7 +68,7 @@ class AdminPanelProvider extends PanelProvider
             //     Widgets\FilamentInfoWidget::class,
             // ])
             ->databaseNotifications()
-            ->databaseNotificationsPolling('30s')
+            ->databaseNotificationsPolling('8s')
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -200,160 +200,114 @@ class AdminPanelProvider extends PanelProvider
             );
 
 
-            // Poll pending detections count and update sidebar badge in real-time
+            // Unified real-time polling: sidebar badges + notification bell — all in sync
             FilamentView::registerRenderHook(
                 PanelsRenderHook::BODY_END,
                 fn (): string => <<<'HTML'
                     <script>
                         (function() {
-                            let lastCount = null;
-
-                            function findRecordsBadge() {
-                                const items = document.querySelectorAll('.fi-sidebar-item');
-                                for (const item of items) {
-                                    const label = item.querySelector('.fi-sidebar-item-label');
-                                    if (label && label.textContent.trim() === 'Records') {
-                                        return {
-                                            item: item,
-                                            badgeWrapper: item.querySelector('.fi-sidebar-item-button > span:last-child:not(.fi-sidebar-item-label):not(.fi-sidebar-item-icon)'),
-                                            badge: item.querySelector('.fi-badge')
-                                        };
-                                    }
-                                }
-                                return null;
-                            }
-
-                            function updateBadge() {
-                                fetch('/admin/api/pending-detections-count', {
-                                    headers: {
-                                        'Accept': 'application/json',
-                                        'X-Requested-With': 'XMLHttpRequest'
-                                    }
-                                })
-                                .then(function(r) { return r.json(); })
-                                .then(function(data) {
-                                    var count = data.count;
-                                    if (lastCount === count) return;
-                                    lastCount = count;
-
-                                    var result = findRecordsBadge();
-                                    if (!result) return;
-
-                                    if (count > 0) {
-                                        if (result.badge) {
-                                            // Badge exists in DOM, update its text
-                                            var textEl = result.badge.querySelector('.truncate') || result.badge.querySelector('span span');
-                                            if (textEl) textEl.textContent = count;
-                                            // Make sure it's visible
-                                            if (result.badge.parentElement) {
-                                                result.badge.parentElement.style.display = '';
-                                            }
-                                        } else {
-                                            // Badge doesn't exist yet, do a soft SPA refresh to render it
-                                            if (window.Livewire && window.Livewire.navigate) {
-                                                window.Livewire.navigate(window.location.href);
-                                            }
-                                        }
-                                    } else {
-                                        // Count is 0, hide the badge
-                                        if (result.badge && result.badge.parentElement) {
-                                            result.badge.parentElement.style.display = 'none';
-                                        }
-                                    }
-                                })
-                                .catch(function() {});
-                            }
-
-                            // Poll every 15 seconds
-                            setInterval(updateBadge, 15000);
-
-                            // Re-check after Livewire SPA navigations
-                            document.addEventListener('livewire:navigated', function() {
-                                lastCount = null;
-                                setTimeout(updateBadge, 500);
-                            });
-
-                            // Initial check after page load
-                            document.addEventListener('DOMContentLoaded', function() {
-                                setTimeout(updateBadge, 1000);
-                            });
-                        })();
-                    </script>
-                    HTML
-            );
-
-            // Poll pending soil analysis count and update sidebar badge in real-time
-            FilamentView::registerRenderHook(
-                PanelsRenderHook::BODY_END,
-                fn (): string => <<<'HTML'
-                    <script>
-                        (function() {
+                            const POLL_INTERVAL = 8000; // 8s — matches databaseNotificationsPolling
+                            let lastDetectionCount = null;
                             let lastSoilCount = null;
 
-                            function findSoilAnalysisBadge() {
+                            // ── Helpers ────────────────────────────────────────────────
+
+                            function findNavItem(label) {
                                 const items = document.querySelectorAll('.fi-sidebar-item');
                                 for (const item of items) {
-                                    const label = item.querySelector('.fi-sidebar-item-label');
-                                    if (label && label.textContent.trim() === 'Soil Analysis') {
-                                        return {
-                                            item: item,
-                                            badge: item.querySelector('.fi-badge')
-                                        };
-                                    }
+                                    const el = item.querySelector('.fi-sidebar-item-label');
+                                    if (el && el.textContent.trim() === label) return item;
                                 }
                                 return null;
                             }
 
-                            function updateSoilBadge() {
-                                fetch('/admin/api/pending-soil-count', {
-                                    headers: {
-                                        'Accept': 'application/json',
-                                        'X-Requested-With': 'XMLHttpRequest'
+                            function setBadge(item, count) {
+                                if (!item) return;
+                                let badge = item.querySelector('.fi-badge');
+                                if (count > 0) {
+                                    if (badge) {
+                                        const textEl = badge.querySelector('.truncate') || badge.querySelector('span');
+                                        if (textEl) textEl.textContent = count;
+                                        badge.style.display = '';
+                                    } else {
+                                        const btn = item.querySelector('.fi-sidebar-item-button');
+                                        if (btn) {
+                                            const span = document.createElement('span');
+                                            span.className = 'fi-badge fi-color-warning fi-size-sm rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset bg-warning-500/10 text-warning-700 ring-warning-600/20 dark:bg-warning-500/20 dark:text-warning-400 dark:ring-warning-500/30';
+                                            span.innerHTML = '<span class="grid"><span class="truncate">' + count + '</span></span>';
+                                            btn.appendChild(span);
+                                        }
                                     }
+                                } else {
+                                    if (badge) badge.style.display = 'none';
+                                }
+                            }
+
+                            // Force Filament's database-notifications Livewire component to refresh immediately
+                            function refreshNotificationBell() {
+                                if (!window.Livewire) return;
+                                Livewire.all().forEach(function(component) {
+                                    try {
+                                        const el = component.el;
+                                        if (el && (
+                                            el.querySelector('.fi-notifications') ||
+                                            el.querySelector('[x-ref="notificationsContainer"]') ||
+                                            (el.hasAttribute('wire:poll') && el.id && el.id.includes('notification'))
+                                        )) {
+                                            component.$wire.$refresh();
+                                        }
+                                    } catch(e) {}
+                                });
+                                // Also dispatch Filament's internal event as fallback
+                                document.dispatchEvent(new CustomEvent('filament:notification-received'));
+                            }
+
+                            // ── Unified poll ───────────────────────────────────────────
+
+                            function pollAll() {
+                                // Detection badge
+                                fetch('/admin/api/pending-detections-count', {
+                                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
                                 })
                                 .then(function(r) { return r.json(); })
                                 .then(function(data) {
                                     var count = data.count;
-                                    if (lastSoilCount === count) return;
-                                    lastSoilCount = count;
+                                    if (lastDetectionCount !== null && count !== lastDetectionCount) {
+                                        // New detection arrived — force notification bell to refresh NOW
+                                        refreshNotificationBell();
+                                    }
+                                    if (lastDetectionCount !== count) {
+                                        lastDetectionCount = count;
+                                        setBadge(findNavItem('Detections'), count);
+                                    }
+                                })
+                                .catch(function() {});
 
-                                    var result = findSoilAnalysisBadge();
-                                    if (!result) return;
-
-                                    if (count > 0) {
-                                        if (result.badge) {
-                                            var textEl = result.badge.querySelector('.truncate') || result.badge.querySelector('span span');
-                                            if (textEl) textEl.textContent = count;
-                                            if (result.badge.parentElement) {
-                                                result.badge.parentElement.style.display = '';
-                                            }
-                                        } else {
-                                            // Badge doesn't exist yet, trigger Livewire navigate to render it
-                                            if (window.Livewire && window.Livewire.navigate) {
-                                                window.Livewire.navigate(window.location.href);
-                                            }
-                                        }
-                                    } else {
-                                        if (result.badge && result.badge.parentElement) {
-                                            result.badge.parentElement.style.display = 'none';
-                                        }
+                                // Soil badge
+                                fetch('/admin/api/pending-soil-count', {
+                                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                                })
+                                .then(function(r) { return r.json(); })
+                                .then(function(data) {
+                                    var count = data.count;
+                                    if (lastSoilCount !== null && count !== lastSoilCount) {
+                                        refreshNotificationBell();
+                                    }
+                                    if (lastSoilCount !== count) {
+                                        lastSoilCount = count;
+                                        setBadge(findNavItem('Soil Analysis'), count);
                                     }
                                 })
                                 .catch(function() {});
                             }
 
-                            // Poll every 15 seconds
-                            setInterval(updateSoilBadge, 15000);
+                            document.addEventListener('DOMContentLoaded', pollAll);
+                            setInterval(pollAll, POLL_INTERVAL);
 
-                            // Re-check after Livewire SPA navigations
                             document.addEventListener('livewire:navigated', function() {
+                                lastDetectionCount = null;
                                 lastSoilCount = null;
-                                setTimeout(updateSoilBadge, 500);
-                            });
-
-                            // Initial check after page load
-                            document.addEventListener('DOMContentLoaded', function() {
-                                setTimeout(updateSoilBadge, 1000);
+                                pollAll();
                             });
                         })();
                     </script>

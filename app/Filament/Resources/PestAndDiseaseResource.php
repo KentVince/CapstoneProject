@@ -86,7 +86,7 @@ class PestAndDiseaseResource extends Resource
 
             if ($user && $user->isAgriculturalProfessional()) {
                 $professional = $user->agriculturalProfessional;
-                if ($professional && $professional->agency === 'MAGRO' && $professional->municipality) {
+                if ($professional && $professional->agency === 'MAGSO' && $professional->municipality) {
                     $appNos = \App\Models\Farmer::where('farmer_address_mun', $professional->municipality)
                         ->pluck('app_no');
                     $query->whereIn('app_no', $appNos);
@@ -112,11 +112,7 @@ class PestAndDiseaseResource extends Resource
     return $form
         ->schema([
             Section::make()
-                ->columns([
-                    'md' => 1,
-                    'lg' => 2,
-                    '2xl' => 2,
-                ])
+                ->columns(2)
                 ->schema([
                     // ViewField::make('qr_code_preview')
                     // ->view('components.qr-code-preview', [
@@ -232,10 +228,14 @@ class PestAndDiseaseResource extends Resource
                             if ($record->validation_status === 'pending') {
                                 AdminRecordView::markViewed(auth()->id(), 'pest_disease', $record->case_id);
                             }
-                            // Mark related header notifications as read
-                            auth()->user()?->unreadNotifications()
-                                ->where('data', 'like', '%viewRecord=' . $record->case_id . '%')
-                                ->update(['read_at' => now()]);
+                            // Defer slow notification query to after response
+                            $userId = auth()->id();
+                            $caseId = $record->case_id;
+                            dispatch(function () use ($userId, $caseId) {
+                                \App\Models\User::find($userId)?->unreadNotifications()
+                                    ->where('data', 'like', '%viewRecord=' . $caseId . '%')
+                                    ->update(['read_at' => now()]);
+                            })->afterResponse();
                             return view('filament.resources.pest-and-disease.view-modal', ['record' => $record]);
                         })
                         ->modalFooterActions(fn (PestAndDisease $record, Action $action) => [
@@ -320,6 +320,7 @@ class PestAndDiseaseResource extends Resource
                                         ->send();
                                     $action->cancel();
                                 })
+                                ->closeModalByClickingAway(false)
                                 ->visible(fn () => $record->validation_status === 'pending'),
                             Action::make('addExpertComment')
                                 ->label('Add Expert Comment')
@@ -347,6 +348,7 @@ class PestAndDiseaseResource extends Resource
                                         ->success()
                                         ->send();
                                 })
+                                ->closeModalByClickingAway(false)
                                 ->visible(fn () => $record->validation_status !== 'pending'),
                         ])
                         ->modalFooterActionsAlignment(\Filament\Support\Enums\Alignment::Center)
@@ -487,6 +489,7 @@ class PestAndDiseaseResource extends Resource
                                     ->send();
                                 $action->cancel();
                             })
+                            ->closeModalByClickingAway(false)
                             ->visible(fn () => $record->validation_status === 'pending'),
                         Action::make('addExpertComment')
                             ->label('Add Expert Comment')
@@ -514,6 +517,7 @@ class PestAndDiseaseResource extends Resource
                                     ->success()
                                     ->send();
                             })
+                            ->closeModalByClickingAway(false)
                             ->visible(fn () => $record->validation_status !== 'pending'),
                     ])
                     ->modalFooterActionsAlignment(\Filament\Support\Enums\Alignment::Center),
@@ -579,7 +583,7 @@ class PestAndDiseaseResource extends Resource
             $user = auth()->user();
             if ($user && $user->isAgriculturalProfessional()) {
                 $professional = $user->agriculturalProfessional;
-                if ($professional && $professional->agency === 'MAGRO' && $professional->municipality) {
+                if ($professional && $professional->agency === 'MAGSO' && $professional->municipality) {
                     $appNos = \App\Models\Farmer::where('farmer_address_mun', $professional->municipality)
                         ->pluck('app_no');
                     $query->whereIn('app_no', $appNos);

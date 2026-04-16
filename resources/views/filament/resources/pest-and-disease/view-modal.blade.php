@@ -343,7 +343,7 @@ $incidenceActionMap = [
     'Low'      => ['en' => 'Monitor closely. Document affected trees and track spread weekly.', 'bi' => 'Bantayan pag-ayo. Irekord ang mga apektadong kahoy ug subayon ang pagkaylap matag semana.'],
     'Moderate' => ['en' => 'Apply targeted control. Use appropriate biological or chemical treatment on affected zones.', 'bi' => 'Magamit og gipunting nga kontrol. Gamiton ang angay nga biological o chemical nga pagtambal sa mga apektadong lugar.'],
     'High'     => ['en' => 'Immediate intervention required. Apply treatment within 48 hours. Escalate to local agricultural officer.', 'bi' => 'Kinahanglan dayon nga paglihok. Mag-apply og pagtambal sulod sa 48 oras. Ipatuman sa lokal nga agrikultura opisyal.'],
-    'Severe'   => ['en' => 'CRITICAL: Full farm containment protocol. Emergency treatment, coordinate with MAGRO/DA immediately.', 'bi' => 'KRITIKAL: Tibuok uma nga containment protocol. Emergency nga pagtambal, makig-koordinar sa MAGRO/DA dayon.'],
+    'Severe'   => ['en' => 'CRITICAL: Full farm containment protocol. Emergency treatment, coordinate with MAGSO/DA immediately.', 'bi' => 'KRITIKAL: Tibuok uma nga containment protocol. Emergency nga pagtambal, makig-koordinar sa MAGSO/DA dayon.'],
 ];
 
 // Pest-specific severity thresholds from PDF v2.1

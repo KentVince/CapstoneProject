@@ -84,13 +84,22 @@ class PestAndDiseaseObserver
         // Note: use wasChanged() not isDirty() — in the 'updated' event, attributes are already synced
         if ($pestAndDisease->wasChanged('validation_status') &&
             in_array($pestAndDisease->validation_status, ['approved', 'disapproved'])) {
-            FcmNotificationService::sendValidationUpdate($pestAndDisease);
 
-            // When a High/Severe detection is APPROVED, alert nearby farms about the outbreak
-            if ($pestAndDisease->validation_status === 'approved' &&
-                in_array($pestAndDisease->severity, ['High', 'Severe'])) {
-                FcmNotificationService::sendNearbySevereAlert($pestAndDisease);
-            }
+            // Defer FCM calls to after the HTTP response so the UI stays fast
+            $caseId = $pestAndDisease->case_id;
+            $status = $pestAndDisease->validation_status;
+            $severity = $pestAndDisease->severity;
+
+            dispatch(function () use ($caseId, $status, $severity) {
+                $record = PestAndDisease::find($caseId);
+                if (!$record) return;
+
+                FcmNotificationService::sendValidationUpdate($record);
+
+                if ($status === 'approved' && in_array($severity, ['High', 'Severe'])) {
+                    FcmNotificationService::sendNearbySevereAlert($record);
+                }
+            })->afterResponse();
         }
     }
 }

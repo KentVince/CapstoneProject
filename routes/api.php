@@ -418,9 +418,9 @@ Route::post('/mobile/expert/farms', function (Request $request) {
 
     $agency = strtoupper(trim($professional->agency ?? ''));
 
-    // MAGRO = Municipal Agriculture Office → only farms in the expert's municipality
+    // MAGSO = Municipal Agriculture Office → only farms in the expert's municipality
     // PAGRO / DDOSC / others = Provincial level → all farms
-    if (str_contains($agency, 'MAGRO')) {
+    if (str_contains($agency, 'MAGSO')) {
         $farms = Farm::where('farmer_address_mun', $professional->municipality)
             ->with('farmer:id,app_no,first_name,last_name,middle_name')
             ->get();
@@ -453,7 +453,7 @@ Route::post('/mobile/expert/farms', function (Request $request) {
     return response()->json([
         'message' => 'Farms retrieved successfully',
         'agency' => $professional->agency,
-        'scope' => str_contains($agency, 'MAGRO') ? 'municipal' : 'provincial',
+        'scope' => str_contains($agency, 'MAGSO') ? 'municipal' : 'provincial',
         'count' => $result->count(),
         'data' => $result,
     ]);

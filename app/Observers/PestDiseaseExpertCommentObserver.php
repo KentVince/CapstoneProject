@@ -14,32 +14,40 @@ class PestDiseaseExpertCommentObserver
      */
     public function created(PestDiseaseExpertComment $comment): void
     {
-        try {
-            $detection = $comment->pestAndDisease()->first();
-            if (!$detection) return;
+        // Defer FCM call to after the HTTP response so the UI stays fast
+        $commentId = $comment->id;
 
-            $appNo = $detection->app_no;
-            if (!$appNo) return;
+        dispatch(function () use ($commentId) {
+            try {
+                $comment = PestDiseaseExpertComment::find($commentId);
+                if (!$comment) return;
 
-            $expert      = $comment->expert()->with('agriculturalProfessional')->first();
-            $agency      = $expert?->agriculturalProfessional?->agency;
-            $agencyLabel = $agency ? "Expert from {$agency}" : ($expert?->name ?? 'An Expert');
+                $detection = $comment->pestAndDisease()->first();
+                if (!$detection) return;
 
-            $this->sendFcm(
-                $appNo,
-                'New Expert Comment',
-                "{$agencyLabel} added a recommendation for your detection.",
-                [
-                    'type'        => 'pest_extra_comment',
-                    'case_id'     => (string) $detection->case_id,
-                    'pest'        => $detection->pest ?? '',
-                    'expert_name' => $agencyLabel,
-                    'message'     => $comment->message,
-                ]
-            );
-        } catch (\Exception $e) {
-            Log::error('PestDiseaseExpertCommentObserver FCM error: ' . $e->getMessage());
-        }
+                $appNo = $detection->app_no;
+                if (!$appNo) return;
+
+                $expert      = $comment->expert()->with('agriculturalProfessional')->first();
+                $agency      = $expert?->agriculturalProfessional?->agency;
+                $agencyLabel = $agency ? "Expert from {$agency}" : ($expert?->name ?? 'An Expert');
+
+                (new self)->sendFcm(
+                    $appNo,
+                    'New Expert Comment',
+                    "{$agencyLabel} added a recommendation for your detection.",
+                    [
+                        'type'        => 'pest_extra_comment',
+                        'case_id'     => (string) $detection->case_id,
+                        'pest'        => $detection->pest ?? '',
+                        'expert_name' => $agencyLabel,
+                        'message'     => $comment->message,
+                    ]
+                );
+            } catch (\Exception $e) {
+                Log::error('PestDiseaseExpertCommentObserver FCM error: ' . $e->getMessage());
+            }
+        })->afterResponse();
     }
 
     private function sendFcm(string $appNo, string $title, string $body, array $data): void

@@ -59,7 +59,7 @@ class AgriculturalProfessionalResource extends Resource
                     Select::make('agency')
                         ->label('Agency')
                         ->options([
-                            'MAGRO' => 'MAGRO',
+                            'MAGSO' => 'MAGSO',
                             'PAGRO' => 'PAGRO',
                             'DDOSC' => 'DDOSC',
                         ])

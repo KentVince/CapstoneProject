@@ -136,7 +136,7 @@ public static function table(Table $table): Table
             $user = auth()->user();
             if ($user && $user->isAgriculturalProfessional()) {
                 $professional = $user->agriculturalProfessional;
-                if ($professional && $professional->agency === 'MAGRO' && $professional->municipality) {
+                if ($professional && $professional->agency === 'MAGSO' && $professional->municipality) {
                     $query->where('farmer_address_mun', $professional->municipality);
                 }
             }

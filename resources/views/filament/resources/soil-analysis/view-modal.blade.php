@@ -236,8 +236,80 @@
     $soilTabs = ['Fertilizer Recommendation', 'Soil Amendment', 'Application Schedule', 'Farming Practices', 'Important Notes'];
 @endphp
 
-<div class="space-y-4"
-     x-data="{ activeTab: 'Fertilizer Recommendation' }">
+<script>
+window['printSoilReport_{{ $record->id }}'] = function() {
+    var d = {!! json_encode([
+        'farmName'        => $record->farm_name ?? 'N/A',
+        'soilType'        => $record->soil_type ?? 'N/A',
+        'cropVariety'     => $record->crop_variety ?? 'N/A',
+        'dateCollected'   => $record->date_collected?->format('F d, Y') ?? '—',
+        'phLevel'         => $record->ph_level ?? '—',
+        'nitrogen'        => $record->nitrogen ?? '—',
+        'phosphorus'      => $record->phosphorus ?? '—',
+        'potassium'       => $record->potassium ?? '—',
+        'organicMatter'   => $record->organic_matter ?? '—',
+        'location'        => $record->location ?? '—',
+        'generatedAt'     => now()->format('F d, Y \a\t h:i A'),
+        'diagnosis'       => $record->ai_diagnosis ?? '',
+        'farmerSummary'   => $record->ai_farmer_summary ?? '',
+        'keyConcerns'     => is_array($record->ai_key_concerns) ? $record->ai_key_concerns : [],
+        'priorityActions' => is_array($record->ai_priority_actions) ? $record->ai_priority_actions : [],
+        'organicAlts'     => is_array($record->ai_organic_alternatives) ? $record->ai_organic_alternatives : [],
+        'practices'       => is_array($record->ai_practices) ? $record->ai_practices : [],
+        'monitoring'      => is_array($record->ai_monitoring_plan) ? $record->ai_monitoring_plan : [],
+        'outcomes'        => $record->ai_expected_outcomes ?? '',
+        'reminders'       => is_array($record->ai_reminders) ? $record->ai_reminders : [],
+        'soilRemarks'     => is_array($record->ai_soil_remarks) ? $record->ai_soil_remarks : [],
+    ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!};
+    function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+    function ul(arr){if(!arr||!arr.length)return'';var h='\x3Cul style="margin:4px 0 8px;padding-left:20px"\x3E';arr.forEach(function(x){h+='\x3Cli style="margin:3px 0"\x3E'+esc(x)+'\x3C/li\x3E';});return h+'\x3C/ul\x3E';}
+    function ol(arr){if(!arr||!arr.length)return'';var h='\x3Col style="margin:4px 0 8px;padding-left:20px"\x3E';arr.forEach(function(x){h+='\x3Cli style="margin:3px 0"\x3E'+esc(x)+'\x3C/li\x3E';});return h+'\x3C/ol\x3E';}
+    var css='body{font-family:Arial,sans-serif;margin:24px 32px;color:#1f2937;font-size:12px;line-height:1.55}'
+        +'h1{font-size:17px;color:#4c1d95;border-bottom:2px solid #4c1d95;padding-bottom:6px;margin-bottom:14px}'
+        +'h2{font-size:12px;font-weight:800;color:#1e5631;margin:18px 0 6px;padding-bottom:4px;border-bottom:2px solid #1e5631;text-transform:uppercase;letter-spacing:.5px}'
+        +'.ig{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:6px 0 10px}'
+        +'.ii{background:#f9fafb;border:1px solid #e5e7eb;padding:6px 9px;border-radius:5px}'
+        +'.il{font-size:9px;text-transform:uppercase;color:#6b7280;margin-bottom:2px}'
+        +'.iv{font-size:12px;font-weight:600;color:#111827}'
+        +'.ab{background:#fef3c7;color:#92400e;padding:8px 12px;border-radius:6px;border-left:3px solid #f59e0b;margin:4px 0}'
+        +'.rb{background:#fef2f2;color:#991b1b;padding:8px 12px;border-radius:6px;margin:4px 0}'
+        +'.gb{background:#f0fdf4;color:#166534;padding:8px 12px;border-radius:6px;margin:4px 0}'
+        +'table{width:100%;border-collapse:collapse;margin:6px 0}'
+        +'th{background:#4c1d95;color:#fff;padding:7px 10px;text-align:left;font-size:10px}'
+        +'td{padding:7px 10px;border:1px solid #e5e7eb;font-size:11px}'
+        +'tr:nth-child(even) td{background:#f9fafb}'
+        +'.ft{margin-top:20px;border-top:1px solid #e5e7eb;padding-top:6px;font-size:9px;color:#9ca3af;text-align:center}'
+        +'@media print{body{margin:8px 16px}}';
+    var h='\x3C!DOCTYPE html\x3E\x3Chtml\x3E\x3Chead\x3E\x3Cmeta charset="utf-8"\x3E\x3Ctitle\x3ESoil AI Report\x3C/title\x3E\x3Cstyle\x3E'+css+'\x3C/style\x3E\x3C/head\x3E\x3Cbody\x3E';
+    h+='\x3Cdiv style="text-align:center;border-bottom:3px solid #4c1d95;padding-bottom:12px;margin-bottom:18px"\x3E';
+    h+='\x3Cp style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9ca3af;margin:0 0 4px"\x3ECofSys \u2014 Coffee Agri-Farming Management System\x3C/p\x3E';
+    h+='\x3Ch1 style="font-size:18px;font-weight:900;color:#4c1d95;margin:0 0 4px"\x3EAI Soil Fertility Recommendation\x3C/h1\x3E';
+    h+='\x3Cp style="font-size:13px;font-weight:700;color:#374151;margin:0 0 8px"\x3E'+esc(d.farmName)+'\x3C/p\x3E';
+    h+='\x3Cp style="font-size:10px;color:#9ca3af;margin:0"\x3ESoil Type: \x3Cstrong\x3E'+esc(d.soilType)+'\x3C/strong\x3E &bull; Crop: \x3Cstrong\x3E'+esc(d.cropVariety)+'\x3C/strong\x3E &bull; Date: \x3Cstrong\x3E'+esc(d.dateCollected)+'\x3C/strong\x3E &bull; Generated: \x3Cstrong\x3E'+esc(d.generatedAt)+'\x3C/strong\x3E\x3C/p\x3E\x3C/div\x3E';
+    h+='\x3Ch2\x3ESoil Test Values\x3C/h2\x3E\x3Cdiv class="ig"\x3E';
+    [['pH Level',d.phLevel],['Nitrogen (N)',d.nitrogen],['Phosphorus (P)',d.phosphorus],['Potassium (K)',d.potassium],['Organic Matter',d.organicMatter],['Location',d.location]].forEach(function(f){h+='\x3Cdiv class="ii"\x3E\x3Cdiv class="il"\x3E'+f[0]+'\x3C/div\x3E\x3Cdiv class="iv"\x3E'+esc(String(f[1]))+'\x3C/div\x3E\x3C/div\x3E';});
+    h+='\x3C/div\x3E';
+    if(d.farmerSummary){h+='\x3Ch2\x3ESummary for the Farmer\x3C/h2\x3E\x3Cdiv class="ab"\x3E'+esc(d.farmerSummary)+'\x3C/div\x3E';}
+    if(d.diagnosis){h+='\x3Ch2\x3ESoil Diagnosis\x3C/h2\x3E\x3Cp style="text-align:justify"\x3E'+esc(d.diagnosis)+'\x3C/p\x3E';}
+    if(d.keyConcerns&&d.keyConcerns.length){h+='\x3Ch2\x3EKey Concerns\x3C/h2\x3E'+ul(d.keyConcerns);}
+    if(d.priorityActions&&d.priorityActions.length){h+='\x3Ch2\x3EPriority Actions\x3C/h2\x3E'+ol(d.priorityActions);}
+    if(d.soilRemarks&&Object.keys(d.soilRemarks).length){
+        var labels={ph:'Soil pH',om:'Organic Matter',n:'Nitrogen (N)',p:'Phosphorus (P)',k:'Potassium (K)'};
+        h+='\x3Ch2\x3ESoil Parameter Analysis\x3C/h2\x3E\x3Ctable\x3E\x3Cthead\x3E\x3Ctr\x3E\x3Cth style="width:140px"\x3EParameter\x3C/th\x3E\x3Cth\x3ERemarks\x3C/th\x3E\x3C/tr\x3E\x3C/thead\x3E\x3Ctbody\x3E';
+        Object.keys(labels).forEach(function(k){if(d.soilRemarks[k]){h+='\x3Ctr\x3E\x3Ctd style="font-weight:700;color:#4c1d95"\x3E'+labels[k]+'\x3C/td\x3E\x3Ctd\x3E'+esc(d.soilRemarks[k])+'\x3C/td\x3E\x3C/tr\x3E';}});
+        h+='\x3C/tbody\x3E\x3C/table\x3E';
+    }
+    if(d.organicAlts&&d.organicAlts.length){h+='\x3Ch2\x3EOrganic &amp; Low-Cost Alternatives\x3C/h2\x3E'+ol(d.organicAlts);}
+    if(d.practices&&d.practices.length){h+='\x3Ch2\x3EGood Farming Practices\x3C/h2\x3E'+ol(d.practices);}
+    if(d.monitoring&&d.monitoring.length){h+='\x3Ch2\x3EMonitoring Plan\x3C/h2\x3E'+ul(d.monitoring);}
+    if(d.outcomes){h+='\x3Ch2\x3EExpected Outcomes\x3C/h2\x3E\x3Cdiv class="gb"\x3E'+esc(d.outcomes)+'\x3C/div\x3E';}
+    if(d.reminders&&d.reminders.length){h+='\x3Ch2\x3EImportant Reminders\x3C/h2\x3E\x3Cdiv class="rb"\x3E'+ul(d.reminders)+'\x3C/div\x3E';}
+    h+='\x3Cdiv class="ft"\x3ECofSys \u2014 AI Soil Fertility Recommendation &nbsp;|&nbsp; Powered by Google Gemini AI &nbsp;|&nbsp; Generated on '+esc(d.generatedAt)+'\x3C/div\x3E\x3C/body\x3E\x3C/html\x3E';
+    var w=window.open('','_blank');w.document.write(h);w.document.close();setTimeout(function(){w.print();},350);
+};
+</script>
+
+<div class="space-y-4" x-data="{ activeTab: 'Fertilizer Recommendation' }">
 
     {{-- ── Status Badge ─────────────────────────────────────────────────────── --}}
     <div class="flex items-center justify-between">
@@ -272,6 +344,106 @@
                 {{ $record->analysis_type === 'with_lab' ? 'With Laboratory' : 'Without Laboratory' }}
             </p>
         </div>
+        @if($record->analysis_type === 'without_lab' && !empty($record->topography))
+            <div class="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-lg border border-emerald-200 dark:border-emerald-800 col-span-2 md:col-span-4">
+                <h4 class="text-xs font-medium text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 20l4.5-9 4.5 9m0 0h9l-4.5-9-4.5 9m9 0H3"/></svg>
+                    Farm Topography
+                </h4>
+                @php
+                    $topoData = [
+                        'Plains/Flat Land' => [
+                            'characteristics' => 'Flat or gently sloping terrain (0–5% gradient). Water drains slowly and may accumulate during heavy rainfall. Soil depth is typically good with moderate to high nutrient retention.',
+                            'fertilizer'      => 'Apply fertilizer in shallow ring furrows (5–10 cm deep) around the drip line. Standard KAPE rates apply without adjustment. Single-dose applications are acceptable since flat terrain retains nutrients well.',
+                            'water'           => 'Ensure proper drainage channels between rows to prevent waterlogging. Construct shallow ditches (15–20 cm deep) to direct excess water away from roots. Avoid fertilizer application before heavy rain.',
+                            'erosion'         => 'Minimal erosion risk. Maintain ground cover crops or organic mulch to prevent surface compaction. Avoid bare soil between rows during rainy season.',
+                            'organic'         => 'Apply 1–2 kg compost per tree per application. Mulch around tree base with dried leaves, grass, or rice straw (5–10 cm layer) to improve soil structure and drainage.',
+                            'special'         => 'Monitor for waterlogging during prolonged rain. If standing water persists more than 24 hours, improve drainage immediately. Suitable for intercropping with leguminous cover crops.',
+                            'erosionRisk'     => 'Low',
+                            'waterConcern'    => 'Waterlogging',
+                            'keyAction'       => 'Ensure proper drainage channels',
+                        ],
+                        'Hills/Hilly Land' => [
+                            'characteristics' => 'Moderately to steeply sloping terrain (15–45% gradient). High risk of erosion and nutrient runoff. Water drains rapidly downhill, reducing fertilizer retention in the root zone.',
+                            'fertilizer'      => 'Split each application into 2 smaller doses 4–6 weeks apart. Apply fertilizer on the uphill side of each tree in crescent-shaped micro-basins to catch water and nutrients. Never apply during or before heavy rain.',
+                            'water'           => 'Construct contour trenches (12–18 inches deep) following the natural curves of the slope to slow water flow and encourage infiltration. Space trenches closer on steeper slopes. Install staggered water collection pits between rows.',
+                            'erosion'         => 'Plant nitrogen-fixing hedgerows (Gliricidia sepium, Flemingia macrophylla, Desmodium rensonii) in contour rows every 3–5 m across the slope (SALT method). Maintain permanent ground cover. Apply heavy mulching (10–15 cm).',
+                            'organic'         => 'Increase compost to 2–3 kg per tree to improve water and nutrient retention. Place mulch on the uphill side of trees to trap moisture and reduce runoff. Use hedgerow prunings as green manure in alleys.',
+                            'special'         => 'Establish shade trees (madre de cacao, Erythrina) to reduce erosion and protect soil from rainfall impact. Avoid deep tillage. Plant coffee rows along contour lines, not up/down the slope. Consider slow-release fertilizers.',
+                            'erosionRisk'     => 'High',
+                            'waterConcern'    => 'Rapid runoff',
+                            'keyAction'       => 'Contour hedgerows (SALT); heavy mulching',
+                        ],
+                        'Valleys' => [
+                            'characteristics' => 'Low-lying areas between hills that naturally collect water, sediment, and nutrients from higher ground. Soils are often deeper and more fertile but prone to flooding and waterlogging.',
+                            'fertilizer'      => 'Reduce fertilizer rates by 10–20% from standard KAPE recommendations since valley soils naturally receive nutrient-rich sediment. Apply in slightly raised mounds or berms (10–15 cm above ground) to prevent submersion.',
+                            'water'           => 'Install robust drainage with main channels and connecting lateral ditches. Raise planting beds 15–30 cm above the surrounding ground to keep roots above flood level. Clear drainage outlets before rainy season.',
+                            'erosion'         => 'Minimal slope erosion risk, but manage sediment deposition from uphill runoff. Plant vegetative buffer strips at valley edges to filter incoming runoff and trap excess sediment. Maintain ground cover.',
+                            'organic'         => 'Standard 1 kg compost per tree is sufficient since valley soils accumulate organic material naturally. Focus on maintaining soil structure and aeration through composting rather than increasing nutrient inputs.',
+                            'special'         => 'Monitor soil moisture closely — valley soils may remain saturated, risking root rot. Select moisture-tolerant coffee varieties if available. Avoid planting in the lowest points where standing water is frequent. Apply fertilizer during drier periods.',
+                            'erosionRisk'     => 'Low (slope)',
+                            'waterConcern'    => 'Flooding; saturation',
+                            'keyAction'       => 'Raised beds; robust drainage',
+                        ],
+                        'Plateaus/Tablelands' => [
+                            'characteristics' => 'Elevated, relatively flat terrain with good sun exposure and typically deep, fertile soil. Combines flat-land ease of management with good natural drainage. May be more exposed to wind and temperature extremes.',
+                            'fertilizer'      => 'Standard KAPE fertilizer rates apply. Apply in ring furrows around the drip line. Single-dose applications per schedule are generally effective since plateaus have good nutrient retention and moderate drainage.',
+                            'water'           => 'Drainage is naturally good on elevated terrain. Focus on moisture conservation through mulching rather than drainage construction. On volcanic or porous soils, thicken the mulch layer (10–15 cm) to slow evaporation.',
+                            'erosion'         => 'Low erosion risk on the flat plateau surface. Monitor plateau edges where slopes begin — runoff from the flat area can concentrate and cause gully erosion at edges. Plant vegetative barriers along plateau margins.',
+                            'organic'         => 'Apply 1–2 kg compost per tree. Heavier mulching (10–15 cm layer) is recommended to conserve moisture and protect soil from wind erosion, which is more common on exposed elevated terrain.',
+                            'special'         => 'Establish windbreak hedgerows or shade trees around the farm perimeter. Monitor soil pH annually — volcanic plateaus may be naturally acidic. Greater sun exposure may increase water demand; consider supplemental irrigation during prolonged dry periods.',
+                            'erosionRisk'     => 'Low (edges)',
+                            'waterConcern'    => 'Wind; evaporation',
+                            'keyAction'       => 'Windbreaks; heavy mulching for moisture',
+                        ],
+                        'Terraces' => [
+                            'characteristics' => 'Constructed or naturally stepped terrain where slopes have been converted into level planting platforms (SALT technology). Combines flat-land benefits (reduced erosion, nutrient retention) with the natural drainage of sloped terrain.',
+                            'fertilizer'      => 'Apply fertilizer on the inner (uphill) side of each terrace level in shallow furrows along the drip line. Standard KAPE rates apply since terraces retain nutrients effectively. Ensure fertilizer is placed away from terrace edges.',
+                            'water'           => 'Maintain terrace walls and retaining structures — damaged walls cause worse concentrated erosion. Ensure each level has a slight inward slope (1–2%) to direct water toward the hillside. Install overflow channels for heavy rain.',
+                            'erosion'         => 'Reinforce terrace risers with vegetation (grasses, leguminous shrubs) or stone to prevent wall collapse. Plant cover crops on each level between coffee rows. Inspect terrace structures before each rainy season and repair immediately.',
+                            'organic'         => 'Apply 1–2 kg compost per tree. Use hedgerow prunings from terrace-edge plantings as green manure on each level. Mulching is especially effective on terraces since the level surface retains mulch in place.',
+                            'special'         => 'Terrace construction requires initial labor but can reduce soil loss by over 90% (Paningbatan et al., 1995). Combine terracing with SALT agroforestry: plant nitrogen-fixing hedgerows (Gliricidia, Flemingia, Leucaena) along terrace edges.',
+                            'erosionRisk'     => 'Low (if maintained)',
+                            'waterConcern'    => 'Wall overflow',
+                            'keyAction'       => 'Maintain walls; vegetative reinforcement',
+                        ],
+                    ];
+                    $topo = $topoData[$record->topography] ?? null;
+                @endphp
+                <p class="mt-1 text-sm font-bold text-emerald-900 dark:text-emerald-100">{{ $record->topography }}</p>
+                @if($topo)
+                    <p class="mt-2 text-xs text-gray-700 dark:text-gray-300 italic">{{ $topo['characteristics'] }}</p>
+                    <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                        <div class="bg-white dark:bg-gray-800 p-2 rounded border border-emerald-200 dark:border-emerald-800">
+                            <div class="font-semibold text-emerald-800 dark:text-emerald-300">Fertilizer Application Method</div>
+                            <div class="text-gray-700 dark:text-gray-300 mt-0.5">{{ $topo['fertilizer'] }}</div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-2 rounded border border-emerald-200 dark:border-emerald-800">
+                            <div class="font-semibold text-blue-700 dark:text-blue-300">Water Management</div>
+                            <div class="text-gray-700 dark:text-gray-300 mt-0.5">{{ $topo['water'] }}</div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-2 rounded border border-emerald-200 dark:border-emerald-800">
+                            <div class="font-semibold text-amber-700 dark:text-amber-300">Erosion Control</div>
+                            <div class="text-gray-700 dark:text-gray-300 mt-0.5">{{ $topo['erosion'] }}</div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-2 rounded border border-emerald-200 dark:border-emerald-800">
+                            <div class="font-semibold text-green-700 dark:text-green-300">Organic Matter</div>
+                            <div class="text-gray-700 dark:text-gray-300 mt-0.5">{{ $topo['organic'] }}</div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-2 rounded border border-emerald-200 dark:border-emerald-800 md:col-span-2">
+                            <div class="font-semibold text-orange-700 dark:text-orange-300">Special Considerations</div>
+                            <div class="text-gray-700 dark:text-gray-300 mt-0.5">{{ $topo['special'] }}</div>
+                        </div>
+                    </div>
+                    <div class="mt-2 flex flex-wrap gap-2 text-[10px]">
+                        <span class="px-2 py-0.5 rounded bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200"><strong>Erosion Risk:</strong> {{ $topo['erosionRisk'] }}</span>
+                        <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200"><strong>Water Concern:</strong> {{ $topo['waterConcern'] }}</span>
+                        <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"><strong>Key Action:</strong> {{ $topo['keyAction'] }}</span>
+                    </div>
+                    <p class="mt-2 text-[10px] text-gray-500 dark:text-gray-400 italic">Source: Topography-Based Coffee Soil Management Guide (KAPE + SALT).</p>
+                @endif
+            </div>
+        @endif
     </div>
 
     {{-- ── Analysis Results — Cards (not in tabs) ──────────────────────────── --}}
@@ -597,176 +769,211 @@
     @endphp
 
     @if($hasAi)
-    <div class="rounded-xl overflow-hidden border border-purple-200 dark:border-purple-800 shadow-md mt-2">
+    {{-- Document viewer (matches pest & disease style) --}}
+    <div class="rounded-xl overflow-hidden border border-gray-300 dark:border-gray-600 shadow-md mt-2">
 
-        {{-- Header --}}
-        <div class="flex items-center justify-between px-5 py-3 bg-gradient-to-r from-purple-700 to-purple-900">
-            <div class="flex items-center gap-2 text-white text-sm font-semibold">
-                <svg class="w-4 h-4 text-purple-300" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+        {{-- Toolbar --}}
+        <div class="flex items-center justify-between bg-gray-700 dark:bg-gray-900 px-4 py-2">
+            <div class="flex items-center gap-2 text-white text-xs font-medium">
+                <svg class="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
                 </svg>
-                AI Soil Analysis Recommendation — {{ $record->farm_name ?? 'Farm' }}
+                <span>AI Soil Fertility Recommendation — {{ $record->farm_name ?? 'Farm' }}</span>
             </div>
-            <span class="text-xs text-purple-300">Powered by Google Gemini AI</span>
+            <div class="flex items-center gap-2">
+                <button type="button"
+                    onclick="var v=document.getElementById('soil-ai-doc-{{ $record->id }}'),b=document.getElementById('soil-ai-exp-{{ $record->id }}');if(v.style.maxHeight==='none'){v.style.maxHeight='600px';b.textContent='Expand';}else{v.style.maxHeight='none';b.textContent='Collapse';}"
+                    id="soil-ai-exp-{{ $record->id }}"
+                    class="text-xs text-gray-300 hover:text-white bg-gray-600 hover:bg-gray-500 px-2 py-1 rounded transition">
+                    Expand
+                </button>
+                <button type="button" onclick="window['printSoilReport_{{ $record->id }}']&&window['printSoilReport_{{ $record->id }}']();"
+                    class="text-xs text-gray-300 hover:text-white bg-gray-600 hover:bg-gray-500 px-2 py-1 rounded transition flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd"/></svg>
+                    Print
+                </button>
+            </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-900 px-6 py-5 space-y-6">
+        {{-- Paper --}}
+        <div class="bg-gray-200 dark:bg-gray-700 px-4 py-4 overflow-y-auto"
+             style="max-height:600px;" id="soil-ai-doc-{{ $record->id }}">
+            <div class="bg-white shadow-lg rounded mx-auto"
+                 style="max-width:720px; min-height:420px; padding:32px 36px; font-family:'Segoe UI',Arial,sans-serif;">
 
-            {{-- 1. Farmer Summary --}}
-            @if(!empty($record->ai_farmer_summary))
-            <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4">
-                <h2 class="text-sm font-bold text-yellow-800 dark:text-yellow-300 uppercase tracking-wide mb-2 flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
-                    Summary for the Farmer
-                </h2>
-                <p class="text-sm text-yellow-900 dark:text-yellow-200 leading-relaxed">{{ $aiFarmerSummary }}</p>
-            </div>
-            @endif
+                @php
+                    $hs = "font-size:13px; font-weight:800; color:#4c1d95; margin:0 0 8px 0; padding-bottom:5px; border-bottom:2px solid #4c1d95; text-transform:uppercase; letter-spacing:0.5px;";
+                @endphp
 
-            {{-- 2. Diagnosis --}}
-            @if(!empty($record->ai_diagnosis))
-            <div>
-                <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Soil Diagnosis</h2>
-                <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{{ $aiDiagnosis }}</p>
-            </div>
-            @endif
+                {{-- Document Title --}}
+                <div style="text-align:center; border-bottom:3px solid #4c1d95; padding-bottom:16px; margin-bottom:26px;">
+                    <p style="font-size:9px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#9ca3af; margin:0 0 4px 0;">
+                        CofSys &mdash; Coffee Agri-Farming Management System
+                    </p>
+                    <h1 style="font-size:18px; font-weight:900; color:#4c1d95; margin:0 0 4px 0;">
+                        AI Soil Fertility Recommendation
+                    </h1>
+                    <p style="font-size:14px; font-weight:700; color:#374151; margin:0 0 10px 0;">
+                        {{ $record->farm_name ?? 'N/A' }}
+                    </p>
+                    <p style="font-size:10px; color:#9ca3af; margin:8px 0 0 0;">
+                        Soil Type: <strong style="color:#374151;">{{ $record->soil_type ?? '—' }}</strong>
+                        &nbsp;&bull;&nbsp;
+                        Crop: <strong style="color:#374151;">{{ $record->crop_variety ?? '—' }}</strong>
+                        &nbsp;&bull;&nbsp;
+                        Date Collected: <strong style="color:#374151;">{{ $record->date_collected?->format('F d, Y') ?? '—' }}</strong>
+                        &nbsp;&bull;&nbsp;
+                        Generated: <strong style="color:#374151;">{{ now()->format('F d, Y') }}</strong>
+                    </p>
+                </div>
 
-            {{-- 3. Key Concerns --}}
-            @if(!empty($aiKeyConcerns))
-            <div>
-                <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Key Concerns</h2>
-                <ul class="space-y-2">
-                    @foreach($aiKeyConcerns as $concern)
-                    <li class="flex gap-2 text-sm text-gray-700 dark:text-gray-300">
-                        <span class="mt-1 flex-shrink-0 w-2 h-2 rounded-full bg-red-400"></span>
-                        <span class="leading-relaxed">{{ $concern }}</span>
-                    </li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
+                {{-- 1. Farmer Summary --}}
+                @if(!empty($aiFarmerSummary))
+                <div style="margin-bottom:22px; background:#fffbeb; border:1px solid #fde68a; border-left:4px solid #f59e0b; border-radius:6px; padding:14px 16px;">
+                    <h2 style="{{ $hs }}">Summary for the Farmer</h2>
+                    <p style="font-size:12.5px; line-height:1.85; color:#1f2937; margin:0; text-align:justify;">{{ $aiFarmerSummary }}</p>
+                </div>
+                @endif
 
-            {{-- 4. Priority Actions --}}
-            @if(!empty($aiPriorityActions))
-            <div>
-                <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Priority Actions</h2>
-                <ol class="space-y-2 list-none">
-                    @foreach($aiPriorityActions as $idx => $action)
-                    <li class="flex gap-3 text-sm text-gray-700 dark:text-gray-300">
-                        <span class="flex-shrink-0 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">{{ $idx + 1 }}</span>
-                        <span class="leading-relaxed pt-0.5">{{ $action }}</span>
-                    </li>
-                    @endforeach
-                </ol>
-            </div>
-            @endif
+                {{-- 2. Diagnosis --}}
+                @if(!empty($aiDiagnosis))
+                <div style="margin-bottom:22px;">
+                    <h2 style="{{ $hs }}">Soil Diagnosis</h2>
+                    <p style="font-size:12.5px; line-height:1.85; color:#1f2937; margin:0; text-align:justify;">{{ $aiDiagnosis }}</p>
+                </div>
+                @endif
 
-            {{-- 5. Soil Parameter Remarks --}}
-            @if(!empty($soilRemarks))
-            <div>
-                <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Soil Parameter Analysis</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm border-collapse">
+                {{-- 3. Key Concerns --}}
+                @if(!empty($aiKeyConcerns))
+                <div style="margin-bottom:22px;">
+                    <h2 style="{{ $hs }}">Key Concerns</h2>
+                    <ul style="margin:0; padding-left:22px; font-size:12.5px; color:#1f2937; line-height:1.85;">
+                        @foreach($aiKeyConcerns as $concern)
+                            <li style="margin-bottom:5px; text-align:justify;">{{ $concern }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
+
+                {{-- 4. Priority Actions --}}
+                @if(!empty($aiPriorityActions))
+                <div style="margin-bottom:22px;">
+                    <h2 style="{{ $hs }}">Priority Actions</h2>
+                    <ol style="margin:0; padding-left:22px; font-size:12.5px; color:#1f2937; line-height:1.85;">
+                        @foreach($aiPriorityActions as $action)
+                            <li style="margin-bottom:7px; text-align:justify;">{{ $action }}</li>
+                        @endforeach
+                    </ol>
+                </div>
+                @endif
+
+                {{-- 5. Soil Parameter Remarks --}}
+                @if(!empty($soilRemarks))
+                <div style="margin-bottom:22px;">
+                    <h2 style="{{ $hs }}">Soil Parameter Analysis</h2>
+                    <table style="width:100%; border-collapse:collapse; font-size:12px;">
                         <thead>
-                            <tr class="bg-purple-700 text-white">
-                                <th class="text-left px-3 py-2 font-semibold text-xs w-32">Parameter</th>
-                                <th class="text-left px-3 py-2 font-semibold text-xs">Remarks &amp; Recommendation</th>
+                            <tr>
+                                <th style="background:#4c1d95; color:#fff; padding:9px 12px; text-align:left; font-size:11px; font-weight:700; width:140px; border:1px solid #4c1d95;">Parameter</th>
+                                <th style="background:#4c1d95; color:#fff; padding:9px 12px; text-align:left; font-size:11px; font-weight:700; border:1px solid #4c1d95;">Remarks &amp; Recommendation</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($paramLabels as $key => $label)
                             @if(!empty($soilRemarks[$key]))
-                            <tr class="border-b border-gray-100 dark:border-gray-700 {{ $loop->even ? 'bg-gray-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-900' }}">
-                                <td class="px-3 py-3 font-semibold text-purple-700 dark:text-purple-400 text-xs align-top">{{ $label }}</td>
-                                <td class="px-3 py-3 text-gray-700 dark:text-gray-300 leading-relaxed text-xs">{{ $soilRemarks[$key] }}</td>
+                            <tr style="background:{{ $loop->even ? '#f9fafb' : '#ffffff' }};">
+                                <td style="padding:9px 12px; vertical-align:top; border:1px solid #e5e7eb; font-weight:700; color:#4c1d95; font-size:11px;">{{ $label }}</td>
+                                <td style="padding:9px 12px; vertical-align:top; border:1px solid #e5e7eb; color:#1f2937; line-height:1.75; text-align:justify; font-size:12px;">{{ $soilRemarks[$key] }}</td>
                             </tr>
                             @endif
                             @endforeach
                         </tbody>
                     </table>
                 </div>
-            </div>
-            @endif
+                @endif
 
-            {{-- 6. Organic Alternatives --}}
-            @if(!empty($aiOrganicAlts))
-            <div>
-                <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Organic &amp; Low-Cost Alternatives</h2>
-                <ul class="space-y-2">
-                    @foreach($aiOrganicAlts as $idx => $alt)
-                    <li class="flex gap-2 text-sm text-gray-700 dark:text-gray-300">
-                        <span class="flex-shrink-0 text-green-500 font-bold text-xs mt-0.5">{{ $idx + 1 }}.</span>
-                        <span class="leading-relaxed">{{ $alt }}</span>
-                    </li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
+                {{-- 6. Organic Alternatives --}}
+                @if(!empty($aiOrganicAlts))
+                <div style="margin-bottom:22px;">
+                    <h2 style="{{ $hs }}">Organic &amp; Low-Cost Alternatives</h2>
+                    <ol style="margin:0; padding-left:22px; font-size:12.5px; color:#1f2937; line-height:1.85;">
+                        @foreach($aiOrganicAlts as $alt)
+                            <li style="margin-bottom:5px; text-align:justify;">{{ $alt }}</li>
+                        @endforeach
+                    </ol>
+                </div>
+                @endif
 
-            {{-- 7. Good Farming Practices --}}
-            @if(!empty($aiPractices))
-            <div>
-                <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Good Farming Practices</h2>
-                <ol class="space-y-2 list-none">
-                    @foreach($aiPractices as $idx => $practice)
-                    <li class="flex gap-2 text-sm text-gray-700 dark:text-gray-300">
-                        <span class="flex-shrink-0 text-purple-500 font-bold text-xs mt-0.5">{{ $idx + 1 }}.</span>
-                        <span class="leading-relaxed">{{ $practice }}</span>
-                    </li>
-                    @endforeach
-                </ol>
-            </div>
-            @endif
+                {{-- 7. Good Farming Practices --}}
+                @if(!empty($aiPractices))
+                <div style="margin-bottom:22px;">
+                    <h2 style="{{ $hs }}">Good Farming Practices</h2>
+                    <ol style="margin:0; padding-left:22px; font-size:12.5px; color:#1f2937; line-height:1.85;">
+                        @foreach($aiPractices as $practice)
+                            <li style="margin-bottom:7px; text-align:justify;">{{ $practice }}</li>
+                        @endforeach
+                    </ol>
+                </div>
+                @endif
 
-            {{-- 8. Monitoring Plan --}}
-            @if(!empty($aiMonitoring))
-            <div>
-                <h2 class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider border-b border-purple-200 dark:border-purple-700 pb-1 mb-3">Monitoring Plan</h2>
-                <ul class="space-y-2">
-                    @foreach($aiMonitoring as $item)
-                    <li class="flex gap-2 text-sm text-gray-700 dark:text-gray-300">
-                        <span class="mt-1.5 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-                        <span class="leading-relaxed">{{ $item }}</span>
-                    </li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
+                {{-- 8. Monitoring Plan --}}
+                @if(!empty($aiMonitoring))
+                <div style="margin-bottom:22px;">
+                    <h2 style="{{ $hs }}">Monitoring Plan</h2>
+                    <ul style="margin:0; padding-left:22px; font-size:12.5px; color:#1f2937; line-height:1.85;">
+                        @foreach($aiMonitoring as $item)
+                            <li style="margin-bottom:5px; text-align:justify;">{{ $item }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
 
-            {{-- 9. Expected Outcomes --}}
-            @if(!empty($record->ai_expected_outcomes))
-            <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
-                <h2 class="text-xs font-bold text-green-800 dark:text-green-400 uppercase tracking-wide mb-2">Expected Outcomes</h2>
-                <p class="text-sm text-green-900 dark:text-green-200 leading-relaxed">{{ $aiOutcomes }}</p>
-            </div>
-            @endif
+                {{-- 9. Expected Outcomes --}}
+                @if(!empty($aiOutcomes))
+                <div style="margin-bottom:22px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:14px 16px;">
+                    <h2 style="{{ $hs }}">Expected Outcomes</h2>
+                    <p style="font-size:12.5px; line-height:1.85; color:#1f2937; margin:0; text-align:justify;">{{ $aiOutcomes }}</p>
+                </div>
+                @endif
 
-            {{-- 10. Reminders --}}
-            @if(!empty($aiReminders))
-            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4">
-                <h2 class="text-xs font-bold text-red-800 dark:text-red-400 uppercase tracking-wide mb-2 flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                    Important Reminders
-                </h2>
-                <ul class="space-y-2 mt-1">
-                    @foreach($aiReminders as $reminder)
-                    <li class="flex gap-2 text-sm text-red-900 dark:text-red-200">
-                        <span class="mt-1 flex-shrink-0 w-2 h-2 rounded-full bg-red-500"></span>
-                        <span class="leading-relaxed">{{ $reminder }}</span>
-                    </li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
+                {{-- 10. Reminders --}}
+                @if(!empty($aiReminders))
+                <div style="margin-bottom:8px; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:14px 16px;">
+                    <h2 style="{{ $hs }}">Important Reminders</h2>
+                    <ul style="margin:0; padding-left:22px; font-size:12.5px; color:#1f2937; line-height:1.85;">
+                        @foreach($aiReminders as $reminder)
+                            <li style="margin-bottom:5px; text-align:justify;">{{ $reminder }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
 
+                {{-- Document footer --}}
+                <div style="margin-top:28px; border-top:1px solid #e5e7eb; padding-top:8px; font-size:10px; color:#9ca3af; text-align:center;">
+                    CofSys — Coffee Agri-Farming Management System &nbsp;·&nbsp; AI-Assisted Soil Fertility Recommendation
+                </div>
+
+            </div>{{-- end paper --}}
+        </div>{{-- end bg-gray-200 scroll --}}
+
+        {{-- Bottom bar --}}
+        <div class="bg-gray-700 dark:bg-gray-900 px-4 py-1 text-center text-xs text-gray-400">
+            Powered by Google Gemini AI &nbsp;|&nbsp; Generated on:
+            <span class="font-medium text-gray-200">{{ $record->updated_at?->format('M d, Y') ?? now()->format('M d, Y') }}</span>
         </div>
 
-        {{-- Footer --}}
-        <div class="bg-purple-900 px-5 py-2 text-center text-xs text-purple-300">
-            Generated on: <span class="font-medium text-white">{{ $record->updated_at?->format('M d, Y · h:i A') ?? 'N/A' }}</span>
-            &nbsp;|&nbsp; Powered by Google Gemini AI
+    </div>{{-- end document viewer --}}
+
+    @else
+        {{-- Placeholder when no AI data yet --}}
+        <div class="border border-dashed border-purple-200 dark:border-purple-800 rounded-xl p-4 flex items-center gap-3 bg-purple-50/50 dark:bg-purple-900/10">
+            <svg class="w-5 h-5 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+            <p class="text-xs text-purple-600 dark:text-purple-400">
+                No AI recommendation yet. Click <strong>Generate AI Draft</strong> below to get an AI-assisted soil fertility recommendation for this analysis.
+            </p>
         </div>
-    </div>
     @endif
 
     {{-- ── Conversation Thread (Expert ↔ Farmer) ───────────────────────────── --}}

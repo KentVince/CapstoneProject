@@ -54,7 +54,7 @@ trait HasFarmerInfoComponents
                             ->visible(fn (Get $get): bool => $get('user_type') === 'agricultural_professional')
                             ->required(fn (Get $get): bool => $get('user_type') === 'agricultural_professional')
                             ->options([
-                                'MAGRO' => 'MAGRO',
+                                'MAGSO' => 'MAGSO',
                                 'PAGRO' => 'PAGRO',
                                 'DDOSC' => 'DDOSC',
                             ]),

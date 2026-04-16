@@ -112,50 +112,47 @@ class SoilAnalysisObserver
         if (($soilAnalysis->wasChanged('expert_comments') || $soilAnalysis->wasChanged('validation_status')) &&
             !empty($soilAnalysis->expert_comments)) {
 
-            try {
-                // Get the farmer
-                $farmer = $soilAnalysis->farmer;
-                if (!$farmer) {
-                    return;
-                }
+            // Defer FCM calls to after the HTTP response so the UI stays fast
+            $analysisId = $soilAnalysis->id;
 
-                // Get the expert/validator name
-                $expertName = $soilAnalysis->validator?->name ?? 'Agricultural Expert';
+            dispatch(function () use ($analysisId) {
+                try {
+                    $soilAnalysis = SoilAnalysis::find($analysisId);
+                    if (!$soilAnalysis) return;
 
-                // Prepare FCM message content
-                $status = $soilAnalysis->validation_status;
-                $farmName = $soilAnalysis->farm_name ?? 'Your soil analysis';
+                    $farmer = $soilAnalysis->farmer;
+                    if (!$farmer) return;
 
-                $title = 'Expert Recommendation Received';
-                $body = "An expert added a recommendation for your soil analysis.";
+                    $expertName = $soilAnalysis->validator?->name ?? 'Agricultural Expert';
+                    $title = 'Expert Recommendation Received';
+                    $body = "An expert added a recommendation for your soil analysis.";
 
-                // Generate sample_id (format: farm_id-date-analysis_id)
-                $sampleId = sprintf(
-                    '%s-%s-%s',
-                    $soilAnalysis->farm_id ?? 'X',
-                    $soilAnalysis->date_collected?->format('m-d-y') ?? now()->format('m-d-y'),
-                    str_pad($soilAnalysis->id, 2, '0', STR_PAD_LEFT)
-                );
-
-                // Send FCM notification to farmer's device
-                $appNo = $farmer->app_no;
-                if ($appNo) {
-                    $this->sendFcmNotification(
-                        $appNo,
-                        $title,
-                        $body,
-                        [
-                            'type' => 'soil_recommendation_update',
-                            'analysis_id' => (string) $soilAnalysis->id,
-                            'sample_id' => $sampleId,
-                            'recommendation' => $soilAnalysis->expert_comments ?? '',
-                            'expert_name' => $expertName,
-                        ]
+                    $sampleId = sprintf(
+                        '%s-%s-%s',
+                        $soilAnalysis->farm_id ?? 'X',
+                        $soilAnalysis->date_collected?->format('m-d-y') ?? now()->format('m-d-y'),
+                        str_pad($soilAnalysis->id, 2, '0', STR_PAD_LEFT)
                     );
+
+                    $appNo = $farmer->app_no;
+                    if ($appNo) {
+                        (new self)->sendFcmNotification(
+                            $appNo,
+                            $title,
+                            $body,
+                            [
+                                'type' => 'soil_recommendation_update',
+                                'analysis_id' => (string) $soilAnalysis->id,
+                                'sample_id' => $sampleId,
+                                'recommendation' => $soilAnalysis->expert_comments ?? '',
+                                'expert_name' => $expertName,
+                            ]
+                        );
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error sending soil analysis recommendation FCM: ' . $e->getMessage());
                 }
-            } catch (\Exception $e) {
-                Log::error('Error sending soil analysis recommendation FCM: ' . $e->getMessage());
-            }
+            })->afterResponse();
         }
     }
 

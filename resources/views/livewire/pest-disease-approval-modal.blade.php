@@ -5,7 +5,7 @@
     <x-filament::modal
         id="pest-disease-approval-modal"
         x-model="isOpen"
-        width="3xl"
+        width="5xl"
         @close="isOpen = false; $wire.closeModal()"
     >
         <x-slot name="heading">
@@ -19,7 +19,7 @@
         @if($record)
             <div class="space-y-4 dark:bg-custom-color-darkmode">
                 {{-- Main Content: Image Left, Details Right --}}
-                <div class="flex flex-col md:flex-row gap-6 pt-2">
+                <div class="flex flex-row gap-6 pt-2">
                     {{-- Left: Image --}}
                     <div class="flex-shrink-0">
                         @if($record->image_path)
@@ -64,15 +64,10 @@
                     </div>
 
                     {{-- Right: Details Grid --}}
-                    <div class="flex-1 grid grid-cols-2 gap-3">
+                    <div class="flex-1 grid grid-cols-3 gap-3">
                         <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
                             <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Pest/Disease</h4>
                             <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{{ $record->pest }}</p>
-                        </div>
-
-                        <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                            <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Type</h4>
-                            <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{{ ucfirst($record->type ?? 'N/A') }}</p>
                         </div>
 
                         <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
@@ -81,25 +76,30 @@
                         </div>
 
                         <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                            <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Area</h4>
+                            <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Type</h4>
+                            <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{{ ucfirst($record->type ?? 'N/A') }}</p>
+                        </div>
+
+                        <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                            <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Date Detected</h4>
+                            <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{{ $record->date_detected ? \Carbon\Carbon::parse($record->date_detected)->format('M d, Y') : 'N/A' }}</p>
+                        </div>
+
+                        <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                            <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Location</h4>
                             <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{{ $record->area }}</p>
                         </div>
 
-                        <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg col-span-2">
-                            <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Description</h4>
-                            <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $record->description ?? 'No description' }}</p>
-                        </div>
-
-                        <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg col-span-2">
-                            <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Detected</h4>
-                            <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $record->date_detected ? \Carbon\Carbon::parse($record->date_detected)->format('M d, Y') : 'N/A' }}</p>
-                        </div>
-
-                        <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg col-span-2">
+                        <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
                             <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Coordinates</h4>
                             <p class="mt-1 text-xs text-gray-900 dark:text-white">
                                 {{ number_format($record->latitude, 4) }}, {{ number_format($record->longitude, 4) }}
                             </p>
+                        </div>
+
+                        <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg col-span-3">
+                            <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400">Description</h4>
+                            <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $record->description ?? 'No description' }}</p>
                         </div>
                     </div>
                 </div>

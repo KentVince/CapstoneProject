@@ -178,6 +178,19 @@ class SoilAnalysisResource extends Resource
                                     ->native(false)
                                     ->live(),
 
+                                Forms\Components\Select::make('topography')
+                                    ->label('Farm Topography')
+                                    ->helperText('Select the shape/slope of the farm for topography-based management recommendations.')
+                                    ->options([
+                                        'Plains/Flat Land'   => 'Plains / Flat Land',
+                                        'Hills/Hilly Land'   => 'Hills / Hilly Land',
+                                        'Valleys'            => 'Valleys',
+                                        'Plateaus/Tablelands'=> 'Plateaus / Tablelands',
+                                        'Terraces'           => 'Terraces',
+                                    ])
+                                    ->native(false)
+                                    ->visible(fn (Forms\Get $get) => $get('analysis_type') === 'without_lab'),
+
                                 Forms\Components\Select::make('crop_variety')
                                     ->label('Crop Variety')
                                     ->options([
@@ -370,7 +383,7 @@ class SoilAnalysisResource extends Resource
                 $user = auth()->user();
                 if ($user && $user->isAgriculturalProfessional()) {
                     $professional = $user->agriculturalProfessional;
-                    if ($professional && $professional->agency === 'MAGRO' && $professional->municipality) {
+                    if ($professional && $professional->agency === 'MAGSO' && $professional->municipality) {
                         $query->whereHas('farmer', fn ($q) => $q->where('farmer_address_mun', $professional->municipality));
                     }
                 }

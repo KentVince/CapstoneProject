@@ -23,6 +23,7 @@ class SoilAnalysisController extends Controller
             'farm_name'      => 'nullable|string',
             'crop_variety'   => 'nullable|string',
             'soil_type'      => 'nullable|string',
+            'topography'     => 'nullable|string',
             'analysis_type'  => 'nullable|string|in:with_lab,without_lab',
             'date_collected' => 'nullable|date',
             'location'       => 'nullable|string',

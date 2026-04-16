@@ -16,6 +16,7 @@ use App\Filament\Widgets\BlogPostsChart1;
 use App\Filament\Widgets\BlogPostsChart3;
 use App\Filament\Widgets\FarmsByMunicipalityChart;
 use App\Filament\Widgets\SoilPhDistributionChart;
+use App\Filament\Widgets\TopAffectedBarangaysChart;
 use App\Filament\Widgets\ValidationStatusChart;
 use App\Models\Municipality;
 use Filament\Forms\Components\Select;
@@ -46,10 +47,12 @@ class Dashboard extends \Filament\Pages\Dashboard
     }
 
     public $pestAndDiseaseData = [];
-    public $farmData = [];
+    public $soilNutrientData = [];
     public $pestData = [];
     public $casesBySeverity = [];
-    public $pestVsDisease = [];
+    public $pestByBarangay = [];
+    public $pestDistributionByBarangay = [];
+    public $incidenceRateTrend = [];
     public $topPests = [];
     public $farmsByMunicipality = [];
     public $soilPhDistribution = [];
@@ -76,15 +79,14 @@ class Dashboard extends \Filament\Pages\Dashboard
         return $query->groupBy('severity')->pluck('count', 'severity');
     }
 
-    public function getPestVsDisease()
+    public function getPestByBarangay()
     {
-        // Get type from categories
-        $categoryTypes = PestAndDiseaseCategory::pluck('type', 'name');
+        $query = PestAndDisease::selectRaw('area, COUNT(*) as count')
+            ->where('validation_status', 'approved')
+            ->whereNotNull('area')
+            ->where('area', '!=', '')
+            ->where('area', '!=', 'Unknown area');
 
-        $query = PestAndDisease::select('pest', DB::raw('COUNT(*) as count'))
-            ->where('validation_status', 'approved');
-
-        // Apply filters
         if ($startDate = $this->filters['startDate'] ?? null) {
             $query->where('date_detected', '>=', $startDate);
         }
@@ -95,24 +97,86 @@ class Dashboard extends \Filament\Pages\Dashboard
             $query->where('area', $municipal);
         }
 
-        $data = $query->groupBy('pest')->get();
+        $rows = $query->groupBy('area')
+            ->orderByDesc('count')
+            ->pluck('count', 'area');
 
-        $pestCount = 0;
-        $diseaseCount = 0;
+        // Strip municipality from area (e.g. "Magcagong, Maragusan" → "Magcagong")
+        $result = [];
+        foreach ($rows as $area => $count) {
+            $barangay = trim(explode(',', $area)[0]);
+            $result[$barangay] = ($result[$barangay] ?? 0) + $count;
+        }
+        arsort($result);
 
-        foreach ($data as $item) {
-            $type = $categoryTypes[$item->pest] ?? 'pest';
-            if ($type === 'pest') {
-                $pestCount += $item->count;
-            } else {
-                $diseaseCount += $item->count;
-            }
+        return $result;
+    }
+
+    public function getPestDistributionByBarangay()
+    {
+        $query = PestAndDisease::selectRaw('area, pest, COUNT(*) as count')
+            ->where('validation_status', 'approved')
+            ->whereNotNull('area')
+            ->where('area', '!=', '')
+            ->where('area', '!=', 'Unknown area');
+
+        if ($startDate = $this->filters['startDate'] ?? null) {
+            $query->where('date_detected', '>=', $startDate);
+        }
+        if ($endDate = $this->filters['endDate'] ?? null) {
+            $query->where('date_detected', '<=', $endDate);
+        }
+        if ($municipal = $this->filters['municipal'] ?? null) {
+            $query->where('area', $municipal);
         }
 
+        $rows = $query->groupBy('area', 'pest')
+            ->orderBy('area')
+            ->get();
+
+        // Collect all unique pests and build pivot: barangay => [pest => count]
+        // Strip municipality from area (e.g. "Magcagong, Maragusan" → "Magcagong")
+        $pests = [];
+        $pivot = [];
+        foreach ($rows as $row) {
+            $barangay = trim(explode(',', $row->area)[0]);
+            $pests[$row->pest] = true;
+            $pivot[$barangay][$row->pest] = ($pivot[$barangay][$row->pest] ?? 0) + (int) $row->count;
+        }
+
+        // Sort pests alphabetically
+        $pestList = array_keys($pests);
+        sort($pestList);
+
         return [
-            'Pests' => $pestCount,
-            'Diseases' => $diseaseCount
+            'pests' => $pestList,
+            'pivot' => $pivot,
         ];
+    }
+
+    public function getIncidenceRateTrend()
+    {
+        $query = PestAndDisease::select(
+                DB::raw("DATE_FORMAT(date_detected, '%Y-%m') as month"),
+                DB::raw('AVG(pest_severity_pct) as avg_severity'),
+                DB::raw('AVG(incidence_rating) as avg_incidence')
+            )
+            ->where('validation_status', 'approved')
+            ->whereNotNull('date_detected');
+
+        if ($startDate = $this->filters['startDate'] ?? null) {
+            $query->where('date_detected', '>=', $startDate);
+        }
+        if ($endDate = $this->filters['endDate'] ?? null) {
+            $query->where('date_detected', '<=', $endDate);
+        }
+        if ($municipal = $this->filters['municipal'] ?? null) {
+            $query->where('area', $municipal);
+        }
+
+        return $query->groupBy('month')
+            ->orderBy('month', 'asc')
+            ->get();
     }
 
     public function getTopPests()
@@ -133,7 +197,7 @@ class Dashboard extends \Filament\Pages\Dashboard
 
         return $query->groupBy('pest')
             ->orderByDesc('count')
-            ->limit(5)
+            ->limit(10)
             ->pluck('count', 'pest');
     }
 
@@ -283,6 +347,50 @@ class Dashboard extends \Filament\Pages\Dashboard
         return SoilAnalysis::count();
     }
 
+    public function getPendingPestCases()
+    {
+        return PestAndDisease::where('validation_status', 'pending')->count();
+    }
+
+    public function getPendingSoilAnalyses()
+    {
+        return SoilAnalysis::where('validation_status', 'pending')->count();
+    }
+
+    public function getOldestPendingPestDate()
+    {
+        $record = PestAndDisease::where('validation_status', 'pending')
+            ->orderBy('date_detected', 'asc')
+            ->first();
+        return $record ? $record->date_detected : null;
+    }
+
+    public function getOldestPendingSoilDate()
+    {
+        $record = SoilAnalysis::where('validation_status', 'pending')
+            ->orderBy('date_collected', 'asc')
+            ->first();
+        return $record ? $record->date_collected : null;
+    }
+
+    public function getPendingPestRecords()
+    {
+        return PestAndDisease::with('farmer:id,first_name,last_name')
+            ->where('validation_status', 'pending')
+            ->orderBy('date_detected', 'asc')
+            ->limit(5)
+            ->get(['case_id', 'farmer_id', 'pest', 'severity', 'date_detected', 'area', 'confidence']);
+    }
+
+    public function getPendingSoilRecords()
+    {
+        return SoilAnalysis::with('farmer:id,first_name,last_name')
+            ->where('validation_status', 'pending')
+            ->orderBy('date_collected', 'asc')
+            ->limit(5)
+            ->get(['id', 'farmer_id', 'farm_name', 'date_collected', 'ph_level', 'nitrogen', 'phosphorus', 'potassium']);
+    }
+
     public function getWidgets(): array
     {
         return [
@@ -293,25 +401,30 @@ class Dashboard extends \Filament\Pages\Dashboard
             BlogPostsChart3::class,
             FarmsByMunicipalityChart::class,
             SoilPhDistributionChart::class,
+            TopAffectedBarangaysChart::class,
         ];
     }
 
     public function mount()
     {
-        // Farms by month
-        $query = Farm::selectRaw('COUNT(*) as count, MONTH(created_at) as month');
+        // Soil Nutrient Levels per Barangay
+        $soilQuery = SoilAnalysis::join('farms', 'soil_analysis.farm_id', '=', 'farms.id')
+            ->join('barangays', 'farms.farmer_address_bgy', '=', 'barangays.code')
+            ->whereNotNull('farms.farmer_address_bgy')
+            ->where('farms.farmer_address_bgy', '!=', '')
+            ->selectRaw('barangays.barangay as barangay_name,
+                AVG(soil_analysis.nitrogen) as avg_nitrogen,
+                AVG(soil_analysis.phosphorus) as avg_phosphorus,
+                AVG(soil_analysis.potassium) as avg_potassium,
+                AVG(soil_analysis.organic_matter) as avg_organic_matter')
+            ->groupBy('barangays.barangay')
+            ->orderBy('barangay_name');
 
-        if ($startDate = $this->filters['startDate'] ?? null) {
-            $query->where('created_at', '>=', $startDate);
-        }
-        if ($endDate = $this->filters['endDate'] ?? null) {
-            $query->where('created_at', '<=', $endDate);
-        }
         if ($municipal = $this->filters['municipal'] ?? null) {
-            $query->where('farmer_address_mun', $municipal);
+            $soilQuery->where('farms.farmer_address_mun', $municipal);
         }
 
-        $this->farmData = $query->groupBy('month')->pluck('count', 'month');
+        $this->soilNutrientData = $soilQuery->get();
 
         // Pest and Disease cases over time
         $query = DB::table('pest_and_disease')
@@ -334,7 +447,9 @@ class Dashboard extends \Filament\Pages\Dashboard
 
         // Load other analytics data
         $this->casesBySeverity = $this->getCasesBySeverity();
-        $this->pestVsDisease = $this->getPestVsDisease();
+        $this->pestByBarangay = $this->getPestByBarangay();
+        $this->pestDistributionByBarangay = $this->getPestDistributionByBarangay();
+        $this->incidenceRateTrend = $this->getIncidenceRateTrend();
         $this->topPests = $this->getTopPests();
         $this->farmsByMunicipality = $this->getFarmsByMunicipality();
         $this->soilPhDistribution = $this->getSoilPhDistribution();
