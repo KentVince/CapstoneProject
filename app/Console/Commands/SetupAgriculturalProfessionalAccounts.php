@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\AgriculturalProfessionalAuthService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class SetupAgriculturalProfessionalAccounts extends Command
 {
@@ -85,6 +86,7 @@ class SetupAgriculturalProfessionalAccounts extends Command
                 ]);
 
                 $professional->update(['user_id' => $user->id]);
+                $this->assignAgriExpertRole($user);
                 $successCount++;
 
                 $this->line("✓ {$professional->app_no} ({$professional->email_add})");
@@ -136,12 +138,14 @@ class SetupAgriculturalProfessionalAccounts extends Command
                 ]);
 
                 $professional->update(['user_id' => $user->id]);
+                $this->assignAgriExpertRole($user);
                 $this->info("✓ User account created successfully.");
             } else {
                 // Reset password
                 $professional->user->update([
                     'password' => Hash::make($defaultPassword),
                 ]);
+                $this->assignAgriExpertRole($professional->user);
                 $this->info("✓ Password reset successfully.");
             }
 
@@ -184,11 +188,12 @@ class SetupAgriculturalProfessionalAccounts extends Command
                 $professional->user->update([
                     'password' => Hash::make($defaultPassword),
                 ]);
+                $this->assignAgriExpertRole($professional->user);
                 $successCount++;
                 $this->line("✓ {$professional->app_no} - {$defaultPassword}");
             } catch (\Exception $e) {
                 $failCount++;
-                $this->error("✗ Failed to reset password for {$professional->app_no}");
+                $this->error("✗ Failed to reset password for {$professional->app_no}: " . $e->getMessage());
             }
         }
 
@@ -221,5 +226,24 @@ class SetupAgriculturalProfessionalAccounts extends Command
             'Reset passwords for all professionals' => $this->resetAllPasswords(),
             default => self::SUCCESS,
         };
+    }
+
+    /**
+     * Ensure the user has the `agri_expert` role (required for Filament panel access).
+     * Creates the role if it does not yet exist, and assigns it if missing.
+     */
+    protected function assignAgriExpertRole(User $user): void
+    {
+        try {
+            Role::firstOrCreate(
+                ['name' => 'agri_expert', 'guard_name' => 'web']
+            );
+
+            if (!$user->hasRole('agri_expert')) {
+                $user->assignRole('agri_expert');
+            }
+        } catch (\Throwable $e) {
+            $this->warn("  ! Could not assign agri_expert role to user {$user->id}: " . $e->getMessage());
+        }
     }
 }

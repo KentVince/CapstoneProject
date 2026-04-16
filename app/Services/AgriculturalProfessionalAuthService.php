@@ -6,12 +6,13 @@ use App\Models\User;
 use App\Models\AgriculturalProfessional;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Spatie\Permission\Models\Role;
 
 class AgriculturalProfessionalAuthService
 {
     /**
      * Authenticate an agricultural professional by email and create/update user account
-     * 
+     *
      * @param string $email
      * @param string $password
      * @return User|null
@@ -41,7 +42,29 @@ class AgriculturalProfessionalAuthService
             return null;
         }
 
+        // Ensure the user has the agri_expert role so they can access the Filament panel
+        $this->ensureAgriExpertRole($user);
+
         return $user;
+    }
+
+    /**
+     * Ensure the user has the `agri_expert` role (required by User::canAccessPanel()).
+     * Creates the role if it does not yet exist and assigns it if missing.
+     */
+    protected function ensureAgriExpertRole(User $user): void
+    {
+        try {
+            Role::firstOrCreate(
+                ['name' => 'agri_expert', 'guard_name' => 'web']
+            );
+
+            if (!$user->hasRole('agri_expert')) {
+                $user->assignRole('agri_expert');
+            }
+        } catch (\Throwable $e) {
+            Log::error("Failed to assign agri_expert role to user {$user->id}: " . $e->getMessage());
+        }
     }
 
     /**
@@ -79,6 +102,9 @@ class AgriculturalProfessionalAuthService
                 'email' => $professional->email_add,
                 'password' => Hash::make($password),
             ]);
+
+            // Assign agri_expert role so the professional can access the Filament panel
+            $this->ensureAgriExpertRole($user);
 
             Log::info("User account created for agricultural professional: {$professional->app_no}");
 
