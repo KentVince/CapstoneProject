@@ -84,7 +84,6 @@ class PestAndDisease extends Model
     ];
 
     protected $casts = [
-        'options'               => 'array',
         'ai_symptoms'           => 'array',
         'ai_causes'             => 'array',
         'ai_action_plan'        => 'array',
