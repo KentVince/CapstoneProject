@@ -389,10 +389,9 @@ document.addEventListener('DOMContentLoaded', function () {
         return `
         <div class="popup-container">
             <div class="no-image-placeholder" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);">
-                <span style="color: white; font-weight: bold;">Farm Location</span>
+                <span style="color: black; font-weight: bold; font-size: 15px;">${farm.name ?? 'Farm Location'}</span>
             </div>
             <div class="popup-content">
-                <div class="popup-title">${farm.name}</div>
                 <div class="popup-detail">
                     <span class="popup-label">Barangay</span>
                     <span class="popup-value">${farm.barangay_name ?? farm.barangay ?? 'N/A'}</span>
@@ -400,6 +399,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="popup-detail">
                     <span class="popup-label">Municipality</span>
                     <span class="popup-value">${farm.municipality_name ?? farm.municipality ?? 'N/A'}</span>
+                </div>
+                <div class="popup-detail">
+                    <span class="popup-label">Soil Type</span>
+                    <span class="popup-value">${farm.soil_type ?? 'N/A'}</span>
+                </div>
+                <div class="popup-detail">
+                    <span class="popup-label">Crop Variety</span>
+                    <span class="popup-value">${farm.crop_variety ?? 'N/A'}</span>
+                </div>
+                <div class="popup-detail">
+                    <span class="popup-label">Crop Area</span>
+                    <span class="popup-value">${farm.crop_area ? farm.crop_area + ' ha' : 'N/A'}</span>
                 </div>
                 <div class="popup-detail">
                     <span class="popup-label">Coordinates</span>
@@ -1119,11 +1130,14 @@ document.addEventListener('DOMContentLoaded', function () {
             if (farmData.length > 0 && farmVal === 'all') {
                 if (rows.length === 0) {
                     // Only farms to show
-                    headers = ['Farm Name', 'Barangay', 'Municipality', 'Coordinates'];
+                    headers = ['Farm Name', 'Barangay', 'Municipality', 'Soil Type', 'Crop Variety', 'Crop Area', 'Coordinates'];
                     rows = farmData.map(farm => [
                         farm.name || 'N/A',
-                        farm.barangay || 'N/A',
-                        farm.municipality || 'N/A',
+                        farm.barangay_name || farm.barangay || 'N/A',
+                        farm.municipality_name || farm.municipality || 'N/A',
+                        farm.soil_type || 'N/A',
+                        farm.crop_variety || 'N/A',
+                        farm.crop_area ? farm.crop_area + ' ha' : 'N/A',
                         `${parseFloat(farm.latitude).toFixed(6)}, ${parseFloat(farm.longitude).toFixed(6)}`
                     ]);
                 }

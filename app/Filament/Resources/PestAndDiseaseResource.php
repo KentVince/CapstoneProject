@@ -606,7 +606,7 @@ class PestAndDiseaseResource extends Resource
         return [
             'index' => Pages\ListPestAndDiseases::route('/'),
           //  'create' => Pages\CreatePestAndDisease::route('/create'),
-            'edit' => Pages\EditPestAndDisease::route('/{record}/edit'),
+          //  'edit' => Pages\EditPestAndDisease::route('/{record}/edit'),
         ];
     }
 }

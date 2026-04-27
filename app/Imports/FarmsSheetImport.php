@@ -41,6 +41,13 @@ class FarmsSheetImport implements ToCollection, WithHeadingRow
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 2;
 
+            // Log the actual heading keys on first row so admins can diagnose header mismatches
+            if ($index === 0) {
+                Log::info('Farms import detected headings', [
+                    'keys' => array_keys(is_array($row) ? $row : $row->toArray()),
+                ]);
+            }
+
             try {
                 // farmer_id in Excel is 1-based sequential → 0-based index in farmers sheet
                 $farmerExcelId = (int) ($row['farmer_id'] ?? ($index + 1));
@@ -73,9 +80,14 @@ class FarmsSheetImport implements ToCollection, WithHeadingRow
                     'crop_variety'       => $row['crop_variety'] ?? null,
                     'crop_area'          => is_numeric($row['crop_area'] ?? null) ? $row['crop_area'] : null,
                     'soil_type'          => $this->nullIfEmpty($row['soil_type']     ?? null),
-                    'verified_area'      => is_numeric($row['verified_area'] ?? null) ? $row['verified_area'] : null,
+                    'verified_area'      => $this->nullIfEmpty($this->pickValue($row, [
+                        'verified_area', 'verified_area_ha', 'verified_area_hectare', 'verified_area_hectares',
+                        'verified_hectare', 'verified_hectares', 'verifiedarea',
+                    ])),
                     'farmworker'         => ucfirst(strtolower(trim($row['farmworker'] ?? 'No'))),
-                    'status'             => 'pending',
+                    'status'             => $this->nullIfEmpty($this->pickValue($row, [
+                        'status', 'farm_status',
+                    ])) ?? 'pending',
                 ]);
 
                 $this->importedCount++;
@@ -105,5 +117,30 @@ class FarmsSheetImport implements ToCollection, WithHeadingRow
             return null;
         }
         return $value;
+    }
+
+    private function parseDecimal($value): ?float
+    {
+        if ($value === null || $value === '' || strtolower((string) $value) === 'null') {
+            return null;
+        }
+        $clean = preg_replace('/[^0-9.\-]/', '', (string) $value);
+        return is_numeric($clean) ? (float) $clean : null;
+    }
+
+    /**
+     * Try multiple possible header keys (after WithHeadingRow normalization)
+     * and return the first non-empty value. Handles cases where the Excel
+     * column heading includes units or extra words (e.g. "Verified Area (ha)"
+     * normalizes to "verified_area_ha").
+     */
+    private function pickValue($row, array $keys)
+    {
+        foreach ($keys as $key) {
+            if (isset($row[$key]) && $row[$key] !== '' && $row[$key] !== null) {
+                return $row[$key];
+            }
+        }
+        return null;
     }
 }

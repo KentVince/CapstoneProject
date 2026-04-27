@@ -2,148 +2,161 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CofSys Dashboard Report</title>
+    <title>Pest &amp; Disease Distribution Report</title>
     <style>
-        /* ── Base ────────────────────────────────────────────────────────── */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
+        * { box-sizing: border-box; }
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 12px;
-            color: #1a1a1a;
-            background: #f3f4f6;
+            margin: 0;
             padding: 24px;
+            color: #111;
+            background: #f5f5f5;
         }
 
-        .page-wrap {
-            max-width: 900px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 32px 36px;
-            border-radius: 8px;
-            box-shadow: 0 2px 12px rgba(0,0,0,.12);
-        }
-
-        /* ── No-print toolbar ────────────────────────────────────────────── */
-        .toolbar {
+        /* ── Toolbar ─────────────────────────────────────────────────────── */
+        .print-bar {
+            max-width: 860px;
+            margin: 0 auto 12px;
             display: flex;
             justify-content: flex-end;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 8px;
         }
-
         .btn {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 8px 18px;
+            padding: 8px 16px;
             border: none;
             border-radius: 6px;
-            cursor: pointer;
             font-size: 13px;
             font-weight: 600;
+            cursor: pointer;
             text-decoration: none;
         }
-
-        .btn-print  { background: #16a34a; color: #fff; }
+        .btn-print { background: #16a34a; color: white; }
         .btn-print:hover { background: #15803d; }
-        .btn-back   { background: #e5e7eb; color: #374151; }
+        .btn-back  { background: #e5e7eb; color: #374151; }
         .btn-back:hover { background: #d1d5db; }
 
-        /* ── Report header ───────────────────────────────────────────────── */
-        .report-header {
-            text-align: center;
+        /* ── Sheet ───────────────────────────────────────────────────────── */
+        .sheet {
+            max-width: 860px;
+            margin: 0 auto;
+            background: white;
+            padding: 32px 36px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        /* ── Header (3-column, same as farmer print) ─────────────────────── */
+        header.report-header {
             border-bottom: 3px solid #16a34a;
-            padding-bottom: 16px;
-            margin-bottom: 24px;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
         }
-
-        .report-header .system-name {
-            font-size: 26px;
-            font-weight: 900;
+        .header-grid {
+            display: grid;
+            grid-template-columns: 120px 1fr 120px;
+            gap: 16px;
+            align-items: center;
+        }
+        .header-left,
+        .header-right {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .header-left img,
+        .header-right img {
+            max-width: 110px;
+            max-height: 110px;
+            object-fit: contain;
+            object-position: center;
+            background: #ffffff;
+            padding: 6px;
+            border-radius: 8px;
+            box-shadow: 0 0 0 1px #e5e7eb;
+        }
+        .header-center { text-align: center; }
+        .header-center img.cofsys-logo {
+            height: 80px;
+            margin-bottom: 6px;
+        }
+        .header-center h1 {
+            margin: 0;
+            font-size: 20px;
             color: #16a34a;
-            letter-spacing: 2px;
+            letter-spacing: 0.5px;
         }
-
-        .report-header .system-sub {
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 2px;
-        }
-
-        .report-header .report-title {
-            font-size: 16px;
-            font-weight: 700;
-            margin: 10px 0 6px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .report-header .meta {
+        .header-center p {
+            margin: 4px 0 0;
             font-size: 11px;
             color: #6b7280;
-            line-height: 1.6;
         }
 
-        .report-header .meta strong { color: #374151; }
-
-        /* ── Section titles ──────────────────────────────────────────────── */
-        .section { margin-bottom: 24px; }
-
-        .section-title {
-            background: #16a34a;
-            color: #fff;
-            padding: 6px 14px;
+        /* ── Meta row ────────────────────────────────────────────────────── */
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
             font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .5px;
-            border-radius: 4px 4px 0 0;
+            color: #6b7280;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            gap: 4px;
         }
 
-        .section-body {
-            border: 1px solid #d1fae5;
-            border-top: none;
-            border-radius: 0 0 4px 4px;
-            padding: 14px;
-        }
-
-        /* ── Summary grid ────────────────────────────────────────────────── */
+        /* ── Summary cards ───────────────────────────────────────────────── */
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+            gap: 10px;
+            margin-bottom: 22px;
         }
-
         .summary-card {
             border: 1px solid #d1fae5;
             border-radius: 6px;
             padding: 12px 14px;
             background: #f0fdf4;
         }
-
         .summary-card .card-label {
             font-size: 11px;
             color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
             margin-bottom: 4px;
         }
-
         .summary-card .card-value {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: 800;
             color: #16a34a;
             line-height: 1;
         }
-
+        .summary-card .card-value.danger { color: #dc2626; }
+        .summary-card .card-value.warn   { color: #d97706; }
         .summary-card .card-sub {
             font-size: 11px;
             color: #6b7280;
             margin-top: 3px;
         }
 
-        /* ── Two-column row ──────────────────────────────────────────────── */
-        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        /* ── Section block ───────────────────────────────────────────────── */
+        section.block {
+            margin-bottom: 22px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        section.block h2 {
+            margin: 0;
+            padding: 8px 12px;
+            background: #f0fdf4;
+            color: #16a34a;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e5e7eb;
+        }
 
         /* ── Tables ──────────────────────────────────────────────────────── */
         table {
@@ -151,7 +164,6 @@
             border-collapse: collapse;
             font-size: 12px;
         }
-
         th {
             background: #f0fdf4;
             border: 1px solid #d1fae5;
@@ -159,263 +171,226 @@
             text-align: left;
             font-weight: 700;
             color: #374151;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
         }
-
         td {
             border: 1px solid #e5e7eb;
             padding: 6px 10px;
             color: #374151;
+            font-size: 12px;
         }
-
         tr:nth-child(even) td { background: #f9fafb; }
-
-        .text-right { text-align: right; }
+        .text-right  { text-align: right; }
         .text-center { text-align: center; }
-        .font-bold { font-weight: 700; }
+        .font-bold   { font-weight: 700; }
+
+        /* Barangay sub-header row inside distribution table */
+        .bgy-row td {
+            background: #16a34a !important;
+            color: white !important;
+            font-weight: 700;
+            font-size: 12px;
+            letter-spacing: 0.3px;
+        }
 
         /* Severity badges */
         .badge {
             display: inline-block;
             padding: 2px 8px;
             border-radius: 999px;
-            font-size: 11px;
-            font-weight: 600;
+            font-size: 10px;
+            font-weight: 700;
         }
+        .badge-low    { background: #dcfce7; color: #15803d; }
+        .badge-medium { background: #fef9c3; color: #a16207; }
+        .badge-high   { background: #fee2e2; color: #b91c1c; }
 
-        .badge-low      { background: #dcfce7; color: #15803d; }
-        .badge-medium   { background: #fef9c3; color: #a16207; }
-        .badge-high     { background: #fee2e2; color: #b91c1c; }
-        .badge-pending  { background: #fef3c7; color: #92400e; }
-        .badge-approved { background: #d1fae5; color: #065f46; }
-        .badge-rejected { background: #fee2e2; color: #991b1b; }
-
-        /* Trend bar (text-based) */
-        .bar-wrap { background: #e5e7eb; border-radius: 2px; height: 10px; display: inline-block; width: 100px; vertical-align: middle; }
-        .bar-fill { background: #16a34a; border-radius: 2px; height: 10px; display: block; }
+        /* Bar */
+        .bar-wrap { background: #e5e7eb; border-radius: 2px; height: 8px; display: inline-block; width: 80px; vertical-align: middle; }
+        .bar-fill { background: #16a34a; border-radius: 2px; height: 8px; display: block; }
 
         /* ── Footer ──────────────────────────────────────────────────────── */
-        .report-footer {
-            text-align: center;
-            margin-top: 32px;
+        footer.report-footer {
+            margin-top: 28px;
             padding-top: 12px;
             border-top: 1px solid #e5e7eb;
-            font-size: 10px;
-            color: #9ca3af;
+            font-size: 12px;
+            color: #6b7280;
+            text-align: center;
+        }
+        footer.report-footer .site-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #16a34a;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        footer.report-footer .site-link svg {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
         }
 
-        /* ── Print media ─────────────────────────────────────────────────── */
+        /* ── Print ───────────────────────────────────────────────────────── */
         @media print {
-            body { background: #fff; padding: 0; }
-            .page-wrap { box-shadow: none; border-radius: 0; padding: 20px; }
-            .toolbar { display: none !important; }
-
-            table { page-break-inside: auto; }
-            tr    { page-break-inside: avoid; }
-            .section { page-break-inside: avoid; }
-
-            @page {
-                size: A4 portrait;
-                margin: 15mm 12mm;
+            @page { size: A4; margin: 0; }
+            html, body { margin: 0; padding: 0; }
+            body { background: white; }
+            .sheet {
+                box-shadow: none;
+                border-radius: 0;
+                padding: 12mm 14mm;
+                max-width: 100%;
             }
+            .print-bar, .no-print { display: none !important; }
+            section.block { page-break-inside: avoid; }
+            .bgy-section  { page-break-inside: avoid; }
         }
     </style>
 </head>
 <body>
-<div class="page-wrap">
 
-    {{-- ── Toolbar (hidden on print) ─────────────────────────────────────── --}}
-    <div class="toolbar">
+    <div class="print-bar no-print">
         <a href="javascript:history.back()" class="btn btn-back">&#8592; Back</a>
-        <button class="btn btn-print" onclick="window.print()">
-            🖨️&nbsp; Print Report
-        </button>
+        <button class="btn btn-print" onclick="window.print()">Print Report</button>
     </div>
 
-    {{-- ── Report Header ───────────────────────────────────────────────────── --}}
-    <div class="report-header">
-        <div class="system-name">CofSys</div>
-        <div class="system-sub">Coffee Farm Management System with Smart Disease Detection and GeoAnalytics</div>
-        <div class="report-title">Dashboard Summary Report</div>
-        <div class="meta">
-            <strong>Report Period:</strong>
-            {{ \Carbon\Carbon::parse($startDate)->format('F j, Y') }}
-            &nbsp;–&nbsp;
-            {{ \Carbon\Carbon::parse($endDate)->format('F j, Y') }}
-            &nbsp;&nbsp;|&nbsp;&nbsp;
-            <strong>Municipality:</strong> {{ $municipal ?? 'All Municipalities' }}
-            &nbsp;&nbsp;|&nbsp;&nbsp;
-            <strong>Generated:</strong> {{ now()->format('F j, Y  h:i A') }}
+    <div class="sheet">
+
+        {{-- ── Header ─────────────────────────────────────────────────────── --}}
+        <header class="report-header">
+            <div class="header-grid">
+                <div class="header-left">
+                    <img src="{{ asset('images/magso_logo.png') }}" alt="MAGSO">
+                </div>
+                <div class="header-center">
+                    <h1>Pest &amp; Disease Distribution Report</h1>
+                    <p>Coffee Farm Management System with Smart Disease Detection and Geoanalytics</p>
+                </div>
+                <div class="header-right">
+                    <img src="{{ asset('images/cofsys_print_logo.png') }}" alt="CofSys" class="cofsys-logo">
+                </div>
+            </div>
+        </header>
+
+        {{-- ── Meta ───────────────────────────────────────────────────────── --}}
+        <div class="meta-row">
+            <div><strong>Municipality:</strong> {{ $municipal ?? 'All Municipalities' }}</div>
+            <div><strong>Barangay:</strong> {{ $barangayName ?? 'All Barangays' }}</div>
+            <div><strong>Generated:</strong> {{ now()->format('F j, Y, g:i a') }}</div>
         </div>
-    </div>
 
-    {{-- ── 1. Summary Statistics ───────────────────────────────────────────── --}}
-    <div class="section">
-        <div class="section-title">1. Summary Statistics</div>
-        <div class="section-body">
-            <div class="summary-grid">
-
-                <div class="summary-card">
-                    <div class="card-label">Total Registered Farmers</div>
-                    <div class="card-value">{{ number_format($totalFarmers) }}</div>
-                    <div class="card-sub">All-time registrations</div>
-                </div>
-
-                <div class="summary-card">
-                    <div class="card-label">Total Registered Farms</div>
-                    <div class="card-value">{{ number_format($totalFarms) }}</div>
-                    <div class="card-sub">{{ number_format($totalArea, 2) }} hectares total</div>
-                </div>
-
-                <div class="summary-card">
-                    <div class="card-label">Total Pest &amp; Disease Cases</div>
-                    <div class="card-value">{{ number_format($totalCases) }}</div>
-                    <div class="card-sub">{{ number_format($approvedCases) }} approved</div>
-                </div>
-
-                <div class="summary-card">
-                    <div class="card-label">Critical Cases (High Severity)</div>
-                    <div class="card-value" style="color:#dc2626;">{{ number_format($criticalCases) }}</div>
-                    <div class="card-sub">Approved, high severity</div>
-                </div>
-
-                <div class="summary-card">
-                    <div class="card-label">Soil Analysis Tests</div>
-                    <div class="card-value">{{ number_format($totalSoilTests) }}</div>
-                    <div class="card-sub">All-time tests conducted</div>
-                </div>
-
-                <div class="summary-card">
-                    <div class="card-label">Average Soil pH Level</div>
-                    <div class="card-value">{{ $avgPh ?: '–' }}</div>
-                    <div class="card-sub">
-                        @if($avgPh)
-                            @if($avgPh < 5.5) Very Acidic
-                            @elseif($avgPh < 6.0) Acidic
-                            @elseif($avgPh < 6.5) Slightly Acidic
-                            @elseif($avgPh < 7.0) Neutral
-                            @else Alkaline
-                            @endif
-                        @else
-                            No data
-                        @endif
-                    </div>
-                </div>
-
+        {{-- ── Summary cards ───────────────────────────────────────────────── --}}
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="card-label">Total Cases</div>
+                <div class="card-value">{{ number_format($totalCases) }}</div>
+                <div class="card-sub">All validation statuses</div>
+            </div>
+            <div class="summary-card">
+                <div class="card-label">Approved Cases</div>
+                <div class="card-value">{{ number_format($approvedCases) }}</div>
+                <div class="card-sub">Validated detections</div>
+            </div>
+            <div class="summary-card">
+                <div class="card-label">Pending / Rejected</div>
+                <div class="card-value warn">{{ number_format($pendingCases) }}</div>
+                <div class="card-sub">{{ number_format($rejectedCases) }} rejected</div>
+            </div>
+            <div class="summary-card">
+                <div class="card-label">Low Severity</div>
+                <div class="card-value">{{ number_format($low) }}</div>
+                <div class="card-sub">Approved cases</div>
+            </div>
+            <div class="summary-card">
+                <div class="card-label">Medium Severity</div>
+                <div class="card-value warn">{{ number_format($medium) }}</div>
+                <div class="card-sub">Approved cases</div>
+            </div>
+            <div class="summary-card">
+                <div class="card-label">High Severity</div>
+                <div class="card-value danger">{{ number_format($high) }}</div>
+                <div class="card-sub">Approved cases</div>
             </div>
         </div>
-    </div>
 
-    {{-- ── 2. Severity & Validation Status ─────────────────────────────────── --}}
-    <div class="two-col">
-
-        <div class="section">
-            <div class="section-title">2. Cases by Severity</div>
-            <div class="section-body" style="padding: 0;">
-                @php
-                    $low    = (int)($casesBySeverity['low']    ?? 0);
-                    $medium = (int)($casesBySeverity['medium'] ?? 0);
-                    $high   = (int)($casesBySeverity['high']   ?? 0);
-                    $sevTotal = $low + $medium + $high;
-                @endphp
+        {{-- ── Per-Barangay Distribution ────────────────────────────────── --}}
+        <section class="block">
+            <h2>Pest &amp; Disease Distribution per Barangay</h2>
+            @if($byBarangay->isEmpty())
+                <div style="padding: 16px; text-align: center; color: #9ca3af; font-style: italic;">
+                    No approved pest &amp; disease records found for the selected filter.
+                </div>
+            @else
                 <table>
                     <thead>
                         <tr>
-                            <th>Severity</th>
-                            <th class="text-right">Cases</th>
-                            <th class="text-right">%</th>
+                            <th style="width:32px;">#</th>
+                            <th style="width:110px;">Purok</th>
+                            <th>Pest / Disease</th>
+                            <th style="width:90px;">Severity</th>
+                            <th class="text-right" style="width:60px;">Cases</th>
+                            <th style="width:100px;">Last Detected</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td><span class="badge badge-low">Low</span></td>
-                            <td class="text-right">{{ number_format($low) }}</td>
-                            <td class="text-right">{{ $sevTotal > 0 ? round($low / $sevTotal * 100, 1) : 0 }}%</td>
-                        </tr>
-                        <tr>
-                            <td><span class="badge badge-medium">Medium</span></td>
-                            <td class="text-right">{{ number_format($medium) }}</td>
-                            <td class="text-right">{{ $sevTotal > 0 ? round($medium / $sevTotal * 100, 1) : 0 }}%</td>
-                        </tr>
-                        <tr>
-                            <td><span class="badge badge-high">High</span></td>
-                            <td class="text-right">{{ number_format($high) }}</td>
-                            <td class="text-right">{{ $sevTotal > 0 ? round($high / $sevTotal * 100, 1) : 0 }}%</td>
-                        </tr>
-                        <tr>
-                            <td class="font-bold">Total</td>
-                            <td class="text-right font-bold">{{ number_format($sevTotal) }}</td>
-                            <td class="text-right font-bold">100%</td>
-                        </tr>
+                        @php $rowNum = 0; @endphp
+                        @foreach($byBarangay as $barangay => $rows)
+                            <tr class="bgy-row">
+                                <td colspan="6">{{ strtoupper($barangay) }} &nbsp;({{ $rows->sum('case_count') }} cases)</td>
+                            </tr>
+                            @foreach($rows as $row)
+                                @php $rowNum++; @endphp
+                                <tr>
+                                    <td class="text-center" style="color:#9ca3af;">{{ $rowNum }}</td>
+                                    <td>{{ $row->purok ?? '—' }}</td>
+                                    <td class="font-bold">{{ $row->pest }}</td>
+                                    <td>
+                                        @if(strtolower($row->severity) === 'high')
+                                            <span class="badge badge-high">High</span>
+                                        @elseif(strtolower($row->severity) === 'medium')
+                                            <span class="badge badge-medium">Medium</span>
+                                        @else
+                                            <span class="badge badge-low">Low</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-right font-bold">{{ number_format($row->case_count) }}</td>
+                                    <td>
+                                        {{ $row->last_detected
+                                            ? \Carbon\Carbon::parse($row->last_detected)->format('M j, Y')
+                                            : '—' }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @endforeach
                     </tbody>
                 </table>
-            </div>
-        </div>
+            @endif
+        </section>
 
-        <div class="section">
-            <div class="section-title">3. Validation Status Breakdown</div>
-            <div class="section-body" style="padding: 0;">
-                @php
-                    $pending  = (int)($validationStatus['pending']  ?? 0);
-                    $approved = (int)($validationStatus['approved'] ?? 0);
-                    $rejected = (int)($validationStatus['rejected'] ?? 0);
-                    $valTotal = $pending + $approved + $rejected;
-                @endphp
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Status</th>
-                            <th class="text-right">Cases</th>
-                            <th class="text-right">%</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><span class="badge badge-pending">Pending</span></td>
-                            <td class="text-right">{{ number_format($pending) }}</td>
-                            <td class="text-right">{{ $valTotal > 0 ? round($pending / $valTotal * 100, 1) : 0 }}%</td>
-                        </tr>
-                        <tr>
-                            <td><span class="badge badge-approved">Approved</span></td>
-                            <td class="text-right">{{ number_format($approved) }}</td>
-                            <td class="text-right">{{ $valTotal > 0 ? round($approved / $valTotal * 100, 1) : 0 }}%</td>
-                        </tr>
-                        <tr>
-                            <td><span class="badge badge-rejected">Rejected</span></td>
-                            <td class="text-right">{{ number_format($rejected) }}</td>
-                            <td class="text-right">{{ $valTotal > 0 ? round($rejected / $valTotal * 100, 1) : 0 }}%</td>
-                        </tr>
-                        <tr>
-                            <td class="font-bold">Total</td>
-                            <td class="text-right font-bold">{{ number_format($valTotal) }}</td>
-                            <td class="text-right font-bold">100%</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-    </div>
-
-    {{-- ── 4. Top 10 Pests & Diseases ───────────────────────────────────────── --}}
-    <div class="section">
-        <div class="section-title">4. Top Pests &amp; Diseases Detected (Period)</div>
-        <div class="section-body" style="padding: 0;">
+        {{-- ── Top Pests Overall ───────────────────────────────────────────── --}}
+        @if($topPests->isNotEmpty())
+        <section class="block">
+            <h2>Top Pests &amp; Diseases (Overall in Selected Area)</h2>
             @php $pdTotal = $topPests->sum('count'); @endphp
             <table>
                 <thead>
                     <tr>
-                        <th class="text-center" style="width:40px;">#</th>
-                        <th>Pest / Disease Name</th>
-                        <th class="text-right" style="width:80px;">Cases</th>
-                        <th class="text-right" style="width:60px;">%</th>
-                        <th style="width:130px;">Distribution</th>
+                        <th style="width:32px;">#</th>
+                        <th>Pest / Disease</th>
+                        <th class="text-right" style="width:60px;">Cases</th>
+                        <th class="text-right" style="width:50px;">%</th>
+                        <th style="width:120px;">Distribution</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($topPests as $i => $item)
+                    @foreach($topPests as $i => $item)
                         @php
-                            $pct = $pdTotal > 0 ? round($item->count / $pdTotal * 100, 1) : 0;
-                            $barW = max(2, (int)($pct));
+                            $pct  = $pdTotal > 0 ? round($item->count / $pdTotal * 100, 1) : 0;
+                            $barW = max(2, (int)$pct);
                         @endphp
                         <tr>
                             <td class="text-center">{{ $i + 1 }}</td>
@@ -428,152 +403,25 @@
                                 </span>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="text-center" style="padding:12px;color:#9ca3af;">
-                                No approved detections in the selected period.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    {{-- ── 5. Monthly Detection Trend ───────────────────────────────────────── --}}
-    <div class="section">
-        <div class="section-title">5. Monthly Detection Trend (Last 12 Months)</div>
-        <div class="section-body" style="padding: 0;">
-            @php $maxMonthCount = $monthlyTrend->max('count') ?: 1; @endphp
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width:110px;">Month</th>
-                        <th class="text-right" style="width:70px;">Cases</th>
-                        <th>Trend</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($monthlyTrend as $row)
-                        @php
-                            $barPct = (int) round($row['count'] / $maxMonthCount * 100);
-                        @endphp
-                        <tr>
-                            <td>{{ $row['month'] }}</td>
-                            <td class="text-right font-bold">{{ $row['count'] }}</td>
-                            <td>
-                                @if($row['count'] > 0)
-                                    <span class="bar-wrap" style="width:180px;">
-                                        <span class="bar-fill" style="width:{{ $barPct }}%;"></span>
-                                    </span>
-                                @else
-                                    <span style="color:#d1d5db;">—</span>
-                                @endif
-                            </td>
-                        </tr>
                     @endforeach
                 </tbody>
             </table>
-        </div>
-    </div>
+        </section>
+        @endif
 
-    {{-- ── 6 & 7: Farms + Soil (two-column) ────────────────────────────────── --}}
-    <div class="two-col">
-
-        {{-- Farms by Municipality --}}
-        <div class="section">
-            <div class="section-title">6. Farms by Municipality</div>
-            <div class="section-body" style="padding: 0;">
-                @php $farmTotal = $farmsByMunicipality->sum('count'); @endphp
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Municipality</th>
-                            <th class="text-right">Farms</th>
-                            <th class="text-right">%</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($farmsByMunicipality as $row)
-                            <tr>
-                                <td>{{ $row->municipality }}</td>
-                                <td class="text-right">{{ number_format($row->count) }}</td>
-                                <td class="text-right">
-                                    {{ $farmTotal > 0 ? round($row->count / $farmTotal * 100, 1) : 0 }}%
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="3" class="text-center" style="padding:12px;color:#9ca3af;">No data.</td>
-                            </tr>
-                        @endforelse
-                        @if($farmsByMunicipality->count())
-                            <tr>
-                                <td class="font-bold">Total (top 10)</td>
-                                <td class="text-right font-bold">{{ number_format($farmTotal) }}</td>
-                                <td></td>
-                            </tr>
-                        @endif
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        {{-- Soil pH Distribution --}}
-        <div class="section">
-            <div class="section-title">7. Soil pH Distribution</div>
-            <div class="section-body" style="padding: 0;">
-                @php $soilTotal = $soilPhDistribution->sum('count'); @endphp
-                <table>
-                    <thead>
-                        <tr>
-                            <th>pH Range</th>
-                            <th class="text-right">Samples</th>
-                            <th class="text-right">%</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @php
-                            $phOrder = [
-                                'Very Acidic (< 5.5)',
-                                'Acidic (5.5–6.0)',
-                                'Slightly Acidic (6.0–6.5)',
-                                'Neutral (6.5–7.0)',
-                                'Alkaline (> 7.0)',
-                            ];
-                            $phMap = $soilPhDistribution->pluck('count', 'ph_range');
-                        @endphp
-                        @foreach($phOrder as $range)
-                            @php $cnt = (int)($phMap[$range] ?? 0); @endphp
-                            <tr>
-                                <td>{{ $range }}</td>
-                                <td class="text-right">{{ number_format($cnt) }}</td>
-                                <td class="text-right">
-                                    {{ $soilTotal > 0 ? round($cnt / $soilTotal * 100, 1) : 0 }}%
-                                </td>
-                            </tr>
-                        @endforeach
-                        @if($soilTotal > 0)
-                            <tr>
-                                <td class="font-bold">Total</td>
-                                <td class="text-right font-bold">{{ number_format($soilTotal) }}</td>
-                                <td class="text-right font-bold">100%</td>
-                            </tr>
-                        @endif
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        {{-- ── Footer ─────────────────────────────────────────────────────── --}}
+        <footer class="report-footer">
+            <span class="site-link">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                </svg>
+                cofsys.davaodeoro.gov.ph
+            </span>
+        </footer>
 
     </div>
-
-    {{-- ── Footer ───────────────────────────────────────────────────────────── --}}
-    <div class="report-footer">
-        <strong>CofSys</strong> – Coffee Farm Management System with Smart Disease Detection and GeoAnalytics
-        &nbsp;|&nbsp; Report generated on {{ now()->format('F j, Y \a\t h:i A') }}
-        &nbsp;|&nbsp; For official use only.
-    </div>
-
-</div>
 </body>
 </html>

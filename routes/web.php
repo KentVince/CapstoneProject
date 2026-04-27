@@ -95,94 +95,254 @@ Route::get('/test-qr', function () {
 // ─── Dashboard Print Report ───────────────────────────────────────────────────
 Route::get('/admin/print-report', function (Request $request) {
 
-    $startDate = $request->get('startDate', now()->startOfYear()->format('Y-m-d'));
-    $endDate   = $request->get('endDate',   now()->format('Y-m-d'));
-    $municipal = $request->get('municipal');
+    $municipal    = $request->get('municipal', 'Maragusan');
+    $barangayCode = $request->get('barangay');
+    $barangayName = $barangayCode
+        ? \App\Models\Barangay::where('code', $barangayCode)->value('barangay')
+        : null;
 
-    // ── Summary statistics (all-time totals, not filtered) ──────────────────
-    $totalFarmers  = Farmer::count();
-    $totalFarms    = Farm::count();
-    $totalArea     = (float) Farm::sum(DB::raw('CAST(lot_hectare AS DECIMAL(10,2))'));
-    $totalCases    = PestAndDisease::count();
-    $approvedCases = PestAndDisease::where('validation_status', 'approved')->count();
-    $criticalCases = PestAndDisease::where('severity', 'high')
-                        ->where('validation_status', 'approved')->count();
-    $totalSoilTests = SoilAnalysis::count();
-    $avgPh          = round((float) SoilAnalysis::avg('ph_level'), 2);
+    // Resolve all Maragusan barangay codes for broad scope when no specific barangay chosen
+    $munCode        = \App\Models\Municipality::where('municipality', $municipal)->value('code');
+    $maraguanBgyCodes = \App\Models\Barangay::where('muni_filter', $munCode)->pluck('code')->toArray();
+    $maraguanBgyNames = \App\Models\Barangay::where('muni_filter', $munCode)->pluck('barangay')->toArray();
 
-    // ── Helpers: apply date + municipality scope ─────────────────────────────
-    $scopePD = function ($query) use ($startDate, $endDate, $municipal) {
-        $query->whereBetween('date_detected', [$startDate, $endDate]);
-        if ($municipal) {
-            $query->where('area', $municipal);
+    // ── Helper: apply barangay/municipality scope to a P&D query ────────────
+    $applyScope = function ($query) use ($barangayName, $maraguanBgyNames) {
+        if ($barangayName) {
+            $query->where(function ($q) use ($barangayName) {
+                $q->where('area', 'LIKE', $barangayName . ',%')
+                  ->orWhere('area', $barangayName);
+            });
+        } else {
+            // Scope to Maragusan — match any of its barangay names
+            $query->where(function ($q) use ($maraguanBgyNames) {
+                foreach ($maraguanBgyNames as $name) {
+                    $q->orWhere('area', 'LIKE', $name . ',%')
+                      ->orWhere('area', $name);
+                }
+            });
         }
     };
 
-    // ── Cases by severity (filtered) ────────────────────────────────────────
-    $casesBySeverity = PestAndDisease::selectRaw('severity, COUNT(*) as count')
-        ->where('validation_status', 'approved')
-        ->tap($scopePD)
-        ->groupBy('severity')
-        ->pluck('count', 'severity');
+    // ── Summary (scoped) ────────────────────────────────────────────────────
+    $totalCases    = PestAndDisease::tap($applyScope)->count();
+    $approvedCases = PestAndDisease::where('validation_status', 'approved')->tap($applyScope)->count();
+    $pendingCases  = PestAndDisease::where('validation_status', 'pending')->tap($applyScope)->count();
+    $rejectedCases = PestAndDisease::where('validation_status', 'rejected')->tap($applyScope)->count();
 
-    // ── Validation status (filtered by date) ────────────────────────────────
-    $validationStatus = PestAndDisease::selectRaw('validation_status, COUNT(*) as count')
-        ->tap($scopePD)
-        ->groupBy('validation_status')
-        ->pluck('count', 'validation_status');
+    $low    = (int) PestAndDisease::where('validation_status', 'approved')->where('severity', 'low')->tap($applyScope)->count();
+    $medium = (int) PestAndDisease::where('validation_status', 'approved')->where('severity', 'medium')->tap($applyScope)->count();
+    $high   = (int) PestAndDisease::where('validation_status', 'approved')->where('severity', 'high')->tap($applyScope)->count();
 
-    // ── Top 10 pests & diseases (filtered) ──────────────────────────────────
+    // ── Per-barangay pest distribution (with purok via farmer join) ────────
+    $rawRows = PestAndDisease::select(
+            'pest_and_disease.area',
+            'pest_and_disease.pest',
+            'pest_and_disease.severity',
+            DB::raw('COALESCE(farmers.farmer_address_prk, "—") as purok'),
+            DB::raw('COUNT(*) as case_count'),
+            DB::raw('MAX(pest_and_disease.date_detected) as last_detected')
+        )
+        ->leftJoin('farmers', 'farmers.id', '=', 'pest_and_disease.farmer_id')
+        ->where('pest_and_disease.validation_status', 'approved')
+        ->tap($applyScope)
+        ->groupBy('pest_and_disease.area', 'pest_and_disease.pest', 'pest_and_disease.severity', 'farmers.farmer_address_prk')
+        ->orderBy('pest_and_disease.area')
+        ->orderBy('farmers.farmer_address_prk')
+        ->orderByDesc('case_count')
+        ->get();
+
+    // Group rows: barangay (first part of area) → collection of rows
+    $byBarangay = $rawRows->groupBy(fn ($r) => trim(explode(',', $r->area)[0]));
+
+    // ── Top pests overall (scoped) ───────────────────────────────────────────
     $topPests = PestAndDisease::selectRaw('pest, COUNT(*) as count')
         ->where('validation_status', 'approved')
-        ->tap($scopePD)
+        ->tap($applyScope)
         ->groupBy('pest')
         ->orderByDesc('count')
         ->limit(10)
         ->get();
 
-    // ── Monthly trend – last 12 months ──────────────────────────────────────
-    $months = collect(range(11, 0))->map(fn ($i) => now()->subMonths($i));
-    $monthlyTrend = $months->map(function ($m) use ($municipal) {
-        $q = PestAndDisease::whereYear('date_detected', $m->year)
-                ->whereMonth('date_detected', $m->month)
-                ->where('validation_status', 'approved');
-        if ($municipal) {
-            $q->where('area', $municipal);
-        }
-        return ['month' => $m->format('M Y'), 'count' => $q->count()];
-    });
-
-    // ── Farms by municipality ────────────────────────────────────────────────
-    $farmsByMunicipality = Farm::selectRaw('farmer_address_mun, COUNT(*) as count')
-        ->whereNotNull('farmer_address_mun')
-        ->where('farmer_address_mun', '!=', '')
-        ->groupBy('farmer_address_mun')
-        ->orderByDesc('count')
-        ->limit(10)
-        ->get();
-
-    // ── Soil pH distribution ─────────────────────────────────────────────────
-    $soilPhDistribution = SoilAnalysis::select(
-        DB::raw('CASE
-            WHEN ph_level < 5.5 THEN "Very Acidic (< 5.5)"
-            WHEN ph_level >= 5.5 AND ph_level < 6.0 THEN "Acidic (5.5–6.0)"
-            WHEN ph_level >= 6.0 AND ph_level < 6.5 THEN "Slightly Acidic (6.0–6.5)"
-            WHEN ph_level >= 6.5 AND ph_level < 7.0 THEN "Neutral (6.5–7.0)"
-            ELSE "Alkaline (> 7.0)"
-        END as ph_range'),
-        DB::raw('COUNT(*) as count')
-    )->whereNotNull('ph_level')
-     ->groupBy('ph_range')
-     ->get();
-
     return view('filament.pages.dashboard-print-report', compact(
-        'startDate', 'endDate', 'municipal',
-        'totalFarmers', 'totalFarms', 'totalArea',
-        'totalCases', 'approvedCases', 'criticalCases',
-        'totalSoilTests', 'avgPh',
-        'casesBySeverity', 'validationStatus',
-        'topPests', 'monthlyTrend',
-        'farmsByMunicipality', 'soilPhDistribution'
+        'municipal', 'barangayName',
+        'totalCases', 'approvedCases', 'pendingCases', 'rejectedCases',
+        'low', 'medium', 'high',
+        'byBarangay', 'topPests'
     ));
 
 })->middleware(['web', 'auth'])->name('dashboard.print-report');
+
+
+// ─── Soil Analysis Print Report ──────────────────────────────────────────────
+Route::get('/admin/soil-report', function (Request $request) {
+
+    $municipal    = $request->get('municipal', 'Maragusan');
+    $barangayCode = $request->get('barangay');
+    $barangayName = $barangayCode
+        ? \App\Models\Barangay::where('code', $barangayCode)->value('barangay')
+        : null;
+
+    // Resolve Maragusan barangay codes for scoping
+    $munCode       = \App\Models\Municipality::where('municipality', $municipal)->value('code');
+    $maragusanCodes = \App\Models\Barangay::where('muni_filter', $munCode)->pluck('code')->toArray();
+
+    // Base query scope: filter farms by barangay/municipality
+    $farmScope = function ($q) use ($barangayCode, $maragusanCodes) {
+        if ($barangayCode) {
+            $q->where('farmer_address_bgy', $barangayCode);
+        } else {
+            $q->whereIn('farmer_address_bgy', $maragusanCodes);
+        }
+    };
+
+    // ── Summary ─────────────────────────────────────────────────────────────
+    $totalFarmsInScope   = Farm::tap($farmScope)->count();
+    $farmsWithLabData    = Farm::tap($farmScope)
+        ->whereHas('soilAnalyses', fn ($q) => $q->whereNotNull('lab_no')->where('lab_no', '!=', ''))
+        ->count();
+    $farmsWithSoilRecord = Farm::tap($farmScope)->whereHas('soilAnalyses')->count();
+    $totalSoilTests      = SoilAnalysis::whereHas('farm', $farmScope)->count();
+    $approvedTests       = SoilAnalysis::where('validation_status', 'approved')->whereHas('farm', $farmScope)->count();
+    $pendingTests        = SoilAnalysis::where('validation_status', 'pending')->whereHas('farm', $farmScope)->count();
+
+    // ── Average nutrient levels (approved) ──────────────────────────────────
+    $avgBase = SoilAnalysis::where('validation_status', 'approved')->whereHas('farm', $farmScope);
+    $avgPh   = round((float) (clone $avgBase)->avg('ph_level'), 2);
+    $avgN    = round((float) (clone $avgBase)->avg('nitrogen'), 4);
+    $avgP    = round((float) (clone $avgBase)->avg('phosphorus'), 2);
+    $avgK    = round((float) (clone $avgBase)->avg('potassium'), 4);
+    $avgOm   = round((float) (clone $avgBase)->avg('organic_matter'), 2);
+
+    // ── pH distribution ──────────────────────────────────────────────────────
+    $phDistribution = SoilAnalysis::select(
+            DB::raw('CASE
+                WHEN ph_level < 5.5 THEN "Very Acidic (< 5.5)"
+                WHEN ph_level >= 5.5 AND ph_level < 6.0 THEN "Acidic (5.5–6.0)"
+                WHEN ph_level >= 6.0 AND ph_level < 6.5 THEN "Slightly Acidic (6.0–6.5)"
+                WHEN ph_level >= 6.5 AND ph_level < 7.0 THEN "Neutral (6.5–7.0)"
+                ELSE "Alkaline (> 7.0)"
+            END as ph_range'),
+            DB::raw('COUNT(*) as count')
+        )
+        ->whereNotNull('ph_level')
+        ->where('validation_status', 'approved')
+        ->whereHas('farm', $farmScope)
+        ->groupBy('ph_range')
+        ->get();
+
+    // ── Per-barangay nutrient averages ───────────────────────────────────────
+    $nutrientByBarangay = SoilAnalysis::select(
+            'barangays.barangay as barangay_name',
+            DB::raw('COUNT(soil_analysis.id) as sample_count'),
+            DB::raw('ROUND(AVG(soil_analysis.ph_level), 2) as avg_ph'),
+            DB::raw('ROUND(AVG(soil_analysis.nitrogen), 4) as avg_n'),
+            DB::raw('ROUND(AVG(soil_analysis.phosphorus), 2) as avg_p'),
+            DB::raw('ROUND(AVG(soil_analysis.potassium), 4) as avg_k'),
+            DB::raw('ROUND(AVG(soil_analysis.organic_matter), 2) as avg_om')
+        )
+        ->join('farms', 'farms.id', '=', 'soil_analysis.farm_id')
+        ->join('barangays', 'barangays.code', '=', 'farms.farmer_address_bgy')
+        ->where('soil_analysis.validation_status', 'approved')
+        ->tap(function ($q) use ($barangayCode, $maragusanCodes) {
+            if ($barangayCode) {
+                $q->where('farms.farmer_address_bgy', $barangayCode);
+            } else {
+                $q->whereIn('farms.farmer_address_bgy', $maragusanCodes);
+            }
+        })
+        ->groupBy('barangays.barangay')
+        ->orderBy('barangays.barangay')
+        ->get();
+
+    // ── Lab records table ────────────────────────────────────────────────────
+    $labRecords = SoilAnalysis::select(
+            'soil_analysis.sample_id',
+            'soil_analysis.farm_name',
+            'soil_analysis.lab_no',
+            'soil_analysis.date_collected',
+            'soil_analysis.date_analyzed',
+            'soil_analysis.ph_level',
+            'soil_analysis.nitrogen',
+            'soil_analysis.phosphorus',
+            'soil_analysis.potassium',
+            'soil_analysis.organic_matter',
+            'soil_analysis.crop_variety',
+            'soil_analysis.validation_status',
+            'barangays.barangay as barangay_name',
+            'farmers.farmer_address_prk as purok'
+        )
+        ->join('farms', 'farms.id', '=', 'soil_analysis.farm_id')
+        ->join('barangays', 'barangays.code', '=', 'farms.farmer_address_bgy')
+        ->leftJoin('farmers', 'farmers.id', '=', 'soil_analysis.farmer_id')
+        ->tap(function ($q) use ($barangayCode, $maragusanCodes) {
+            if ($barangayCode) {
+                $q->where('farms.farmer_address_bgy', $barangayCode);
+            } else {
+                $q->whereIn('farms.farmer_address_bgy', $maragusanCodes);
+            }
+        })
+        ->orderBy('barangays.barangay')
+        ->orderBy('soil_analysis.date_collected', 'desc')
+        ->get();
+
+    return view('filament.pages.soil-print-report', compact(
+        'municipal', 'barangayName',
+        'totalFarmsInScope', 'farmsWithLabData', 'farmsWithSoilRecord',
+        'totalSoilTests', 'approvedTests', 'pendingTests',
+        'avgPh', 'avgN', 'avgP', 'avgK', 'avgOm',
+        'phDistribution', 'nutrientByBarangay', 'labRecords'
+    ));
+
+})->middleware(['web', 'auth'])->name('dashboard.soil-report');
+
+
+// ─── Farmer & Farm List Report ───────────────────────────────────────────────
+Route::get('/admin/farmer-farm-report', function (Request $request) {
+
+    $municipal    = $request->get('municipal', 'Maragusan');
+    $barangayCode = $request->get('barangay');
+    $barangayName = $barangayCode
+        ? \App\Models\Barangay::where('code', $barangayCode)->value('barangay')
+        : null;
+
+    $munCode        = \App\Models\Municipality::where('municipality', $municipal)->value('code');
+    $maragusanCodes = \App\Models\Barangay::where('muni_filter', $munCode)->pluck('code')->toArray();
+
+    $farmerScope = function ($q) use ($barangayCode, $maragusanCodes) {
+        if ($barangayCode) {
+            $q->where('farmer_address_bgy', $barangayCode);
+        } else {
+            $q->whereIn('farmer_address_bgy', $maragusanCodes);
+        }
+    };
+
+    // Farmers (with their farms) within scope
+    $farmers = Farmer::with(['farms', 'barangayData'])
+        ->tap($farmerScope)
+        ->orderBy('last_name')
+        ->orderBy('first_name')
+        ->get();
+
+    // Summary stats
+    $totalFarmers = $farmers->count();
+    $totalFarms   = $farmers->sum(fn ($f) => $f->farms->count());
+    $totalArea    = $farmers->flatMap->farms->sum(fn ($farm) => (float) ($farm->crop_area ?? 0));
+    $verifiedFarms = $farmers->flatMap->farms
+        ->filter(fn ($farm) => strtolower((string) $farm->verified_area) === 'yes')
+        ->count();
+
+    return view('filament.pages.farmer-farm-print-report', compact(
+        'municipal', 'barangayName',
+        'farmers', 'totalFarmers', 'totalFarms', 'totalArea', 'verifiedFarms'
+    ));
+
+})->middleware(['web', 'auth'])->name('dashboard.farmer-farm-report');
+
+
+// ─── Farmer Details Print ────────────────────────────────────────────────────
+Route::get('/admin/farmers/{farmer}/print', function (Farmer $farmer) {
+    $farmer->load(['farm', 'barangayData', 'municipalityData']);
+
+    return view('farmers.print', compact('farmer'));
+})->middleware(['web', 'auth'])->name('farmers.print');

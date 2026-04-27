@@ -26,6 +26,50 @@
         }
     </style>
     <div>
+        @php
+            $selectedBarangayName = $this->getSelectedBarangayName();
+            $selectedMunicipal = $this->filters['municipal'] ?? null;
+            $selectedYear = $this->filters['year'] ?? null;
+            $selectedMonth = $this->filters['month'] ?? null;
+            $monthNames = [
+                '1' => 'January', '2' => 'February', '3' => 'March', '4' => 'April',
+                '5' => 'May', '6' => 'June', '7' => 'July', '8' => 'August',
+                '9' => 'September', '10' => 'October', '11' => 'November', '12' => 'December',
+            ];
+            $selectedMonthName = $selectedMonth ? ($monthNames[(string) $selectedMonth] ?? null) : null;
+        @endphp
+
+        @if ($selectedBarangayName || $selectedMunicipal || $selectedYear || $selectedMonth)
+            <div class="mb-6 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 shadow-sm dark:border-emerald-800 dark:bg-emerald-900/20">
+                <svg class="h-5 w-5 flex-shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                </svg>
+                <div class="flex flex-wrap items-center gap-2 text-sm">
+                    <span class="font-medium text-emerald-900 dark:text-emerald-100">Active Filter:</span>
+                    @if ($selectedBarangayName)
+                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-800/40 dark:text-emerald-100">
+                            Barangay: {{ $selectedBarangayName }}
+                        </span>
+                    @endif
+                    @if ($selectedMunicipal)
+                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-800/40 dark:text-emerald-100">
+                            Municipality: {{ $selectedMunicipal }}
+                        </span>
+                    @endif
+                    @if ($selectedYear)
+                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-800/40 dark:text-emerald-100">
+                            Year: {{ $selectedYear }}
+                        </span>
+                    @endif
+                    @if ($selectedMonthName)
+                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-800/40 dark:text-emerald-100">
+                            Month: {{ $selectedMonthName }}
+                        </span>
+                    @endif
+                </div>
+            </div>
+        @endif
+
         <!-- Statistics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <!-- Total Pests Card -->
@@ -83,6 +127,12 @@
                         </svg>
                     </div>
                     <div class="text-3xl font-bold text-white">{{ $this->getTotalFarmers() }}</div>
+                    <div class="flex items-center gap-1 mt-1 text-sm font-semibold text-white">
+                        <svg class="w-4 h-4 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>{{ $this->getTotalVerifiedFarmers() }} verified</span>
+                    </div>
                     <p class="text-xs text-white/70 mt-2">Registered farmers</p>
                 </div>
                 <div class="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-white/10 rounded-full"></div>
@@ -443,9 +493,8 @@
                                 <select id="dataTypeFilter"
                                         onchange="filterTableData()"
                                         class="w-full sm:w-auto px-4 py-2 text-sm font-medium border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer">
-                                    <option value="all">📊 All Data</option>
+                                    <option value="farms" selected>🌾 Farms</option>
                                     <option value="pest_disease">🐛 Pest & Disease</option>
-                                    <option value="farms">🌾 Farms</option>
                                     <option value="farmers">👨‍🌾 Farmers</option>
                                     <option value="soil">🌱 Soil Analysis</option>
                                 </select>
@@ -474,7 +523,7 @@
                                 Showing <span id="recordsCount" class="font-bold text-blue-600 dark:text-blue-400">0</span> records
                             </p>
                             <span id="currentFilterLabel" class="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 font-semibold">
-                                All Data
+                                🌾 Farms
                             </span>
                         </div>
                         <div class="flex gap-2">
@@ -753,22 +802,20 @@
     }
 
     function initializePlaceholderData() {
-        // This will be populated with actual data from your backend
-        allTableData = {
-            pestDisease: @json($this->getRecentPestDiseases() ?? []),
-            farms: @json($this->getRecentFarms() ?? []),
-            farmers: @json($this->getRecentFarmers() ?? []),
-            soil: @json($this->getRecentSoilAnalysis() ?? [])
-        };
-
-        // Debug logging
-        console.log('Table data loaded:', {
-            pestDisease: allTableData.pestDisease.length,
-            farms: allTableData.farms.length,
-            farmers: allTableData.farmers.length,
-            soil: allTableData.soil.length
-        });
-
+        const el = document.getElementById('dashboard-table-json');
+        if (el) {
+            try {
+                const parsed = JSON.parse(el.textContent.trim());
+                allTableData = {
+                    pestDisease: parsed.pestDisease || [],
+                    farms:       parsed.farms       || [],
+                    farmers:     parsed.farmers     || [],
+                    soil:        parsed.soil        || [],
+                };
+            } catch(e) {
+                console.error('Failed to parse table JSON:', e);
+            }
+        }
         filterTableData();
     }
 
@@ -778,7 +825,6 @@
 
         // Update filter label
         const filterLabels = {
-            'all': '📊 All Data',
             'pest_disease': '🐛 Pest & Disease',
             'farms': '🌾 Farms',
             'farmers': '👨‍🌾 Farmers',
@@ -786,7 +832,7 @@
         };
         const filterLabel = document.getElementById('currentFilterLabel');
         if (filterLabel) {
-            filterLabel.textContent = filterLabels[dataType] || 'All Data';
+            filterLabel.textContent = filterLabels[dataType] || '🌾 Farms';
         }
 
         let data = [];
@@ -988,11 +1034,29 @@
         }
     }
 
-    // Initialize table data on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        initializePlaceholderData();
+    // Initialize on first load
+    document.addEventListener('DOMContentLoaded', initializePlaceholderData);
+
+    // Re-initialize after every Livewire commit (filter apply, etc.) — Livewire v3 hook
+    document.addEventListener('livewire:initialized', function () {
+        Livewire.hook('commit', function ({ succeed }) {
+            succeed(function () {
+                initializePlaceholderData();
+            });
+        });
     });
 </script>
+
+{{-- Livewire-reactive data store: plain div so morphdom updates it on every re-render --}}
+@php
+    $tableJsonData = [
+        'pestDisease' => $this->getRecentPestDiseases() ?? [],
+        'farms'       => $this->getRecentFarms()        ?? [],
+        'farmers'     => $this->getRecentFarmers()      ?? [],
+        'soil'        => $this->getRecentSoilAnalysis() ?? [],
+    ];
+@endphp
+<div id="dashboard-table-json" style="display:none" aria-hidden="true">@json($tableJsonData)</div>
 </div>
 
 </x-filament::page>

@@ -29,7 +29,7 @@ class SoilAnalysisResource extends Resource
 
     protected static ?string $navigationIcon  = 'heroicon-o-beaker';
     protected static ?string $navigationLabel = 'Soil Analysis';
-    protected static ?string $pluralLabel     = 'Soil Analyses';
+    protected static ?string $pluralLabel     = 'Soil Analysis';
     protected static ?string $navigationGroup = 'Soil Fertility';
     protected static ?int    $navigationSort  = 2;
     /**
@@ -120,7 +120,7 @@ class SoilAnalysisResource extends Resource
                                     ->afterStateUpdated(function ($state, Forms\Set $set) {
                                         if ($state) {
                                             $farm = \App\Models\Farm::with('farmer:id,last_name')
-                                                ->select(['id', 'farm_name', 'soil_type', 'latitude', 'longtitude', 'farmer_id'])
+                                                ->select(['id', 'farm_name', 'soil_type', 'crop_variety', 'latitude', 'longtitude', 'farmer_id'])
                                                 ->find($state);
                                             if ($farm) {
                                                 $set('farm_name', $farm->farm_name);
@@ -140,6 +140,19 @@ class SoilAnalysisResource extends Resource
                                                 }
                                                 if ($farm->soil_type) {
                                                     $set('soil_type', $farm->soil_type);
+                                                }
+                                                if ($farm->crop_variety) {
+                                                    // Normalize the stored value against the dropdown options.
+                                                    // Handles inputs like "Coffee - Robusta", "robusta", "Excelsa/Liberica".
+                                                    $variety = trim($farm->crop_variety);
+                                                    $variety = preg_replace('/^coffee\s*-\s*/i', '', $variety);
+                                                    $variety = trim(explode('/', $variety)[0]);
+                                                    foreach (['Arabica', 'Robusta', 'Excelsa', 'Liberica'] as $known) {
+                                                        if (strcasecmp($variety, $known) === 0) {
+                                                            $set('crop_variety', $known);
+                                                            break;
+                                                        }
+                                                    }
                                                 }
                                                 if ($farm->latitude && $farm->longtitude) {
                                                     $set('location', "{$farm->latitude}, {$farm->longtitude}");
@@ -194,9 +207,10 @@ class SoilAnalysisResource extends Resource
                                 Forms\Components\Select::make('crop_variety')
                                     ->label('Crop Variety')
                                     ->options([
-                                        'Coffee - Arabica' => 'Coffee - Arabica',
-                                        'Coffee - Robusta' => 'Coffee - Robusta',
-                                        'Coffee - Excelsa/Liberica' => 'Coffee - Excelsa/Liberica',
+                                        'Arabica' => 'Arabica',
+                                        'Robusta' => 'Robusta',
+                                        'Excelsa' => 'Excelsa',
+                                        'Liberica' => 'Liberica',
                                     ])
                                     ->native(false)
                                     ->required(),
@@ -210,6 +224,7 @@ class SoilAnalysisResource extends Resource
                             Grid::make(3)->schema([
                                 Forms\Components\DatePicker::make('date_collected')
                                     ->label('Date Collected')
+                                    ->prefixIcon('heroicon-o-calendar-days')
                                     ->native(false),
                             ]),
 
@@ -249,10 +264,12 @@ class SoilAnalysisResource extends Resource
                                     ->maxLength(255),
 
                                 Forms\Components\DatePicker::make('date_submitted')
+                                    ->prefixIcon('heroicon-o-calendar-days')
                                     ->native(false),
                             ]),
                             Grid::make(3)->schema([
                                 Forms\Components\DatePicker::make('date_analyzed')
+                                    ->prefixIcon('heroicon-o-calendar-days')
                                     ->native(false),
 
                                 Forms\Components\TextInput::make('lab_no')
@@ -274,6 +291,9 @@ class SoilAnalysisResource extends Resource
                                     ->numeric()
                                     ->inputMode('decimal')
                                     ->step('0.01')
+                                    ->minValue(0)
+                                    ->maxValue(14)
+                                    ->placeholder('<4.5 or >8.5')
                                     ->suffix('pH'),
 
                                 Forms\Components\TextInput::make('organic_matter')
@@ -281,6 +301,9 @@ class SoilAnalysisResource extends Resource
                                     ->numeric()
                                     ->inputMode('decimal')
                                     ->step('0.01')
+                                    ->minValue(0)
+                                    ->maxValue(15)
+                                    ->placeholder('<1.0 or >5.15')
                                     ->suffix('%'),
                             ]),
                         ]),
@@ -294,6 +317,9 @@ class SoilAnalysisResource extends Resource
                                     ->numeric()
                                     ->inputMode('decimal')
                                     ->step('0.01')
+                                    ->minValue(0)
+                                    ->maxValue(2)
+                                    ->placeholder('<0.05 or >0.3')
                                     ->suffix('%'),
 
                                 Forms\Components\TextInput::make('phosphorus')
@@ -301,6 +327,9 @@ class SoilAnalysisResource extends Resource
                                     ->numeric()
                                     ->inputMode('decimal')
                                     ->step('0.01')
+                                    ->minValue(0)
+                                    ->maxValue(500)
+                                    ->placeholder('<3 or >30')
                                     ->suffix('ppm'),
 
                                 Forms\Components\TextInput::make('potassium')
@@ -308,6 +337,9 @@ class SoilAnalysisResource extends Resource
                                     ->numeric()
                                     ->inputMode('decimal')
                                     ->step('0.01')
+                                    ->minValue(0)
+                                    ->maxValue(2000)
+                                    ->placeholder('<0.2 or >1.0')
                                     ->suffix('ppm'),
                             ]),
                         ]),

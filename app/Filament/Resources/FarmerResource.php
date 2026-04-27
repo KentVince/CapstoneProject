@@ -20,6 +20,10 @@ use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use App\Services\QrCodeService;
+use App\Models\Barangay;
+use App\Models\Municipality;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 
 class FarmerResource extends Resource implements HasShieldPermissions
 {
@@ -87,14 +91,7 @@ public static function table(Table $table): Table
                 ->alignCenter()
                 ->state(fn ($record) => $record), // ✅ this passes the entire record, not just the string
 
-            // 🟦 Clickable Application Number — goes to Edit page
-            Tables\Columns\TextColumn::make('app_no')
-                ->label('Application No.')
-                ->searchable()
-                ->sortable()
-                ->formatStateUsing(fn ($state) => strtoupper($state)),
-
-                Tables\Columns\TextColumn::make('rsbsa_no')
+            Tables\Columns\TextColumn::make('rsbsa_no')
                 ->label('RSBSA No.')
                 ->searchable()
                 ->sortable()
@@ -141,6 +138,32 @@ public static function table(Table $table): Table
                 }
             }
         })
+        ->filters([
+            TernaryFilter::make('verified_area')
+                ->label('Verified Area')
+                ->placeholder('All farmers')
+                ->trueLabel('Verified only')
+                ->falseLabel('Not verified')
+                ->queries(
+                    true: fn (Builder $q) => $q->whereHas('farms', fn (Builder $f) =>
+                        $f->whereRaw('LOWER(verified_area) = ?', ['yes'])
+                    ),
+                    false: fn (Builder $q) => $q->whereDoesntHave('farms', fn (Builder $f) =>
+                        $f->whereRaw('LOWER(verified_area) = ?', ['yes'])
+                    ),
+                    blank: fn (Builder $q) => $q,
+                ),
+
+            SelectFilter::make('farmer_address_bgy')
+                ->label('Barangay')
+                ->options(function () {
+                    $munCode = Municipality::where('municipality', 'Maragusan')->value('code');
+                    return Barangay::where('muni_filter', $munCode)
+                        ->orderBy('barangay')
+                        ->pluck('barangay', 'code');
+                })
+                ->searchable(),
+        ])
 
 
         ->actions([
@@ -166,6 +189,12 @@ public static function table(Table $table): Table
                                     'qrUrl' => $qrUrl,
                                 ]);
                             }),
+                        Tables\Actions\Action::make('print_details')
+                            ->label('Print Details')
+                            ->icon('heroicon-o-document-text')
+                            ->color('info')
+                            ->url(fn (Farmer $record) => route('farmers.print', $record))
+                            ->openUrlInNewTab(),
                         Tables\Actions\EditAction::make()
                             ->modalWidth('7xl')
                             ->mutateRecordDataUsing(function (array $data, Farmer $record): array {

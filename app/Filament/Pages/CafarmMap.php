@@ -128,7 +128,10 @@ class CafarmMap extends Page
         $municipalities = Municipality::pluck('municipality', 'code');
         $barangays = Barangay::pluck('barangay', 'code');
 
-        return Farm::select('id', 'farm_name as name', 'latitude', 'longtitude as longitude', 'farmer_address_bgy as barangay', 'farmer_address_mun as municipality')
+        return Farm::select('id', 'farm_name as name', 'latitude', 'longtitude as longitude', 'farmer_address_bgy as barangay', 'farmer_address_mun as municipality', 'soil_type', 'crop_area', 'crop_variety')
+            ->whereRaw('LOWER(verified_area) = ?', ['yes'])
+            ->whereNotNull('latitude')
+            ->whereNotNull('longtitude')
             ->orderBy('farm_name')
             ->get()
             ->map(function ($farm) use ($municipalities, $barangays) {

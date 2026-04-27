@@ -149,8 +149,7 @@ trait HasFarmInfoComponents
                             ->schema([
 
                                 TextInput::make('verified_area')
-                                    ->label('Verified Area (ha)')
-                                    ->numeric(),
+                                    ->label('Verified Area'),
 
                                 Select::make('status')
                                     ->label('Status')

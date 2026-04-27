@@ -224,6 +224,8 @@ Route::post('/mobile/check-app-no', function (Request $request) {
                 'farm_name' => $farm->farm_name ?? 'Unknown Farm',
                 'latitude' => $farm->latitude ?? null,
                 'longitude' => $farm->longtitude ?? null,
+                'verified_area' => $farm->verified_area ?? null,
+                'status' => $farm->status ?? null,
             ],
         ],
     ]);
@@ -553,12 +555,14 @@ Route::post('/soil-analysis/{id}/expert-comments', [SoilAnalysisController::clas
 // Add this route with your other mobile routes
 Route::post('/mobile/change-password', [MobileController::class, 'changePassword']);
 
-// Update farm GPS coordinates from mobile device
+// Update farm GPS coordinates (and optionally verified_area + status) from mobile device
 Route::post('/mobile/update-farm-gps', function (Request $request) {
     $request->validate([
-        'farm_id'   => 'required|integer',
-        'latitude'  => 'required|numeric',
-        'longitude' => 'required|numeric',
+        'farm_id'       => 'required|integer',
+        'latitude'      => 'required|numeric',
+        'longitude'     => 'required|numeric',
+        'verified_area' => 'nullable|string|max:255',
+        'status'        => 'nullable|string|max:255',
     ]);
 
     $farm = Farm::find($request->farm_id);
@@ -567,16 +571,26 @@ Route::post('/mobile/update-farm-gps', function (Request $request) {
         return response()->json(['success' => false, 'message' => 'Farm not found'], 404);
     }
 
-    $farm->update([
+    $updates = [
         'latitude'   => $request->latitude,
         'longtitude' => $request->longitude, // note: column has typo in DB
-    ]);
+    ];
+    if ($request->filled('verified_area')) {
+        $updates['verified_area'] = $request->verified_area;
+    }
+    if ($request->filled('status')) {
+        $updates['status'] = $request->status;
+    }
+
+    $farm->update($updates);
 
     return response()->json([
-        'success'   => true,
-        'message'   => 'Farm GPS updated successfully',
-        'latitude'  => $request->latitude,
-        'longitude' => $request->longitude,
+        'success'       => true,
+        'message'       => 'Farm updated successfully',
+        'latitude'      => $request->latitude,
+        'longitude'     => $request->longitude,
+        'verified_area' => $farm->verified_area,
+        'status'        => $farm->status,
     ]);
 });
 

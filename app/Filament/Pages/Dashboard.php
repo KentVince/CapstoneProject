@@ -10,7 +10,6 @@ use App\Models\PestAndDiseaseCategory;
 use Illuminate\Support\Facades\DB;
 use App\Filament\Widgets\StatOverview;
 use Filament\Forms\Components\Section;
-use Filament\Forms\Components\DatePicker;
 use App\Filament\Widgets\BlogPostsChart;
 use App\Filament\Widgets\BlogPostsChart1;
 use App\Filament\Widgets\BlogPostsChart3;
@@ -18,6 +17,7 @@ use App\Filament\Widgets\FarmsByMunicipalityChart;
 use App\Filament\Widgets\SoilPhDistributionChart;
 use App\Filament\Widgets\TopAffectedBarangaysChart;
 use App\Filament\Widgets\ValidationStatusChart;
+use App\Models\Barangay;
 use App\Models\Municipality;
 use Filament\Forms\Components\Select;
 use Filament\Actions\Action;
@@ -58,6 +58,51 @@ class Dashboard extends \Filament\Pages\Dashboard
     public $soilPhDistribution = [];
     public $monthlyComparison = [];
 
+    /**
+     * Resolve selected barangay code (from filter) to its name.
+     */
+    protected function getSelectedBarangayName(): ?string
+    {
+        if ($code = $this->filters['barangay'] ?? null) {
+            return Barangay::where('code', $code)->value('barangay');
+        }
+        return null;
+    }
+
+    /**
+     * Apply the barangay filter against a pest_and_disease query
+     * where the `area` column stores "Barangay, Municipality".
+     */
+    protected function applyBarangayToAreaQuery($query): void
+    {
+        if ($name = $this->getSelectedBarangayName()) {
+            $query->where(function ($q) use ($name) {
+                $q->where('area', 'LIKE', $name . ',%')
+                  ->orWhere('area', $name);
+            });
+        }
+    }
+
+    protected function applyYearFilter($query, string $column): void
+    {
+        if ($year = $this->filters['year'] ?? null) {
+            $query->whereYear($column, $year);
+        }
+    }
+
+    protected function applyMonthFilter($query, string $column): void
+    {
+        if ($month = $this->filters['month'] ?? null) {
+            $query->whereMonth($column, $month);
+        }
+    }
+
+    protected function applyDateFilters($query, string $column): void
+    {
+        $this->applyYearFilter($query, $column);
+        $this->applyMonthFilter($query, $column);
+    }
+
     public function getCasesBySeverity()
     {
         $query = PestAndDisease::selectRaw('severity, COUNT(*) as count')
@@ -75,6 +120,9 @@ class Dashboard extends \Filament\Pages\Dashboard
         if ($municipal = $this->filters['municipal'] ?? null) {
             $query->where('area', $municipal);
         }
+
+        $this->applyBarangayToAreaQuery($query);
+        $this->applyDateFilters($query, 'date_detected');
 
         return $query->groupBy('severity')->pluck('count', 'severity');
     }
@@ -96,6 +144,9 @@ class Dashboard extends \Filament\Pages\Dashboard
         if ($municipal = $this->filters['municipal'] ?? null) {
             $query->where('area', $municipal);
         }
+
+        $this->applyBarangayToAreaQuery($query);
+        $this->applyDateFilters($query, 'date_detected');
 
         $rows = $query->groupBy('area')
             ->orderByDesc('count')
@@ -129,6 +180,9 @@ class Dashboard extends \Filament\Pages\Dashboard
         if ($municipal = $this->filters['municipal'] ?? null) {
             $query->where('area', $municipal);
         }
+
+        $this->applyBarangayToAreaQuery($query);
+        $this->applyDateFilters($query, 'date_detected');
 
         $rows = $query->groupBy('area', 'pest')
             ->orderBy('area')
@@ -174,6 +228,9 @@ class Dashboard extends \Filament\Pages\Dashboard
             $query->where('area', $municipal);
         }
 
+        $this->applyBarangayToAreaQuery($query);
+        $this->applyDateFilters($query, 'date_detected');
+
         return $query->groupBy('month')
             ->orderBy('month', 'asc')
             ->get();
@@ -195,6 +252,9 @@ class Dashboard extends \Filament\Pages\Dashboard
             $query->where('area', $municipal);
         }
 
+        $this->applyBarangayToAreaQuery($query);
+        $this->applyDateFilters($query, 'date_detected');
+
         return $query->groupBy('pest')
             ->orderByDesc('count')
             ->limit(10)
@@ -208,6 +268,10 @@ class Dashboard extends \Filament\Pages\Dashboard
         // Apply municipality filter if exists
         if ($municipal = $this->filters['municipal'] ?? null) {
             $query->where('farmer_address_mun', $municipal);
+        }
+
+        if ($barangayCode = $this->filters['barangay'] ?? null) {
+            $query->where('farmer_address_bgy', $barangayCode);
         }
 
         return $query->groupBy('farmer_address_mun')
@@ -229,6 +293,14 @@ class Dashboard extends \Filament\Pages\Dashboard
             DB::raw('COUNT(*) as count')
         )->whereNotNull('ph_level');
 
+        if ($barangayCode = $this->filters['barangay'] ?? null) {
+            $query->whereHas('farm', function ($q) use ($barangayCode) {
+                $q->where('farmer_address_bgy', $barangayCode);
+            });
+        }
+
+        $this->applyDateFilters($query, 'date_collected');
+
         return $query->groupBy('ph_range')->pluck('count', 'ph_range');
     }
 
@@ -249,8 +321,8 @@ class Dashboard extends \Filament\Pages\Dashboard
         ->where('validation_status', 'approved')
         ->orderBy('date_detected', 'desc');
 
-        // Don't apply filters for table data - show all recent records
-        // Filters are for charts only
+        $this->applyBarangayToAreaQuery($query);
+        $this->applyDateFilters($query, 'date_detected');
 
         return $query->get()->map(function ($item) use ($categoryTypes) {
             $item->type = $categoryTypes[$item->pest] ?? 'pest';
@@ -269,8 +341,11 @@ class Dashboard extends \Filament\Pages\Dashboard
         ])
         ->orderBy('created_at', 'desc');
 
-        // Don't apply filters for table data - show all recent records
-        // Filters are for charts only
+        if ($barangayCode = $this->filters['barangay'] ?? null) {
+            $query->where('farmer_address_bgy', $barangayCode);
+        }
+
+        $this->applyDateFilters($query, 'created_at');
 
         return $query->get()->map(function ($farm) use ($barangays) {
             $farm->farmer_name = $farm->farmer ?
@@ -293,9 +368,18 @@ class Dashboard extends \Filament\Pages\Dashboard
             'nitrogen',
             'phosphorus',
             'potassium',
-            'organic_matter'
+            'organic_matter',
+            'farm_id'
         )
         ->orderBy('date_collected', 'desc');
+
+        if ($barangayCode = $this->filters['barangay'] ?? null) {
+            $query->whereHas('farm', function ($q) use ($barangayCode) {
+                $q->where('farmer_address_bgy', $barangayCode);
+            });
+        }
+
+        $this->applyDateFilters($query, 'date_collected');
 
         return $query->get();
     }
@@ -309,8 +393,11 @@ class Dashboard extends \Filament\Pages\Dashboard
         $query = Farmer::with('barangayData')
         ->orderBy('created_at', 'desc');
 
-        // Don't apply filters for table data - show all recent records
-        // Filters are for charts only
+        if ($barangayCode = $this->filters['barangay'] ?? null) {
+            $query->where('farmer_address_bgy', $barangayCode);
+        }
+
+        $this->applyDateFilters($query, 'created_at');
 
         return $query->get()->map(function ($farmer) use ($municipalities) {
             $farmer->full_name = trim(($farmer->first_name ?? '') . ' ' . ($farmer->middle_name ?? '') . ' ' . ($farmer->last_name ?? ''));
@@ -325,68 +412,135 @@ class Dashboard extends \Filament\Pages\Dashboard
     // Get statistics for cards
     public function getTotalPests()
     {
-        return PestAndDisease::where('validation_status', 'approved')
-            ->where('type', 'pest')
-            ->count();
+        $query = PestAndDisease::where('validation_status', 'approved')
+            ->where('type', 'pest');
+
+        $this->applyBarangayToAreaQuery($query);
+        $this->applyDateFilters($query, 'date_detected');
+
+        return $query->count();
     }
 
     public function getTotalDiseases()
     {
-        return PestAndDisease::where('validation_status', 'approved')
-            ->where('type', 'disease')
-            ->count();
+        $query = PestAndDisease::where('validation_status', 'approved')
+            ->where('type', 'disease');
+
+        $this->applyBarangayToAreaQuery($query);
+        $this->applyDateFilters($query, 'date_detected');
+
+        return $query->count();
     }
 
     public function getTotalFarmers()
     {
-        return Farmer::count();
+        $query = Farmer::query();
+
+        if ($barangayCode = $this->filters['barangay'] ?? null) {
+            $query->where('farmer_address_bgy', $barangayCode);
+        }
+
+        return $query->count();
+    }
+
+    public function getTotalVerifiedFarmers()
+    {
+        $barangayCode = $this->filters['barangay'] ?? null;
+
+        return Farmer::whereHas('farms', function ($q) use ($barangayCode) {
+            $q->whereRaw('LOWER(verified_area) = ?', ['yes']);
+            if ($barangayCode) {
+                $q->where('farmer_address_bgy', $barangayCode);
+            }
+        })
+        ->when($barangayCode, fn ($q) => $q->where('farmer_address_bgy', $barangayCode))
+        ->count();
     }
 
     public function getTotalSoilTested()
     {
-        return SoilAnalysis::count();
+        $query = SoilAnalysis::query();
+
+        if ($barangayCode = $this->filters['barangay'] ?? null) {
+            $query->whereHas('farm', function ($q) use ($barangayCode) {
+                $q->where('farmer_address_bgy', $barangayCode);
+            });
+        }
+
+        $this->applyDateFilters($query, 'date_collected');
+
+        return $query->count();
     }
 
     public function getPendingPestCases()
     {
-        return PestAndDisease::where('validation_status', 'pending')->count();
+        $query = PestAndDisease::where('validation_status', 'pending');
+        $this->applyBarangayToAreaQuery($query);
+        $this->applyDateFilters($query, 'date_detected');
+        return $query->count();
     }
 
     public function getPendingSoilAnalyses()
     {
-        return SoilAnalysis::where('validation_status', 'pending')->count();
+        $query = SoilAnalysis::where('validation_status', 'pending');
+        if ($barangayCode = $this->filters['barangay'] ?? null) {
+            $query->whereHas('farm', function ($q) use ($barangayCode) {
+                $q->where('farmer_address_bgy', $barangayCode);
+            });
+        }
+        $this->applyDateFilters($query, 'date_collected');
+        return $query->count();
     }
 
     public function getOldestPendingPestDate()
     {
-        $record = PestAndDisease::where('validation_status', 'pending')
-            ->orderBy('date_detected', 'asc')
-            ->first();
+        $query = PestAndDisease::where('validation_status', 'pending');
+        $this->applyBarangayToAreaQuery($query);
+        $this->applyDateFilters($query, 'date_detected');
+
+        $record = $query->orderBy('date_detected', 'asc')->first();
         return $record ? $record->date_detected : null;
     }
 
     public function getOldestPendingSoilDate()
     {
-        $record = SoilAnalysis::where('validation_status', 'pending')
-            ->orderBy('date_collected', 'asc')
-            ->first();
+        $query = SoilAnalysis::where('validation_status', 'pending');
+        if ($barangayCode = $this->filters['barangay'] ?? null) {
+            $query->whereHas('farm', function ($q) use ($barangayCode) {
+                $q->where('farmer_address_bgy', $barangayCode);
+            });
+        }
+        $this->applyDateFilters($query, 'date_collected');
+
+        $record = $query->orderBy('date_collected', 'asc')->first();
         return $record ? $record->date_collected : null;
     }
 
     public function getPendingPestRecords()
     {
-        return PestAndDisease::with('farmer:id,first_name,last_name')
-            ->where('validation_status', 'pending')
-            ->orderBy('date_detected', 'asc')
+        $query = PestAndDisease::with('farmer:id,first_name,last_name')
+            ->where('validation_status', 'pending');
+        $this->applyBarangayToAreaQuery($query);
+        $this->applyDateFilters($query, 'date_detected');
+
+        return $query->orderBy('date_detected', 'asc')
             ->limit(5)
             ->get(['case_id', 'farmer_id', 'pest', 'severity', 'date_detected', 'area', 'confidence']);
     }
 
     public function getPendingSoilRecords()
     {
-        return SoilAnalysis::with('farmer:id,first_name,last_name')
-            ->where('validation_status', 'pending')
-            ->orderBy('date_collected', 'asc')
+        $query = SoilAnalysis::with('farmer:id,first_name,last_name')
+            ->where('validation_status', 'pending');
+
+        if ($barangayCode = $this->filters['barangay'] ?? null) {
+            $query->whereHas('farm', function ($q) use ($barangayCode) {
+                $q->where('farmer_address_bgy', $barangayCode);
+            });
+        }
+        $this->applyDateFilters($query, 'date_collected');
+
+        return $query->orderBy('date_collected', 'asc')
             ->limit(5)
             ->get(['id', 'farmer_id', 'farm_name', 'date_collected', 'ph_level', 'nitrogen', 'phosphorus', 'potassium']);
     }
@@ -424,6 +578,18 @@ class Dashboard extends \Filament\Pages\Dashboard
             $soilQuery->where('farms.farmer_address_mun', $municipal);
         }
 
+        if ($barangayCode = $this->filters['barangay'] ?? null) {
+            $soilQuery->where('farms.farmer_address_bgy', $barangayCode);
+        }
+
+        if ($year = $this->filters['year'] ?? null) {
+            $soilQuery->whereYear('soil_analysis.date_collected', $year);
+        }
+
+        if ($month = $this->filters['month'] ?? null) {
+            $soilQuery->whereMonth('soil_analysis.date_collected', $month);
+        }
+
         $this->soilNutrientData = $soilQuery->get();
 
         // Pest and Disease cases over time
@@ -439,6 +605,21 @@ class Dashboard extends \Filament\Pages\Dashboard
         }
         if ($municipal = $this->filters['municipal'] ?? null) {
             $query->where('area', $municipal);
+        }
+
+        if ($barangayName = $this->getSelectedBarangayName()) {
+            $query->where(function ($q) use ($barangayName) {
+                $q->where('area', 'LIKE', $barangayName . ',%')
+                  ->orWhere('area', $barangayName);
+            });
+        }
+
+        if ($year = $this->filters['year'] ?? null) {
+            $query->whereYear('date_detected', $year);
+        }
+
+        if ($month = $this->filters['month'] ?? null) {
+            $query->whereMonth('date_detected', $month);
         }
 
         $this->pestAndDiseaseData = $query->groupBy('month')
@@ -465,35 +646,79 @@ class Dashboard extends \Filament\Pages\Dashboard
                 ->label('Print Report')
                 ->icon('heroicon-o-printer')
                 ->color('gray')
-                ->url(fn () => route('dashboard.print-report', array_filter([
-                    'startDate' => $this->filters['startDate'] ?? now()->startOfYear()->format('Y-m-d'),
-                    'endDate'   => $this->filters['endDate']   ?? now()->format('Y-m-d'),
-                    'municipal' => $this->filters['municipal'] ?? null,
-                ])))
-                ->openUrlInNewTab(),
+                ->modalHeading('Select Report Type')
+                ->modalSubmitAction(false)
+                ->modalCancelActionLabel('Close')
+                ->modalContent(function () {
+                    $params = array_filter([
+                        'municipal' => $this->filters['municipal'] ?? null,
+                        'barangay'  => $this->filters['barangay']  ?? null,
+                        'year'      => $this->filters['year']      ?? null,
+                        'month'     => $this->filters['month']     ?? null,
+                    ]);
+                    return view('components.print-report-selector', [
+                        'pestUrl'        => route('dashboard.print-report',        $params),
+                        'soilUrl'        => route('dashboard.soil-report',         $params),
+                        'farmerFarmUrl'  => route('dashboard.farmer-farm-report',  $params),
+                    ]);
+                }),
 
             FilterAction::make()
                 ->form([
                     Section::make()
                     ->schema([
-                        DatePicker::make('startDate')
-                            ->label('Start Date')
-                            ->default(now()->startOfYear())
-                            ->maxDate(fn ($get) => $get('endDate') ?: now()),
-
-                        DatePicker::make('endDate')
-                            ->label('End Date')
-                            ->default(now())
-                            ->minDate(fn ($get) => $get('startDate'))
-                            ->maxDate(now()),
-
                         Select::make('municipal')
                             ->label('Municipality')
                             ->options(Municipality::all()->pluck('municipality', 'municipality'))
+                            ->default('Maragusan')
+                            ->disabled()
+                            ->dehydrated()
+                            ->columnSpanFull(),
+
+                        Select::make('barangay')
+                            ->label('Barangay')
+                            ->placeholder('All Barangays')
+                            ->options(function () {
+                                $munCode = Municipality::where('municipality', 'Maragusan')->value('code');
+                                return Barangay::where('muni_filter', $munCode)
+                                    ->orderBy('barangay')
+                                    ->pluck('barangay', 'code');
+                            })
                             ->searchable()
-                            ->columnSpanFull()
+                            ->columnSpanFull(),
+
+                        Select::make('year')
+                            ->label('Year')
+                            ->placeholder('All Years')
+                            ->options([
+                                '2026' => '2026',
+                                '2025' => '2025',
+                                '2024' => '2024',
+                            ])
+                            ->searchable()
+                            ->columnSpanFull(),
+
+                        Select::make('month')
+                            ->label('Month')
+                            ->placeholder('All Months')
+                            ->options([
+                                '1'  => 'January',
+                                '2'  => 'February',
+                                '3'  => 'March',
+                                '4'  => 'April',
+                                '5'  => 'May',
+                                '6'  => 'June',
+                                '7'  => 'July',
+                                '8'  => 'August',
+                                '9'  => 'September',
+                                '10' => 'October',
+                                '11' => 'November',
+                                '12' => 'December',
+                            ])
+                            ->searchable()
+                            ->columnSpanFull(),
                     ])
-                    ->columns(2),
+                    ->columns(1),
                 ]),
         ];
     }
