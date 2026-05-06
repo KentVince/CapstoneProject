@@ -31,7 +31,6 @@ class ListPestAndDiseases extends ListRecords
                 ->label('Import Excel')
                 ->icon('heroicon-o-arrow-up-tray')
                 ->color('success')
-                ->hidden()
                 ->modalHeading('Import Pest & Disease from Excel')
                 ->modalDescription('Upload an Excel file (.xlsx) with pest and disease data. Rows missing pest or date_detected will be skipped.')
                 ->modalSubmitActionLabel('Import')

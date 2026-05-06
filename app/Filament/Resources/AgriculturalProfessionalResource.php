@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Services\QrCodeService;
 use App\Filament\Resources\AgriculturalProfessionalResource\Pages;
+use Spatie\Permission\Models\Role;
 
 class AgriculturalProfessionalResource extends Resource
 {
@@ -132,6 +133,19 @@ class AgriculturalProfessionalResource extends Resource
                         ->maxLength(255),
                 ])
                 ->columns(2),
+
+            Section::make('Roles & Permissions')
+                ->description('Select roles for this professional. The selected roles fully replace the user account\'s roles (the default panel_user role is removed). The agri_expert role is always kept so the professional can still access the panel.')
+                ->schema([
+                    Select::make('roles')
+                        ->label('Assign Roles')
+                        ->multiple()
+                        ->options(Role::pluck('name', 'name'))
+                        ->preload()
+                        ->searchable()
+                        ->helperText('Selected roles will be synced to the user account on save — only these roles (plus agri_expert) will be active.'),
+                ])
+                ->columns(1),
 
             Section::make('QR Code')
                 ->description('This QR Code is automatically generated based on the Application Number.')

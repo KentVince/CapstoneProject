@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Filament\Notifications\Notification;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Spatie\Permission\Models\Role;
 
 class UserRegistrationService
 {
@@ -28,26 +29,15 @@ class UserRegistrationService
             if ($userType === 'agricultural_professional') {
                 $professional = $this->createAgriculturalProfessional($data, $user);
                 $this->generateProfessionalQrCode($professional);
+
+                $selectedRoles = $data['roles'] ?? [];
+                $this->syncProfessionalRoles($user, $selectedRoles);
             } else {
                 $farmer = $this->createFarmer($data, $user);
                 $this->createFarm($data, $user);
-            }
-           // $this->createFarmerNames($data, $farmer);
-           // $this->createFarmerInfo($data, $farmer);
 
-           // $this->createFarmerApp($data, $farmer);
-          //   $this->createPersonnelAddresses($data, $farmer);
-            // $this->createPersonnelContactId($data, $farmer);
-            // $this->createPersonnelEducBackground($data, $farmer);
-            // $this->createPersonnelEligibility($data, $farmer);
-            // $this->createPersonnelWorkExp($data, $farmer);
-            // $this->createPersonnelVoluntaryWorks($data, $farmer);
-            // $this->createPersonnelLnds($data, $farmer);
-            // $this->createPersonnelOtherInfo($data, $farmer);
-            // $this->createPersonnelStatutory($data, $farmer);
-            // $this->createPersonelRefs($data, $farmer);
-           $roleName = 'panel_user';
-            $this->assignUserRole($user, $roleName);
+                $this->assignUserRole($user, 'panel_user');
+            }
 
             DB::commit();
 
@@ -154,6 +144,7 @@ class UserRegistrationService
             'barangay'   => $data['barangay'] ?? '',
             'phone_no'   => $data['phone_no'] ?? '',
             'email_add'  => $data['email'] ?? '',
+            'roles'      => $data['roles'] ?? [],
         ]);
     }
 
@@ -305,5 +296,22 @@ class UserRegistrationService
     protected function assignUserRole(User $user, $roleName)
     {
         $user->assignRole($roleName);
+    }
+
+    /**
+     * Sync roles for an agricultural professional's user account.
+     * Always includes `agri_expert` (required for Filament panel access),
+     * plus any roles selected during registration. The user's roles are
+     * replaced — `panel_user` and other defaults are removed.
+     */
+    protected function syncProfessionalRoles(User $user, array $selectedRoles): void
+    {
+        $roles = array_values(array_unique(array_merge(['agri_expert'], $selectedRoles)));
+
+        foreach ($roles as $name) {
+            Role::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
+        }
+
+        $user->syncRoles($roles);
     }
 }

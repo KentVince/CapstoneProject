@@ -28,10 +28,12 @@ class AgriculturalProfessional extends Model
         'email_add',
         'qr_code',
         'user_id',
+        'roles',
     ];
 
     protected $casts = [
         'birthdate' => 'date',
+        'roles' => 'array',
     ];
 
     public function user()

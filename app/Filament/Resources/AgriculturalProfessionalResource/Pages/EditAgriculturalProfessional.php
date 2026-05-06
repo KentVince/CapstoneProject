@@ -7,6 +7,7 @@ use App\Services\QrCodeService;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Role;
 
 class EditAgriculturalProfessional extends EditRecord
 {
@@ -50,6 +51,36 @@ class EditAgriculturalProfessional extends EditRecord
                 Notification::make()
                     ->title('QR Generation Failed')
                     ->body('An error occurred while creating the QR code, but the record was still saved.')
+                    ->warning()
+                    ->send();
+            }
+        }
+
+        // Sync user roles to match exactly what was selected on the professional record.
+        // `agri_expert` is always included (required for panel access). Any other roles
+        // (like the default `panel_user`) are removed if they aren't in the selection.
+        if ($professional->user_id && $professional->user) {
+            try {
+                $user = $professional->user;
+                $selected = $professional->roles ?? [];
+
+                $roles = array_values(array_unique(array_merge(['agri_expert'], $selected)));
+
+                foreach ($roles as $roleName) {
+                    Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
+                }
+
+                $user->syncRoles($roles);
+
+                Notification::make()
+                    ->title('Roles Updated')
+                    ->body('Roles for this professional now match the selection.')
+                    ->success()
+                    ->send();
+            } catch (\Throwable $th) {
+                Notification::make()
+                    ->title('Role Update Warning')
+                    ->body('Record was saved, but roles could not be updated: ' . $th->getMessage())
                     ->warning()
                     ->send();
             }

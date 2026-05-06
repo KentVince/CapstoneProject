@@ -5,24 +5,38 @@ namespace App\Imports;
 use App\Models\PestAndDisease;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class PestAndDiseaseImport implements ToCollection, WithHeadingRow
+class PestAndDiseaseImport implements ToCollection, WithHeadingRow, WithChunkReading
 {
     public int   $importedCount = 0;
     public int   $skippedCount  = 0;
     public array $errors        = [];
 
+    public function chunkSize(): int
+    {
+        return 200;
+    }
+
     public function collection(Collection $rows): void
     {
+        set_time_limit(300);
+
+        $batch     = [];
+        $now       = now()->toDateTimeString();
+        $fillable  = (new PestAndDisease)->getFillable();
+        $fillableMap = array_flip($fillable);
+
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 2;
 
             try {
-                $pest          = $this->nullIfEmpty($row['pest']          ?? null);
-                $dateDetected  = $this->parseDate($row['date_detected']   ?? null);
+                $pest         = $this->nullIfEmpty($row['pest']         ?? null);
+                $dateDetected = $this->parseDate($row['date_detected']  ?? null);
 
                 if (empty($pest) || empty($dateDetected)) {
                     $this->skippedCount++;
@@ -30,39 +44,57 @@ class PestAndDiseaseImport implements ToCollection, WithHeadingRow
                     continue;
                 }
 
-                PestAndDisease::create([
-                    'app_no'               => $this->nullIfEmpty($row['app_no']           ?? null),
-                    'expert_id'            => $this->parseInt($row['expert_id']           ?? null),
-                    'farmer_id'            => $this->parseInt($row['farmer_id']           ?? null),
-                    'farm_id'              => $this->parseInt($row['farm_id']             ?? null),
-                    'date_detected'        => $dateDetected,
-                    'type'                 => $this->nullIfEmpty($row['type']             ?? null),
-                    'pest'                 => $pest,
-                    'confidence'           => $this->parseDecimal($row['confidence']       ?? null),
-                    'severity'             => $this->nullIfEmpty($row['severity']         ?? null),
-                    'pest_incidence'       => $this->parseDecimal($row['pest_incidence']   ?? null),
-                    'incidence_rating'     => $this->nullIfEmpty($row['incidence_rating'] ?? null),
-                    'pest_severity_pct'    => $this->parseDecimal($row['pest_severity_pct'] ?? null),
-                    'sum_ratings'          => $this->parseInt($row['sum_ratings']         ?? null),
-                    'n_infested'           => $this->parseInt($row['n_infested']          ?? null),
-                    'n_total'              => $this->parseInt($row['n_total']             ?? null),
-                    'total_trees_planted'  => $this->parseInt($row['total_trees_planted'] ?? null),
-                    'scan_results'         => $this->nullIfEmpty($row['scan_results']     ?? null),
-                    'image_path'           => $this->nullIfEmpty($row['image_path']       ?? null),
-                    'validation_status'    => $this->resolveValidationStatus($row['validation_status'] ?? null),
-                    'expert_comments'      => $this->nullIfEmpty($row['expert_comments']  ?? null),
-                    'ai_recommendation'    => $this->nullIfEmpty($row['ai_recommendation'] ?? null),
-                    'validated_by'         => $this->nullIfEmpty($row['validated_by']     ?? null),
-                    'validated_at'         => $this->parseDateTime($row['validated_at']    ?? null),
-                    'admin_viewed_at'      => $this->parseDateTime($row['admin_viewed_at'] ?? null),
-                    'area'                 => $this->nullIfEmpty($row['area']             ?? null),
-                ]);
+                $record = [
+                    'app_no'              => $this->nullIfEmpty($row['app_no']              ?? null),
+                    'expert_id'           => $this->parseInt($row['expert_id']              ?? null),
+                    'farmer_id'           => $this->parseInt($row['farmer_id']              ?? null),
+                    'farm_id'             => $this->parseInt($row['farm_id']                ?? null),
+                    'date_detected'       => $dateDetected,
+                    'type'                => $this->nullIfEmpty($row['type']                ?? null),
+                    'pest'                => $pest,
+                    'confidence'          => $this->parseDecimal($row['confidence']         ?? null),
+                    'severity'            => $this->nullIfEmpty($row['severity']            ?? null),
+                    'pest_incidence'      => $this->parseDecimal($row['pest_incidence']     ?? null),
+                    'incidence_rating'    => $this->nullIfEmpty($row['incidence_rating']    ?? null),
+                    'pest_severity_pct'   => $this->parseDecimal($row['pest_severity_pct']  ?? null),
+                    'sum_ratings'         => $this->parseInt($row['sum_ratings']            ?? null),
+                    'n_infested'          => $this->parseInt($row['n_infested']             ?? null),
+                    'n_total'             => $this->parseInt($row['n_total']                ?? null),
+                    'total_trees_planted' => $this->parseInt($row['total_trees_planted']    ?? null),
+                    'scan_results'        => $this->nullIfEmpty($row['scan_results']        ?? null),
+                    'image_path'          => $this->nullIfEmpty($row['image_path']          ?? null),
+                    'validation_status'   => $this->resolveValidationStatus($row['validation_status'] ?? null),
+                    'expert_comments'     => $this->nullIfEmpty($row['expert_comments']     ?? null),
+                    'ai_recommendation'   => $this->nullIfEmpty($row['ai_recommendation']   ?? null),
+                    'validated_by'        => $this->nullIfEmpty($row['validated_by']        ?? null),
+                    'validated_at'        => $this->parseDateTime($row['validated_at']      ?? null),
+                    'admin_viewed_at'     => $this->parseDateTime($row['admin_viewed_at']   ?? null),
+                    'area'                => $this->nullIfEmpty($row['area']                ?? null),
+                    'latitude'            => $this->parseDecimal($row['latitude']           ?? null),
+                    'longitude'           => $this->parseDecimal($row['longitude']          ?? null),
+                    'created_at'          => $now,
+                    'updated_at'          => $now,
+                ];
 
-                $this->importedCount++;
+                // Only include columns that exist on the model
+                $batch[] = array_intersect_key($record, $fillableMap + ['created_at' => 1, 'updated_at' => 1]);
+
             } catch (\Exception $e) {
                 $this->skippedCount++;
                 $this->errors[] = "Row {$rowNumber}: {$e->getMessage()}";
                 Log::warning("PestAndDisease import error at row {$rowNumber}: {$e->getMessage()}");
+            }
+        }
+
+        // Bulk insert collected rows in sub-chunks of 100
+        foreach (array_chunk($batch, 100) as $chunk) {
+            try {
+                DB::table('pest_and_disease')->insert($chunk);
+                $this->importedCount += count($chunk);
+            } catch (\Exception $e) {
+                $this->skippedCount += count($chunk);
+                $this->errors[] = "Batch insert failed: {$e->getMessage()}";
+                Log::error("PestAndDisease batch insert error: {$e->getMessage()}");
             }
         }
     }

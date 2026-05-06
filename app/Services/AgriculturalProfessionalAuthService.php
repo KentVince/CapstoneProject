@@ -42,28 +42,34 @@ class AgriculturalProfessionalAuthService
             return null;
         }
 
-        // Ensure the user has the agri_expert role so they can access the Filament panel
-        $this->ensureAgriExpertRole($user);
+        // Ensure the user has the agri_expert role and selected roles so they can access the Filament panel
+        $this->ensureAgriExpertRole($user, $professional);
 
         return $user;
     }
 
     /**
-     * Ensure the user has the `agri_expert` role (required by User::canAccessPanel()).
-     * Creates the role if it does not yet exist and assigns it if missing.
+     * Sync the user's roles to match what was selected on the professional record.
+     * `agri_expert` is always included (required by User::canAccessPanel()). Any
+     * roles not in the selection are removed so defaults like `panel_user` do
+     * not stick around once specific roles are chosen for the professional.
      */
-    protected function ensureAgriExpertRole(User $user): void
+    protected function ensureAgriExpertRole(User $user, AgriculturalProfessional $professional = null): void
     {
         try {
-            Role::firstOrCreate(
-                ['name' => 'agri_expert', 'guard_name' => 'web']
-            );
+            $selected = $professional && !empty($professional->roles)
+                ? $professional->roles
+                : [];
 
-            if (!$user->hasRole('agri_expert')) {
-                $user->assignRole('agri_expert');
+            $roles = array_values(array_unique(array_merge(['agri_expert'], $selected)));
+
+            foreach ($roles as $name) {
+                Role::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
             }
+
+            $user->syncRoles($roles);
         } catch (\Throwable $e) {
-            Log::error("Failed to assign agri_expert role to user {$user->id}: " . $e->getMessage());
+            Log::error("Failed to sync roles for user {$user->id}: " . $e->getMessage());
         }
     }
 
@@ -103,8 +109,8 @@ class AgriculturalProfessionalAuthService
                 'password' => Hash::make($password),
             ]);
 
-            // Assign agri_expert role so the professional can access the Filament panel
-            $this->ensureAgriExpertRole($user);
+            // Assign agri_expert role and any selected roles so the professional can access the Filament panel
+            $this->ensureAgriExpertRole($user, $professional);
 
             Log::info("User account created for agricultural professional: {$professional->app_no}");
 

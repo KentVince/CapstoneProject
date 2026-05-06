@@ -139,6 +139,46 @@
          class="rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
     </div>
 
+    {{-- BUFFER ZONE LEGEND --}}
+    <div id="bufferLegend" class="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow p-4" style="display:none;">
+        <div class="flex items-center justify-between mb-3">
+            <div>
+                <h4 class="text-sm font-bold text-gray-800 dark:text-white">Buffer Zone Analysis</h4>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Farm: <span id="bufferFarmName" class="font-semibold"></span></p>
+            </div>
+            <button onclick="clearBufferZones()" class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">✕ Clear</button>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+            <div class="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 p-3">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="inline-block w-3 h-3 rounded-full" style="background:#dc2626;"></span>
+                    <span class="text-xs font-bold text-red-800 dark:text-red-300">High-Risk</span>
+                </div>
+                <div class="text-[10px] text-red-600 dark:text-red-400 mb-2">0 – 500 m · Immediate Alert</div>
+                <div class="text-xl font-bold text-red-700 dark:text-red-300"><span id="bufZ1Total">0</span></div>
+                <div class="text-[10px] text-gray-500">cases &nbsp;·&nbsp; <span id="bufZ1High" class="font-semibold text-red-600">0</span> high severity</div>
+            </div>
+            <div class="rounded-lg border border-orange-200 bg-orange-50 dark:bg-orange-900/20 dark:border-orange-800 p-3">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="inline-block w-3 h-3 rounded-full" style="background:#ea580c;"></span>
+                    <span class="text-xs font-bold text-orange-800 dark:text-orange-300">Moderate-Risk</span>
+                </div>
+                <div class="text-[10px] text-orange-600 dark:text-orange-400 mb-2">500 m – 1 km · Notify &amp; Monitor</div>
+                <div class="text-xl font-bold text-orange-700 dark:text-orange-300"><span id="bufZ2Total">0</span></div>
+                <div class="text-[10px] text-gray-500">cases &nbsp;·&nbsp; <span id="bufZ2High" class="font-semibold text-orange-600">0</span> high severity</div>
+            </div>
+            <div class="rounded-lg border border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-800 p-3">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="inline-block w-3 h-3 rounded-full" style="background:#ca8a04;"></span>
+                    <span class="text-xs font-bold text-yellow-800 dark:text-yellow-300">Extended-Risk</span>
+                </div>
+                <div class="text-[10px] text-yellow-600 dark:text-yellow-400 mb-2">1 – 2 km · Surveillance</div>
+                <div class="text-xl font-bold text-yellow-700 dark:text-yellow-300"><span id="bufZ3Total">0</span></div>
+                <div class="text-[10px] text-gray-500">cases &nbsp;·&nbsp; <span id="bufZ3High" class="font-semibold text-yellow-600">0</span> high severity</div>
+            </div>
+        </div>
+    </div>
+
     {{-- HEATMAP LEGEND --}}
     <div class="mt-4">
         <div class="flex items-center gap-3">
@@ -190,6 +230,17 @@
 
 .leaflet-popup-content { margin: 0; padding: 0; }
 .leaflet-popup-content-wrapper { padding: 0; border-radius: 12px; overflow: hidden; }
+.buffer-tooltip {
+    background: rgba(15,23,42,0.88);
+    color: #f1f5f9;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.buffer-tooltip::before { display: none; }
 
 .popup-container { min-width: 280px; max-width: 320px; }
 
@@ -348,12 +399,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function getSeverityWeight(severity) {
-        if (!severity) return 0.3;
+        if (!severity) return 0.6;
         switch (severity.toLowerCase()) {
             case 'high':
             case 'severe': return 1.0;
-            case 'medium': return 0.6;
-            default: return 0.3;
+            case 'medium': return 0.85;
+            default: return 0.6;
         }
     }
 
@@ -572,16 +623,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (heatData.length > 0) {
             heatLayer = L.heatLayer(heatData, {
-                radius: 30,
-                blur: 20,
+                radius: 60,
+                blur: 25,
                 maxZoom: 17,
-                max: 1.0,
+                max: 0.5,
+                minOpacity: 0.55,
                 gradient: {
-                    0.2: '#ffffb2',
-                    0.4: '#fecc5c',
-                    0.6: '#fd8d3c',
-                    0.8: '#f03b20',
-                    1.0: '#bd0026'
+                    0.0: '#fecc5c',
+                    0.3: '#fd8d3c',
+                    0.6: '#f03b20',
+                    0.8: '#bd0026',
+                    1.0: '#7b0008'
                 }
             }).addTo(map);
         }
@@ -631,6 +683,88 @@ document.addEventListener('DOMContentLoaded', function () {
 
         return data;
     }
+
+    // ================= BUFFER ZONES =================
+
+    function haversineMeters(lat1, lon1, lat2, lon2) {
+        const R = 6371000;
+        const φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180;
+        const Δφ = (lat2 - lat1) * Math.PI / 180;
+        const Δλ = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    // Buffer circles stored as plain array so nothing can accidentally clear them
+    let bufferCircles = [];
+
+    window.clearBufferZones = function () {
+        bufferCircles.forEach(c => map.removeLayer(c));
+        bufferCircles = [];
+        const legend = document.getElementById('bufferLegend');
+        if (legend) legend.style.display = 'none';
+    };
+    const clearBufferZones = window.clearBufferZones;
+
+    function drawBufferZones(lat, lng, farmName) {
+        clearBufferZones();
+
+        const isHigh = s => s && (s.toLowerCase() === 'high' || s.toLowerCase() === 'severe');
+
+        const casesWithDist = allPestCases
+            .filter(c => c.latitude && c.longitude)
+            .map(c => ({
+                ...c,
+                dist: haversineMeters(lat, lng, parseFloat(c.latitude), parseFloat(c.longitude))
+            }));
+
+        const z1 = casesWithDist.filter(c => c.dist <= 500);
+        const z2 = casesWithDist.filter(c => c.dist > 500  && c.dist <= 1000);
+        const z3 = casesWithDist.filter(c => c.dist > 1000 && c.dist <= 2000);
+
+        const h1 = z1.filter(c => isHigh(c.severity)).length;
+        const h2 = z2.filter(c => isHigh(c.severity)).length;
+        const h3 = z3.filter(c => isHigh(c.severity)).length;
+
+        // Draw outermost first so inner rings render on top
+        const makeCircle = (radius, color, fillColor, fillOpacity, dashArray, label, total, high) => {
+            const riskLabel = high > 0 ? `⚠️ ${high} high-severity` : (total > 0 ? `${total} case(s)` : 'No cases');
+            const circle = L.circle([lat, lng], {
+                radius,
+                color,
+                weight: 2.5,
+                dashArray: dashArray || null,
+                fillColor,
+                fillOpacity,
+                pane: 'overlayPane',
+            })
+            .bindTooltip(
+                `<strong>${label}</strong><br>Cases: ${total} &nbsp;|&nbsp; ${riskLabel}`,
+                { sticky: true, className: 'buffer-tooltip' }
+            )
+            .addTo(map);
+
+            bufferCircles.push(circle);
+        };
+
+        makeCircle(2000, '#ca8a04', '#fef9c3', 0.12, '8 5', '🟡 Extended-Risk Zone (1–2 km)',      z3.length, h3);
+        makeCircle(1000, '#ea580c', '#fed7aa', 0.18, '6 4', '🟠 Moderate-Risk Zone (500 m–1 km)', z2.length, h2);
+        makeCircle(500,  '#dc2626', '#fca5a5', 0.25, null,  '🔴 High-Risk Zone (0–500 m)',         z1.length, h1);
+
+        // Update legend panel
+        const legend = document.getElementById('bufferLegend');
+        if (legend) {
+            document.getElementById('bufferFarmName').textContent = farmName || 'Selected Farm';
+            document.getElementById('bufZ1Total').textContent = z1.length;
+            document.getElementById('bufZ1High').textContent  = h1;
+            document.getElementById('bufZ2Total').textContent = z2.length;
+            document.getElementById('bufZ2High').textContent  = h2;
+            document.getElementById('bufZ3Total').textContent = z3.length;
+            document.getElementById('bufZ3High').textContent  = h3;
+            legend.style.display = 'block';
+        }
+    }
+
 
     let heatmapMode = false;
 
@@ -925,6 +1059,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     window.filterByMunicipality = function () {
+        clearBufferZones();
         const munVal = document.getElementById('municipalityFilter').value;
 
         // Reset barangay and farm dropdowns based on selected municipality
@@ -947,6 +1082,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     window.filterByBarangay = function () {
+        clearBufferZones();
         const brgyVal = document.getElementById('barangayFilter').value;
 
         // Update farm dropdown based on selected barangay
@@ -974,6 +1110,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const farmVal = document.getElementById('farmFilter').value;
 
         if (farmVal === 'all') {
+            clearBufferZones();
+
             // Reset to current barangay or municipality view
             const brgyVal = document.getElementById('barangayFilter').value;
             const munVal = document.getElementById('municipalityFilter').value;
@@ -988,11 +1126,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 setHighlight(null);
             }
         } else {
-            // Zoom to selected farm
+            // Zoom to selected farm and draw buffer zones
             const selectedFarm = allFarms.find(f => f.id == farmVal);
             if (selectedFarm && selectedFarm.latitude && selectedFarm.longitude) {
                 setHighlight(null);
-                map.setView([parseFloat(selectedFarm.latitude), parseFloat(selectedFarm.longitude)], 15);
+                const lat = parseFloat(selectedFarm.latitude);
+                const lng = parseFloat(selectedFarm.longitude);
+                map.setView([lat, lng], 15);
+                drawBufferZones(lat, lng, selectedFarm.name);
             }
         }
 
