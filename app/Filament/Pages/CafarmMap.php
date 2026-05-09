@@ -47,6 +47,7 @@ class CafarmMap extends Page
 
         return PestAndDisease::select(
             'case_id',
+            'farm_id',
             'latitude',
             'longitude',
             'pest',

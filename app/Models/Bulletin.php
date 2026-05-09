@@ -23,6 +23,7 @@ class Bulletin extends Model
         'title',
         'content',
         'attachments',
+        'target_farm_ids',
         'notification_sent',
     ];
 
@@ -30,5 +31,6 @@ class Bulletin extends Model
         'notification_sent' => 'boolean',
         'date_posted'       => 'date',
         'attachments'       => 'array',
+        'target_farm_ids'   => 'array',
     ];
 }

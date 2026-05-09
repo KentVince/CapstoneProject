@@ -106,9 +106,26 @@ Route::post('/test-upload', function (Request $request) {
 
 
 
-Route::get('/mobile/announcements', function () {
-    $items = Bulletin::orderBy('created_at', 'desc')
-        ->where('notification_sent', true)
+Route::get('/mobile/announcements', function (Request $request) {
+    $query = Bulletin::orderBy('created_at', 'desc')
+        ->where('notification_sent', true);
+
+    // Per-user visibility: include broadcasts plus bulletins targeted at this user's farms.
+    if ($request->filled('app_no')) {
+        $farmIds = \App\Http\Controllers\Api\Mobile\BulletinController::resolveFarmIdsForAppNo($request->input('app_no'));
+
+        $query->where(function ($q) use ($farmIds) {
+            $q->whereNull('target_farm_ids')
+              ->orWhereJsonLength('target_farm_ids', 0);
+
+            foreach ($farmIds as $fid) {
+                $q->orWhereJsonContains('target_farm_ids', $fid)
+                  ->orWhereJsonContains('target_farm_ids', (string) $fid);
+            }
+        });
+    }
+
+    $items = $query
         ->get(['bulletin_id', 'category', 'title', 'content', 'date_posted', 'attachments'])
         ->map(function ($item) {
             $attachments = collect($item->attachments ?? [])

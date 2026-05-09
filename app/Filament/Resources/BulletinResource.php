@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Models\Bulletin;
+use App\Models\Farm;
 use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Form;
@@ -76,6 +77,25 @@ class BulletinResource extends Resource
                             'bold', 'italic', 'underline', 'bulletList',
                             'orderedList', 'link', 'undo', 'redo',
                         ])
+                        ->columnSpanFull(),
+
+                    Select::make('target_farm_ids')
+                        ->label('Send To Specific Farms')
+                        ->helperText('Leave empty to broadcast to ALL farmers. Select one or more farms to send this bulletin only to those farm owners.')
+                        ->multiple()
+                        ->searchable()
+                        ->preload()
+                        ->options(function () {
+                            return Farm::with('farmer')
+                                ->orderBy('farm_name')
+                                ->get()
+                                ->mapWithKeys(function ($farm) {
+                                    $owner = trim(($farm->farmer->first_name ?? '') . ' ' . ($farm->farmer->last_name ?? ''));
+                                    $owner = $owner !== '' ? $owner : 'Unknown Owner';
+                                    return [$farm->id => "{$farm->farm_name} — Owner: {$owner}"];
+                                })
+                                ->toArray();
+                        })
                         ->columnSpanFull(),
 
                     Forms\Components\FileUpload::make('attachments')

@@ -148,6 +148,15 @@
             </div>
             <button onclick="clearBufferZones()" class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">✕ Clear</button>
         </div>
+
+        {{-- RISK STATUS BANNER --}}
+        <div id="bufferStatusBanner" class="mb-3 rounded-lg px-3 py-2.5 flex items-start gap-2.5 border">
+            <span id="bufferStatusIcon" class="text-lg leading-none flex-shrink-0">✅</span>
+            <div class="flex-1 min-w-0">
+                <div id="bufferStatusTitle" class="text-xs font-bold"></div>
+                <div id="bufferStatusSubtitle" class="text-[11px] mt-0.5"></div>
+            </div>
+        </div>
         <div class="grid grid-cols-3 gap-3">
             <div class="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 p-3">
                 <div class="flex items-center gap-2 mb-1">
@@ -175,6 +184,28 @@
                 <div class="text-[10px] text-yellow-600 dark:text-yellow-400 mb-2">1 – 2 km · Surveillance</div>
                 <div class="text-xl font-bold text-yellow-700 dark:text-yellow-300"><span id="bufZ3Total">0</span></div>
                 <div class="text-[10px] text-gray-500">cases &nbsp;·&nbsp; <span id="bufZ3High" class="font-semibold text-yellow-600">0</span> high severity</div>
+            </div>
+        </div>
+
+        {{-- INFECTED FARMS NEARBY --}}
+        <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-2">
+                <h5 class="text-xs font-bold text-red-700 dark:text-red-300 uppercase tracking-wider">⚠️ Infected Farms Nearby</h5>
+                <span class="text-[10px] text-gray-500 dark:text-gray-400">Total: <span id="bufInfectedTotal" class="font-semibold">0</span></span>
+            </div>
+            <div id="bufferInfectedList" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                <p class="text-xs text-gray-400 italic">No infected farms detected.</p>
+            </div>
+        </div>
+
+        {{-- HEALTHY FARMS IN ZONE --}}
+        <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-2">
+                <h5 class="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">🌱 Healthy Farms in Zone</h5>
+                <span class="text-[10px] text-gray-500 dark:text-gray-400">Total: <span id="bufHealthyTotal" class="font-semibold">0</span></span>
+            </div>
+            <div id="bufferHealthyList" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                <p class="text-xs text-gray-400 italic">No other farms in zone.</p>
             </div>
         </div>
     </div>
@@ -476,6 +507,10 @@ document.addEventListener('DOMContentLoaded', function () {
                        style="display:block; text-align:center; padding:6px 12px; background:#16a34a; color:white; border-radius:6px; font-size:12px; font-weight:600; text-decoration:none;">
                         View Soil Analysis
                     </a>
+                    <button type="button" onclick="showFarmDangerZone(${farm.id})"
+                       style="display:block; text-align:center; padding:6px 12px; background:#ea580c; color:white; border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer;">
+                        Show Danger Zone
+                    </button>
                 </div>
             </div>
         </div>`;
@@ -706,7 +741,20 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const clearBufferZones = window.clearBufferZones;
 
-    function drawBufferZones(lat, lng, farmName) {
+    window.showFarmDangerZone = function (farmId) {
+        const farm = allFarms.find(f => f.id == farmId);
+        if (!farm || !farm.latitude || !farm.longitude) return;
+
+        const lat = parseFloat(farm.latitude);
+        const lng = parseFloat(farm.longitude);
+
+        map.closePopup();
+        setHighlight(null);
+        map.setView([lat, lng], 15);
+        drawBufferZones(lat, lng, farm.name, farm.id);
+    };
+
+    function drawBufferZones(lat, lng, farmName, farmId) {
         clearBufferZones();
 
         const isHigh = s => s && (s.toLowerCase() === 'high' || s.toLowerCase() === 'severe');
@@ -763,6 +811,125 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('bufZ3High').textContent  = h3;
             legend.style.display = 'block';
         }
+
+        renderAffectedFarms(lat, lng, farmName, farmId);
+    }
+
+    function renderAffectedFarms(lat, lng, sourceName, sourceFarmId) {
+        const infectedList = document.getElementById('bufferInfectedList');
+        const healthyList  = document.getElementById('bufferHealthyList');
+        const infectedTotal = document.getElementById('bufInfectedTotal');
+        const healthyTotal  = document.getElementById('bufHealthyTotal');
+        const banner       = document.getElementById('bufferStatusBanner');
+        const bannerIcon   = document.getElementById('bufferStatusIcon');
+        const bannerTitle  = document.getElementById('bufferStatusTitle');
+        const bannerSub    = document.getElementById('bufferStatusSubtitle');
+        if (!infectedList || !healthyList || !banner) return;
+
+        const isHigh = s => s && (s.toLowerCase() === 'high' || s.toLowerCase() === 'severe');
+
+        // Build the set of farm_ids that have at least one approved detection
+        const infectedFarmIds = new Set(
+            (allPestCases || [])
+                .filter(c => c.farm_id != null)
+                .map(c => String(c.farm_id))
+        );
+
+        // Identify the source farm and whether it is infected
+        const sourceFarm = (allFarms || []).find(f =>
+            (sourceFarmId != null && f.id == sourceFarmId) ||
+            (f.name === sourceName)
+        );
+        const sourceIsInfected = sourceFarm ? infectedFarmIds.has(String(sourceFarm.id)) : false;
+
+        // Cases within 2km (used for banner counts)
+        const casesInZone = (allPestCases || [])
+            .filter(c => c.latitude && c.longitude)
+            .map(c => ({ ...c, dist: haversineMeters(lat, lng, parseFloat(c.latitude), parseFloat(c.longitude)) }))
+            .filter(c => c.dist <= 2000);
+
+        const highSeverityCount = casesInZone.filter(c => isHigh(c.severity)).length;
+
+        // Nearby farms within 2km (excluding the source farm)
+        const farmsWithDist = (allFarms || [])
+            .filter(f => f.latitude && f.longitude)
+            .filter(f => !sourceFarm || f.id != sourceFarm.id)
+            .map(f => ({
+                ...f,
+                dist: haversineMeters(lat, lng, parseFloat(f.latitude), parseFloat(f.longitude)),
+                infected: infectedFarmIds.has(String(f.id))
+            }))
+            .filter(f => f.dist <= 2000)
+            .sort((a, b) => a.dist - b.dist);
+
+        const infected = farmsWithDist.filter(f => f.infected);
+        const healthy  = farmsWithDist.filter(f => !f.infected);
+
+        // === Risk status banner ===
+        banner.className = 'mb-3 rounded-lg px-3 py-2.5 flex items-start gap-2.5 border';
+        if (sourceIsInfected) {
+            banner.classList.add('bg-red-50','dark:bg-red-900/20','border-red-300','dark:border-red-800');
+            bannerIcon.textContent = '🚨';
+            bannerTitle.className = 'text-xs font-bold text-red-800 dark:text-red-300';
+            bannerSub.className   = 'text-[11px] mt-0.5 text-red-700 dark:text-red-400';
+            bannerTitle.textContent = 'Infected farm — active detections on this property';
+            bannerSub.textContent = `${casesInZone.length} case(s) within 2 km · ${infected.length} other infected farm(s) nearby`;
+        } else if (casesInZone.length > 0) {
+            banner.classList.add('bg-orange-50','dark:bg-orange-900/20','border-orange-300','dark:border-orange-800');
+            bannerIcon.textContent = '⚠️';
+            bannerTitle.className = 'text-xs font-bold text-orange-800 dark:text-orange-300';
+            bannerSub.className   = 'text-[11px] mt-0.5 text-orange-700 dark:text-orange-400';
+            bannerTitle.textContent = 'At risk — nearby infections detected';
+            bannerSub.textContent = `Healthy farm with ${casesInZone.length} pest/disease case(s) within 2 km` +
+                (highSeverityCount > 0 ? ` · ${highSeverityCount} high-severity` : '') +
+                (infected.length > 0 ? ` · ${infected.length} infected farm(s) nearby` : '');
+        } else {
+            banner.classList.add('bg-emerald-50','dark:bg-emerald-900/20','border-emerald-300','dark:border-emerald-800');
+            bannerIcon.textContent = '✅';
+            bannerTitle.className = 'text-xs font-bold text-emerald-800 dark:text-emerald-300';
+            bannerSub.className   = 'text-[11px] mt-0.5 text-emerald-700 dark:text-emerald-400';
+            bannerTitle.textContent = 'No threats detected within 2 km';
+            bannerSub.textContent = 'This farm and its surroundings are currently clear.';
+        }
+
+        // === Lists ===
+        infectedTotal.textContent = infected.length;
+        healthyTotal.textContent  = healthy.length;
+
+        infectedList.innerHTML = infected.length === 0
+            ? '<p class="text-xs text-gray-400 italic">No infected farms detected.</p>'
+            : infected.map(f => renderFarmRow(f, true)).join('');
+
+        healthyList.innerHTML = healthy.length === 0
+            ? '<p class="text-xs text-gray-400 italic">No other farms in zone.</p>'
+            : healthy.map(f => renderFarmRow(f, false)).join('');
+    }
+
+    function renderFarmRow(f, infected) {
+        const escape = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        const distLabel = f.dist < 1000 ? `${Math.round(f.dist)} m` : `${(f.dist / 1000).toFixed(2)} km`;
+        const location = [f.barangay_name ?? f.barangay, f.municipality_name ?? f.municipality].filter(Boolean).join(', ');
+
+        const zone = f.dist <= 500 ? 'High' : (f.dist <= 1000 ? 'Moderate' : 'Extended');
+        const dotColor = f.dist <= 500 ? '#dc2626' : (f.dist <= 1000 ? '#ea580c' : '#ca8a04');
+
+        const style = infected
+            ? { bg: 'bg-red-50 dark:bg-red-900/20', border: 'border-red-200 dark:border-red-800', text: 'text-red-700 dark:text-red-300' }
+            : { bg: 'bg-emerald-50 dark:bg-emerald-900/20', border: 'border-emerald-200 dark:border-emerald-800', text: 'text-emerald-700 dark:text-emerald-300' };
+
+        return `
+            <div class="rounded-md border ${style.border} ${style.bg} px-2.5 py-2 flex items-start gap-2">
+                <span class="inline-block w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0" style="background:${dotColor};"></span>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs font-semibold ${style.text} truncate">${escape(f.name)}</span>
+                        <span class="text-[10px] font-mono ${style.text} flex-shrink-0">${distLabel}</span>
+                    </div>
+                    <div class="text-[10px] text-gray-500 dark:text-gray-400 truncate">${escape(location || 'Location N/A')}</div>
+                    <div class="text-[10px] text-gray-400 dark:text-gray-500">${zone}-Risk Zone</div>
+                </div>
+            </div>
+        `;
     }
 
 
@@ -866,15 +1033,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 farmMarker.addTo(pestMarkers);
             });
         } else if (farmVal !== 'all') {
-            // Show only the selected farm marker
+            // Show selected farm + any other farms within the 2km danger zone
             const selectedFarm = allFarms.find(f => f.id == farmVal);
             if (selectedFarm) {
-                const farmMarker = L.marker([parseFloat(selectedFarm.latitude), parseFloat(selectedFarm.longitude)], {
-                    icon: farmIcon
+                const selLat = parseFloat(selectedFarm.latitude);
+                const selLng = parseFloat(selectedFarm.longitude);
+
+                const farmsInZone = allFarms.filter(f => {
+                    if (!f.latitude || !f.longitude) return false;
+                    if (f.id == selectedFarm.id) return true;
+                    return haversineMeters(selLat, selLng, parseFloat(f.latitude), parseFloat(f.longitude)) <= 2000;
                 });
 
-                farmMarker.bindPopup(createFarmPopupContent(selectedFarm));
-                farmMarker.addTo(pestMarkers);
+                farmsInZone.forEach(f => {
+                    const m = L.marker([parseFloat(f.latitude), parseFloat(f.longitude)], { icon: farmIcon });
+                    m.bindPopup(createFarmPopupContent(f));
+                    m.addTo(pestMarkers);
+                });
             }
         }
 
@@ -1007,9 +1182,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const brgyNames = [...new Set(
             barangayGeoData.features
-                .filter(f => f.properties.Muni_Adjus === municipality || f.properties.MUN === municipality)
+                .filter(f => f.properties.Muni_Adjus === municipality && f.properties.MUN === municipality)
                 .map(f => f.properties.Brgy)
-                .filter(Boolean)
+                .filter(name => name && !/\sVS\s/i.test(name))
         )].sort();
 
         brgyNames.forEach(name => {
@@ -1133,7 +1308,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const lat = parseFloat(selectedFarm.latitude);
                 const lng = parseFloat(selectedFarm.longitude);
                 map.setView([lat, lng], 15);
-                drawBufferZones(lat, lng, selectedFarm.name);
+                drawBufferZones(lat, lng, selectedFarm.name, selectedFarm.id);
             }
         }
 

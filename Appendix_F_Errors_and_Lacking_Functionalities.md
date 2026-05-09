@@ -146,3 +146,12 @@ On the CofSys Map, clicking "View Soil Analysis" on any farm marker navigated to
 The root cause was identified as a Filament v3 API misunderstanding: the page was overriding `getEloquentQuery()`, which does not exist on Filament v3 `ListRecords` page classes (it only exists on Resource classes). Because the method was never called by Filament, the farm filter was silently ignored. The fix in `app/Filament/Resources/SoilAnalysisResource/Pages/ListSoilAnalyses.php` was to: (1) capture `?farm_id=` from the URL in `mount()` into a `$filteredFarmId` property, which Livewire serializes in its snapshot so the filter persists across 15-second table polling intervals; and (2) override `getTableQuery()` — the correct Filament v3 page-level method — to apply `WHERE soil_analysis.farm_id = ?` when `$filteredFarmId` is set, and display a "Filtered by farm: [Farm Name]" subheading to confirm the active filter.
 
 ---
+
+### 17.
+**Error Found / Lacking Functionality:**
+The CofSys Map lacked a visual danger zone representation when clicking on farms. Users could not identify proximity-based risk areas around farm locations. The map needed to display concentric danger zones based on distance thresholds: 0-500m (High Risk - displayed as red), 500m-1km (Moderate Risk - displayed as orange), and 1km-2km (Extended Risk - displayed as yellow). These zones would help users quickly assess pest, disease, or environmental threat exposure for farms and surrounding areas.
+
+**Action Taken:**
+[To be completed - implementation of danger zone visualization on CofSys Map]
+
+---
