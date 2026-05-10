@@ -1795,11 +1795,11 @@
 
                         <div class="mockup-stats-row">
                             <div class="mockup-stat">
-                                <div class="ms-val">247</div>
+                                <div class="ms-val">1345</div>
                                 <div class="ms-lbl">Farmers</div>
                             </div>
                             <div class="mockup-stat">
-                                <div class="ms-val">89</div>
+                                <div class="ms-val">60</div>
                                 <div class="ms-lbl">Reports</div>
                             </div>
                             <div class="mockup-stat">
