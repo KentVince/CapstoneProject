@@ -1682,14 +1682,14 @@
                 </ul>
 
                 <div class="mab-store-btns">
-                    <!-- Google Play -->
-                    <a href="#" class="store-btn store-btn--android">
+                    <!-- Google Play (direct APK download for now) -->
+                    <a href="{{ route('app.download') }}" download class="store-btn store-btn--android">
                         <svg class="store-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                             <path d="M3.18 23.76c.3.17.65.2.98.09l11.07-6.39-2.38-2.38-9.67 8.68zm-1.06-20.3C2.04 3.73 2 4.02 2 4.34v15.32c0 .32.04.61.12.88l.06.06 8.59-8.59v-.2L2.18 3.4l-.06.06zM20.1 10.3l-2.35-1.36-2.65 2.65 2.65 2.65 2.37-1.37c.68-.39.68-1.18-.02-1.57zm-17.74 12c.3.3.75.38 1.16.15l12.55-7.25-2.56-2.56-11.15 9.66z"/>
                         </svg>
                         <div class="store-text">
-                            <span class="store-sub">Get it on</span>
-                            <span class="store-name">Google Play</span>
+                            <span class="store-sub">Download</span>
+                            <span class="store-name">APK (Android)</span>
                         </div>
                     </a>
 

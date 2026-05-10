@@ -26,6 +26,16 @@ Route::get('/', function () {
     return view('landing');
 });
 
+// Direct APK download for the CofSys mobile app (until the Play Store listing goes live)
+Route::get('/download/app', function () {
+    $path = storage_path('app/app-release.apk');
+    abort_unless(file_exists($path), 404);
+
+    return response()->download($path, 'CofSys.apk', [
+        'Content-Type' => 'application/vnd.android.package-archive',
+    ]);
+})->name('app.download');
+
 // Lightweight endpoint for sidebar badge polling (unviewed by current user)
 Route::get('/admin/api/pending-detections-count', function () {
     $userId = auth()->id();
