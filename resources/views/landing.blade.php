@@ -1434,7 +1434,7 @@
 
                 <div class="hero-stats">
                     <div>
-                        <div class="hero-stat-val">500+</div>
+                        <div class="hero-stat-val">62+</div>
                         <div class="hero-stat-lbl">Farms Monitored</div>
                     </div>
                     <div>
@@ -1442,8 +1442,8 @@
                         <div class="hero-stat-lbl">Municipalities</div>
                     </div>
                     <div>
-                        <div class="hero-stat-val">AI</div>
-                        <div class="hero-stat-lbl">Powered Detection</div>
+                        <div class="hero-stat-val">1345</div>
+                        <div class="hero-stat-lbl">Total Farmers</div>
                     </div>
                 </div>
             </div>
@@ -1850,7 +1850,7 @@
                     <img src="/images/coffee_farm1.webp" alt="Coffee farm aerial view"
                          onerror="this.style.background='linear-gradient(135deg, #107737, #003432)';this.style.display='block'">
                     <div class="map-overlay-badge">
-                        <div class="mob-val">12+</div>
+                        <div class="mob-val">11</div>
                         <div class="mob-lbl">Municipalities<br>Covered</div>
                     </div>
                 </div>
