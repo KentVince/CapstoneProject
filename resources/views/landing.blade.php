@@ -1353,6 +1353,108 @@
             section { padding: 4rem 1.5rem; }
             .footer-top { grid-template-columns: 1fr; gap: 2rem; }
             .footer-bottom { flex-direction: column; text-align: center; }
+
+            /* Hero — mobile portrait fixes */
+            .hero-content {
+                padding: 6.5rem 1.25rem 3rem;
+                gap: 2rem;
+            }
+            .hero-left { display: flex; flex-direction: column; align-items: center; }
+            .hero-badge {
+                font-size: 0.7rem;
+                padding: 0.35rem 0.85rem;
+                margin-bottom: 1.25rem;
+            }
+            .hero-title {
+                font-size: clamp(1.75rem, 8vw, 2.4rem);
+                line-height: 1.18;
+                margin-bottom: 1rem;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }
+            .hero-desc {
+                font-size: 0.95rem;
+                line-height: 1.65;
+                margin-bottom: 2rem;
+                max-width: 520px;
+            }
+            .hero-cta {
+                width: 100%;
+                justify-content: center;
+                gap: 0.75rem;
+            }
+            .btn-primary, .btn-outline {
+                font-size: 0.88rem;
+                padding: 0.75rem 1.4rem;
+            }
+            .hero-stats {
+                width: 100%;
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0.75rem;
+                margin-top: 2.25rem;
+                padding-top: 1.5rem;
+            }
+            .hero-stats > div { text-align: center; }
+            .hero-stat-val { font-size: 1.4rem; }
+            .hero-stat-lbl {
+                font-size: 0.65rem;
+                letter-spacing: 0.06em;
+            }
+
+            /* How It Works — mobile portrait fixes */
+            .how { padding: 4rem 1rem; }
+            .how-inner { text-align: center; }
+            .how-inner .section-label { justify-content: center; }
+            .how-inner .section-sub { margin-left: auto; margin-right: auto; }
+            .how-grid { gap: 2.5rem; margin-top: 2.5rem; }
+            .how-steps { gap: 1.5rem; }
+            .how-step {
+                gap: 0.85rem;
+                opacity: 0.95;
+                text-align: left;
+                align-items: flex-start;
+            }
+            .how-step > div:last-child {
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+            .step-num {
+                width: 36px; height: 36px;
+                border-radius: 10px;
+                font-size: 0.95rem;
+            }
+            .step-body-title { font-size: 0.98rem; }
+            .step-body-desc {
+                font-size: 0.82rem;
+                line-height: 1.55;
+                overflow-wrap: break-word;
+                word-wrap: break-word;
+            }
+            .mockup-frame { padding: 1rem; }
+        }
+
+        @media (max-width: 420px) {
+            .how { padding: 3.5rem 0.85rem; }
+            .how-step { gap: 0.7rem; }
+            .step-num {
+                width: 32px; height: 32px;
+                border-radius: 9px;
+                font-size: 0.88rem;
+            }
+            .step-body-title { font-size: 0.95rem; }
+            .step-body-desc { font-size: 0.8rem; }
+
+            /* Hero — extra-narrow phones */
+            .hero-content { padding: 6rem 1rem 2.5rem; }
+            .hero-title { font-size: 1.65rem; }
+            .hero-stats { gap: 0.4rem; }
+            .hero-stat-val { font-size: 1.2rem; }
+            .hero-stat-lbl { font-size: 0.6rem; }
+            .btn-primary, .btn-outline {
+                font-size: 0.82rem;
+                padding: 0.7rem 1.1rem;
+            }
         }
 
         /* ── SCROLL REVEAL ──────────────────────── */
