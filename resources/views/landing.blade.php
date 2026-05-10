@@ -1438,7 +1438,7 @@
                         <div class="hero-stat-lbl">Farms Monitored</div>
                     </div>
                     <div>
-                        <div class="hero-stat-val">12</div>
+                        <div class="hero-stat-val">11</div>
                         <div class="hero-stat-lbl">Municipalities</div>
                     </div>
                     <div>
@@ -1803,7 +1803,7 @@
                                 <div class="ms-lbl">Reports</div>
                             </div>
                             <div class="mockup-stat">
-                                <div class="ms-val">12</div>
+                                <div class="ms-val">11</div>
                                 <div class="ms-lbl">Municipalities</div>
                             </div>
                         </div>
