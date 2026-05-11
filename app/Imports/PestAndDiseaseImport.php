@@ -31,6 +31,12 @@ class PestAndDiseaseImport implements ToCollection, WithHeadingRow, WithChunkRea
         $fillable  = (new PestAndDisease)->getFillable();
         $fillableMap = array_flip($fillable);
 
+        // Pre-load valid FK target IDs so we can null out stale references
+        // from spreadsheets prepared on a different environment, instead of
+        // failing the whole batch on a foreign key constraint violation.
+        $validUserIds   = DB::table('users')->pluck('id')->flip();
+        $validExpertIds = DB::table('agricultural_professionals')->pluck('id')->flip();
+
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 2;
 
@@ -44,9 +50,21 @@ class PestAndDiseaseImport implements ToCollection, WithHeadingRow, WithChunkRea
                     continue;
                 }
 
+                $expertId    = $this->parseInt($row['expert_id']    ?? null);
+                $validatedBy = $this->parseInt($row['validated_by'] ?? null);
+
+                if ($expertId !== null && ! $validExpertIds->has($expertId)) {
+                    $this->errors[] = "Row {$rowNumber}: expert_id {$expertId} not found — set to null.";
+                    $expertId = null;
+                }
+                if ($validatedBy !== null && ! $validUserIds->has($validatedBy)) {
+                    $this->errors[] = "Row {$rowNumber}: validated_by {$validatedBy} not found — set to null.";
+                    $validatedBy = null;
+                }
+
                 $record = [
                     'app_no'              => $this->nullIfEmpty($row['app_no']              ?? null),
-                    'expert_id'           => $this->parseInt($row['expert_id']              ?? null),
+                    'expert_id'           => $expertId,
                     'farmer_id'           => $this->parseInt($row['farmer_id']              ?? null),
                     'farm_id'             => $this->parseInt($row['farm_id']                ?? null),
                     'date_detected'       => $dateDetected,
@@ -66,7 +84,7 @@ class PestAndDiseaseImport implements ToCollection, WithHeadingRow, WithChunkRea
                     'validation_status'   => $this->resolveValidationStatus($row['validation_status'] ?? null),
                     'expert_comments'     => $this->nullIfEmpty($row['expert_comments']     ?? null),
                     'ai_recommendation'   => $this->nullIfEmpty($row['ai_recommendation']   ?? null),
-                    'validated_by'        => $this->nullIfEmpty($row['validated_by']        ?? null),
+                    'validated_by'        => $validatedBy,
                     'validated_at'        => $this->parseDateTime($row['validated_at']      ?? null),
                     'admin_viewed_at'     => $this->parseDateTime($row['admin_viewed_at']   ?? null),
                     'area'                => $this->nullIfEmpty($row['area']                ?? null),
@@ -86,15 +104,25 @@ class PestAndDiseaseImport implements ToCollection, WithHeadingRow, WithChunkRea
             }
         }
 
-        // Bulk insert collected rows in sub-chunks of 100
+        // Insert collected rows in sub-chunks of 100. If a chunk fails
+        // (e.g. an unrelated constraint), fall back to per-row inserts so
+        // one bad row doesn't take down the entire batch.
         foreach (array_chunk($batch, 100) as $chunk) {
             try {
                 DB::table('pest_and_disease')->insert($chunk);
                 $this->importedCount += count($chunk);
             } catch (\Exception $e) {
-                $this->skippedCount += count($chunk);
-                $this->errors[] = "Batch insert failed: {$e->getMessage()}";
-                Log::error("PestAndDisease batch insert error: {$e->getMessage()}");
+                Log::warning("PestAndDisease batch insert failed, retrying per-row: {$e->getMessage()}");
+                foreach ($chunk as $row) {
+                    try {
+                        DB::table('pest_and_disease')->insert($row);
+                        $this->importedCount++;
+                    } catch (\Exception $rowEx) {
+                        $this->skippedCount++;
+                        $this->errors[] = "Row insert failed: {$rowEx->getMessage()}";
+                        Log::error("PestAndDisease row insert error: {$rowEx->getMessage()}");
+                    }
+                }
             }
         }
     }
