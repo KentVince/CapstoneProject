@@ -9,6 +9,7 @@ use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Illuminate\Validation\ValidationException;
 use App\Services\AgriculturalProfessionalAuthService;
 use Illuminate\Support\Facades\Auth;
+use Coderflex\FilamentTurnstile\Forms\Components\Turnstile;
 
 class Login extends AuthLogin
 {
@@ -23,6 +24,8 @@ class Login extends AuthLogin
                 $this->getPasswordFormComponent()
                     ->extraInputAttributes(['tabindex' => 2]),
                 $this->getRememberFormComponent(),
+                Turnstile::make('captcha')
+                    ->theme('auto'),
             ])
             ->statePath('data');
     }

@@ -6,6 +6,7 @@ use App\Models\Farm;
 use App\Models\SoilAnalysis;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -28,6 +29,11 @@ class SoilAnalysisImport implements ToCollection, WithHeadingRow
                 'farmer_id' => $farm->farmer_id,
             ];
         });
+
+        // Pre-load valid user IDs so stale validated_by references from
+        // spreadsheets prepared on a different environment can be nulled
+        // out instead of failing the row's foreign key constraint.
+        $validUserIds = DB::table('users')->pluck('id')->flip();
 
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 2;
@@ -54,6 +60,12 @@ class SoilAnalysisImport implements ToCollection, WithHeadingRow
                     continue;
                 }
 
+                $validatedBy = $this->parseInt($row['validated_by'] ?? null);
+                if ($validatedBy !== null && ! $validUserIds->has($validatedBy)) {
+                    $this->errors[] = "Row {$rowNumber}: validated_by {$validatedBy} not found — set to null.";
+                    $validatedBy = null;
+                }
+
                 SoilAnalysis::create([
                     'sample_id'       => $sampleId,
                     'farm_id'         => $farmId,
@@ -77,7 +89,7 @@ class SoilAnalysisImport implements ToCollection, WithHeadingRow
                     'potassium'       => $this->parseDecimal($row['potassium']       ?? null),
                     'organic_matter'    => $this->parseDecimal($row['organic_matter']    ?? null),
                     'validation_status' => $this->resolveValidationStatus($row['validation_status'] ?? null),
-                    'validated_by'      => $this->nullIfEmpty($row['validated_by']      ?? null),
+                    'validated_by'      => $validatedBy,
                 ]);
 
                 $this->importedCount++;
@@ -112,6 +124,15 @@ class SoilAnalysisImport implements ToCollection, WithHeadingRow
         }
         $clean = preg_replace('/[^0-9.\-]/', '', (string) $value);
         return is_numeric($clean) ? (float) $clean : null;
+    }
+
+    private function parseInt($value): ?int
+    {
+        if ($value === null || $value === '' || strtolower((string) $value) === 'null') {
+            return null;
+        }
+        $clean = preg_replace('/[^0-9\-]/', '', (string) $value);
+        return is_numeric($clean) ? (int) $clean : null;
     }
 
     private function parseDate($value): ?string

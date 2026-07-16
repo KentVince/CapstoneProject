@@ -26,51 +26,7 @@ class ListPestAndDiseases extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [
-            Action::make('importPestAndDisease')
-                ->label('Import Excel')
-                ->icon('heroicon-o-arrow-up-tray')
-                ->color('success')
-                ->modalHeading('Import Pest & Disease from Excel')
-                ->modalDescription('Upload an Excel file (.xlsx) with pest and disease data. Rows missing pest or date_detected will be skipped.')
-                ->modalSubmitActionLabel('Import')
-                ->form([
-                    FileUpload::make('file')
-                        ->label('Excel File (.xlsx)')
-                        ->acceptedFileTypes(['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'])
-                        ->maxSize(10240)
-                        ->required()
-                        ->storeFiles(false),
-                ])
-                ->action(function (array $data): void {
-                    $file     = $data['file'];
-                    $importer = new PestAndDiseaseImport();
-
-                    Excel::import($importer, $file);
-
-                    $body = "Imported: {$importer->importedCount} | Skipped: {$importer->skippedCount}";
-                    if ($importer->errors) {
-                        $body .= "\n" . implode("\n", array_slice($importer->errors, 0, 5));
-                        if (count($importer->errors) > 5) {
-                            $body .= "\n... and " . (count($importer->errors) - 5) . ' more.';
-                        }
-                    }
-
-                    if ($importer->importedCount > 0) {
-                        Notification::make()
-                            ->title('Import Successful')
-                            ->body($body)
-                            ->success()
-                            ->send();
-                    } else {
-                        Notification::make()
-                            ->title('Nothing Imported')
-                            ->body($body)
-                            ->warning()
-                            ->send();
-                    }
-                }),
-        ];
+        return [];
     }
 
     public function getSubheading(): ?string
