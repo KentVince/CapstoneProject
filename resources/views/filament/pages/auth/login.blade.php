@@ -201,6 +201,10 @@
         }
 
         /* Filament form styles */
+        .login-form-section .fi-fo-component-ctn {
+            gap: 0.5rem !important;
+        }
+
         .login-form-section .fi-fo-field-wrp {
             margin-bottom: 0.75rem;
         }
